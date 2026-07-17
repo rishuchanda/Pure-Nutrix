@@ -334,7 +334,6 @@
   }
   
   .product-image-container, .product-details {
-    transform: none !important;
     flex: none;
     width: 100%;
   }

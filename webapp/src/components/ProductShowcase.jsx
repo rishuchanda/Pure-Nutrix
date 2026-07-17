@@ -45,9 +45,18 @@ const ProductCard = ({ product, index }) => {
     offset: ["start end", "end start"]
   });
   
-  // Parallax: Image moves down, Details move up (Opposite scroll effect)
-  const yImage = useTransform(scrollYProgress, [0, 1], [-60, 60]);
-  const yDetails = useTransform(scrollYProgress, [0, 1], [40, -40]);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 992);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Parallax: Disable on mobile to prevent JS/CSS conflicts and lag
+  const yImage = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 0] : [-60, 60]);
+  const yDetails = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 0] : [40, -40]);
 
   const nextImage = () => {
     setCurrentImgIdx((prev) => (prev + 1) % product.images.length);
