@@ -2,6 +2,4 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/purenutr/public_html
-    - cd webapp && npm install
-    - cd webapp && npm run build
     - /bin/cp -R webapp/dist/* $DEPLOYPATH/
