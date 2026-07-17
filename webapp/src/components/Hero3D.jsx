@@ -68,7 +68,9 @@ const InteractiveParticles = () => {
     lastActivity.current = { x: mouseX, y: mouseY, scroll: scrollY };
 
     if (materialRef.current) {
-      materialRef.current.opacity = activityLevel.current * 0.9;
+      // Use size scaling instead of opacity to guarantee it works on all GPUs (Safari bug fix)
+      materialRef.current.opacity = 0.9;
+      materialRef.current.size = activityLevel.current * 0.08;
     }
 
     // 1. Make the entire sphere FOLLOW the cursor's position smoothly
@@ -118,31 +120,18 @@ const InteractiveParticles = () => {
 
   return (
     <group ref={groupRef}>
-      <points ref={ref} frustumCulled={false}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={positions.length / 3}
-            array={positions}
-            itemSize={3}
-          />
-          <bufferAttribute
-            attach="attributes-color"
-            count={colors.length / 3}
-            array={colors}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <pointsMaterial 
+      <Points ref={ref} positions={positions} stride={3} frustumCulled={false}>
+        <bufferAttribute attach="attributes-color" array={colors} itemSize={3} />
+        <PointMaterial 
           ref={materialRef}
           transparent 
           vertexColors={true}
-          size={0.08} 
+          size={0} 
           sizeAttenuation={true} 
           depthWrite={false} 
-          opacity={0} 
+          opacity={0.9} 
         />
-      </points>
+      </Points>
     </group>
   );
 };
