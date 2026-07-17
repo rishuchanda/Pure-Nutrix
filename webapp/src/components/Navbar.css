@@ -141,3 +141,15 @@
 .mobile-nav-link:last-child {
   border-bottom: none;
 }
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 10px 0;
+  }
+  .logo-img {
+    height: 55px;
+  }
+  .cart-btn {
+    padding: 8px 12px;
+  }
+}

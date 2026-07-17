@@ -89,5 +89,15 @@
   
   .trust-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .trust-title {
+    font-size: 1.8rem;
+  }
+  .trust-card {
+    padding: 30px 20px;
   }
 }

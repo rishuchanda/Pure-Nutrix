@@ -108,3 +108,29 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 768px) {
+  .science-title {
+    font-size: 2.5rem;
+  }
+  .science-stats {
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .stat-number {
+    font-size: 2rem;
+  }
+  .science-image-glow {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .science-title {
+    font-size: 2rem;
+  }
+  .stat-number {
+    font-size: 1.8rem;
+  }
+}

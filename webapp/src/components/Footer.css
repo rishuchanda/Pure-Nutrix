@@ -57,3 +57,19 @@
   color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 50px 0 20px 0;
+    margin-top: 60px;
+  }
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 30px;
+  }
+  .footer-links-group {
+    align-items: center;
+  }
+}
