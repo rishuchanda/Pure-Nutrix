@@ -333,6 +333,12 @@
     gap: 40px;
   }
   
+  .product-image-container, .product-details {
+    transform: none !important;
+    flex: none;
+    width: 100%;
+  }
+
   .product-name {
     font-size: 2rem;
   }

@@ -23,7 +23,7 @@ const ProductReviews = ({ reviews }) => {
   return (
     <div className="product-reviews-container">
       <h4 className="section-mini-title">Real Results</h4>
-      <div className="reviews-slider">
+      <div className="reviews-slider" data-lenis-prevent="true">
         {reviews.map((review, i) => (
           <div key={i} className="review-card">
             <div className="stars">★★★★★</div>
