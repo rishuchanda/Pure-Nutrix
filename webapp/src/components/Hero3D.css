@@ -1,0 +1,115 @@
+.hero-section-interactive {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+}
+
+/* Make canvas fixed to the viewport background */
+.hero-canvas-interactive {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background-color: #ffffff; /* Pure white background like Antigravity */
+}
+
+.hero-content-interactive {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.interactive-text-wrapper {
+  pointer-events: auto;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+}
+
+.interactive-title {
+  font-family: var(--font-display);
+  font-size: 6rem;
+  line-height: 1.05;
+  margin-bottom: 50px;
+  letter-spacing: -3px; /* Very tight spacing for the brutalist/antigravity look */
+  font-weight: 500;
+  color: #111111; /* Pitch black */
+}
+
+.interactive-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* Pill Buttons matching the Antigravity style */
+.btn-ag-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #111111;
+  color: #ffffff;
+  padding: 16px 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 40px; /* Pill shape */
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-ag-primary:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+.btn-ag-secondary {
+  background-color: #f4f4f5;
+  color: #111111;
+  padding: 16px 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 40px;
+  border: 1px solid #e4e4e7;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-ag-secondary:hover {
+  background-color: #e4e4e7;
+  transform: scale(1.02);
+}
+
+@media (max-width: 992px) {
+  .interactive-title {
+    font-size: 4rem;
+    letter-spacing: -2px;
+  }
+}
+
+@media (max-width: 768px) {
+  .interactive-title {
+    font-size: 3.2rem;
+    letter-spacing: -1.5px;
+  }
+  
+  .interactive-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+}

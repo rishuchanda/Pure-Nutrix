@@ -1,0 +1,339 @@
+.product-showcase {
+  position: relative;
+  z-index: 2;
+  /* Fully transparent background so it seamlessly floats over the fixed white canvas */
+  background-color: transparent;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.section-title {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  color: #111111;
+  letter-spacing: -1px;
+}
+
+.section-subtitle {
+  font-size: 1.2rem;
+  color: var(--color-text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 100px;
+}
+
+.product-card {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  padding: 60px;
+  background-color: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 32px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+}
+
+.row-normal {
+  flex-direction: row;
+}
+
+.row-reverse {
+  flex-direction: row-reverse;
+}
+
+.product-image-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1000px; /* For 3D Tilt */
+}
+
+.glow-backdrop {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  border-radius: 50%;
+  z-index: 1;
+  filter: blur(40px);
+}
+
+.tilt-wrapper {
+  position: relative;
+  z-index: 2;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.product-image-container:hover .tilt-wrapper {
+  /* Fake 3D tilt effect on hover */
+  transform: rotateY(15deg) rotateX(10deg) scale(1.05);
+}
+
+.product-image {
+  width: 100%;
+  max-width: 450px; /* Increased size */
+  height: auto;
+  border-radius: 20px;
+  box-shadow: none; /* Removed shadow */
+  object-fit: cover;
+}
+
+.product-details {
+  flex: 1.2;
+  min-width: 0; /* Critical fix: prevents the reviews slider from breaking the flex layout */
+}
+
+.product-category {
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+}
+
+.product-name {
+  font-size: 2.5rem;
+  line-height: 1.2;
+  margin-bottom: 25px;
+  color: #111111;
+  letter-spacing: -1px;
+}
+
+.product-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  font-family: var(--font-display);
+}
+
+.product-qty {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+}
+
+.product-price {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-accent-gold);
+}
+
+.product-description ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 40px;
+}
+
+.product-description li {
+  position: relative;
+  padding-left: 30px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.product-description li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  top: 2px;
+  color: var(--color-accent-gold);
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Carousel Styles */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+  color: #111111;
+}
+
+.carousel-btn:hover {
+  background: #f9fafb;
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.prev-btn {
+  left: 10px;
+}
+
+.next-btn {
+  right: 10px;
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e4e4e7;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.carousel-dot:hover {
+  background: #a1a1aa;
+}
+
+.carousel-dot.active {
+  background: #111111;
+  transform: scale(1.2);
+}
+
+/* Embedded Mini Sections (Ingredients & Reviews) */
+.section-mini-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+  color: #111111;
+  border-bottom: 1px solid #e4e4e7;
+  padding-bottom: 10px;
+}
+
+/* Ingredients Spotlight Styles */
+.product-ingredients-container {
+  margin-bottom: 30px;
+}
+
+.ingredients-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ingredient-pill {
+  background: #f9fafb;
+  border: 1px solid #e4e4e7;
+  border-radius: 30px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ing-name {
+  font-weight: 700;
+  color: #111111;
+  font-size: 0.9rem;
+}
+
+.ing-desc {
+  color: var(--color-accent-emerald); /* Highlight benefit in green */
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Reviews Slider Styles */
+.product-reviews-container {
+  margin-top: 40px;
+  width: 100%;
+}
+
+.reviews-slider {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 15px;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.reviews-slider::-webkit-scrollbar {
+  height: 6px;
+}
+
+.reviews-slider::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.reviews-slider::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 10px;
+}
+
+.review-card {
+  min-width: 260px;
+  max-width: 260px;
+  background: #f9fafb;
+  border: 1px solid #e4e4e7;
+  border-radius: 16px;
+  padding: 20px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.review-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.stars {
+  color: #d4af37;
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+}
+
+.review-text {
+  font-size: 0.95rem;
+  color: #52525b;
+  font-style: italic;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.review-author {
+  font-weight: 700;
+  color: #111111;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 992px) {
+  .product-card {
+    flex-direction: column !important;
+    padding: 40px 30px;
+    gap: 40px;
+  }
+  
+  .product-name {
+    font-size: 2rem;
+  }
+}
