@@ -62,7 +62,7 @@ const ProductCard = ({ product, index }) => {
       ref={cardRef}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
-      viewport={{ once: false, margin: "-100px" }}
+      viewport={{ once: true, margin: "0px" }}
       transition={{ duration: 0.8 }}
       className={`product-card glass-card ${index % 2 === 0 ? 'row-normal' : 'row-reverse'}`}
     >

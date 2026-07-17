@@ -53,11 +53,6 @@ const InteractiveParticles = () => {
     const mouseY = state.mouse.y;
     const scrollY = window.scrollY;
 
-    // Always keep particles visible, just let them react to scroll and mouse
-    if (materialRef.current) {
-      materialRef.current.opacity = 0.9;
-    }
-
     // 1. Make the entire sphere FOLLOW the cursor's position smoothly
     const targetRotX = mouseY * 0.5; 
     const targetRotY = mouseX * 0.5;
@@ -114,7 +109,7 @@ const InteractiveParticles = () => {
           size={0.08} 
           sizeAttenuation={true} 
           depthWrite={false} 
-          opacity={0} // Starts invisible
+          opacity={1} 
         />
       </Points>
     </group>
