@@ -68,9 +68,7 @@ const InteractiveParticles = () => {
     lastActivity.current = { x: mouseX, y: mouseY, scroll: scrollY };
 
     if (materialRef.current) {
-      // Use size scaling instead of opacity to guarantee it works on all GPUs (Safari bug fix)
-      materialRef.current.opacity = 0.9;
-      materialRef.current.size = activityLevel.current * 0.08;
+      materialRef.current.opacity = activityLevel.current * 0.9;
     }
 
     // 1. Make the entire sphere FOLLOW the cursor's position smoothly
@@ -126,10 +124,10 @@ const InteractiveParticles = () => {
           ref={materialRef}
           transparent 
           vertexColors={true}
-          size={0} 
+          size={0.08} 
           sizeAttenuation={true} 
           depthWrite={false} 
-          opacity={0.9} 
+          opacity={0} // Starts invisible
         />
       </Points>
     </group>
