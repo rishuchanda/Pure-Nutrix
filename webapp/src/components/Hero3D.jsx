@@ -46,9 +46,20 @@ const InteractiveParticles = () => {
     return { positions: pos, originalPositions: orig, colors: cols };
   }, [count]);
 
-  const { viewport } = useThree();
-  const lastActivity = useRef({ x: 0, y: 0, scroll: 0 });
-  const activityLevel = useRef(0);
+  const circleTexture = useMemo(() => {
+    if (typeof document === 'undefined') return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const context = canvas.getContext('2d');
+    context.beginPath();
+    context.arc(32, 32, 30, 0, 2 * Math.PI);
+    context.fillStyle = 'white';
+    context.fill();
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, []);
 
   useFrame((state, delta) => {
     // Detect user activity (mouse movement and scroll)
@@ -77,7 +88,7 @@ const InteractiveParticles = () => {
     const mouseY = (mouseYNorm * viewport.height) / 2;
 
     const positionsArray = ref.current.geometry.attributes.position.array;
-    const time = state.clock.elapsedTime * 0.2; // Extra slow, luxurious ocean wave
+    const time = state.clock.elapsedTime * 0.3; // Slightly faster base wave for more life
     const interactionRadius = 8.0; 
 
     // Scroll reverse animation (Parallax effect)
@@ -106,16 +117,16 @@ const InteractiveParticles = () => {
         const force = (interactionRadius - dist) / interactionRadius; 
         const smoothForce = force * force * (3 - 2 * force); 
         
-        // Very slow, gentle pull towards mouse
-        targetX -= (dx / (dist || 0.01)) * smoothForce * 1.0;
-        targetY -= (dy / (dist || 0.01)) * smoothForce * 1.0;
-        targetZ += smoothForce * 1.5; 
+        // Increased pull for more visible motion
+        targetX -= (dx / (dist || 0.01)) * smoothForce * 2.0;
+        targetY -= (dy / (dist || 0.01)) * smoothForce * 2.0;
+        targetZ += smoothForce * 2.5; 
       }
 
-      // Extremely smooth and slow interpolation (0.02 instead of 0.08)
-      positionsArray[ix] += (targetX - positionsArray[ix]) * 0.02;
-      positionsArray[iy] += (targetY - positionsArray[iy]) * 0.02;
-      positionsArray[iz] += (targetZ - positionsArray[iz]) * 0.02;
+      // Slightly faster interpolation for more responsiveness
+      positionsArray[ix] += (targetX - positionsArray[ix]) * 0.04;
+      positionsArray[iy] += (targetY - positionsArray[iy]) * 0.04;
+      positionsArray[iz] += (targetZ - positionsArray[iz]) * 0.04;
     }
 
     ref.current.geometry.attributes.position.needsUpdate = true;
@@ -145,6 +156,8 @@ const InteractiveParticles = () => {
         sizeAttenuation={true} 
         depthWrite={false} 
         opacity={0.8} 
+        map={circleTexture}
+        alphaTest={0.5}
       />
     </points>
   );
