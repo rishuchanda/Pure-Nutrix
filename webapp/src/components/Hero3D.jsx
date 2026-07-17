@@ -9,25 +9,23 @@ const InteractiveParticles = () => {
   const ref = useRef();
   const materialRef = useRef();
   
-  const count = 5000; // Dense field of tiny dots
+  const count = 3000; // Less dense for a cleaner, premium look
 
-  // Generate original static positions, colors, and initial velocities
-  const { positions, originalPositions, colors, velocities } = useMemo(() => {
+  // Generate original static positions and colors
+  const { positions, originalPositions, colors } = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const orig = new Float32Array(count * 3);
     const cols = new Float32Array(count * 3);
-    const vels = new Float32Array(count * 3);
     
-    // Requested Theme colors: Blue, Red, Orange, Yellow
+    // Pure Nutrix Theme Colors: Gold, Dark Gold, Health Green, and Light Beige
     const colorPalette = [
-      new THREE.Color('#3b82f6'), // Blue
-      new THREE.Color('#ef4444'), // Red
-      new THREE.Color('#f97316'), // Orange
-      new THREE.Color('#eab308')  // Yellow
+      new THREE.Color('#d4af37'), // Gold
+      new THREE.Color('#b5952f'), // Dark Gold
+      new THREE.Color('#059669'), // Health Green
+      new THREE.Color('#ebdca2')  // Light Beige/Gold
     ];
     
     for (let i = 0; i < count; i++) {
-      // Spread particles across a wide 2D plane (x, y) with slight z depth variation
       const x = (Math.random() - 0.5) * 45; 
       const y = (Math.random() - 0.5) * 35;
       const z = (Math.random() - 0.5) * 2; 
@@ -40,84 +38,84 @@ const InteractiveParticles = () => {
       pos[i * 3 + 1] = y;
       pos[i * 3 + 2] = z;
 
-      vels[i * 3] = 0;
-      vels[i * 3 + 1] = 0;
-      vels[i * 3 + 2] = 0;
-
       const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
       cols[i * 3] = color.r;
       cols[i * 3 + 1] = color.g;
       cols[i * 3 + 2] = color.b;
     }
-    return { positions: pos, originalPositions: orig, colors: cols, velocities: vels };
+    return { positions: pos, originalPositions: orig, colors: cols };
   }, [count]);
 
   const { viewport } = useThree();
+  const lastActivity = useRef({ x: 0, y: 0, scroll: 0 });
+  const activityLevel = useRef(0);
 
   useFrame((state, delta) => {
+    // Detect user activity (mouse movement and scroll)
+    const mouseXNorm = state.mouse.x;
+    const mouseYNorm = state.mouse.y;
+    const scrollY = window.scrollY;
+
+    const dxActivity = Math.abs(mouseXNorm - lastActivity.current.x);
+    const dyActivity = Math.abs(mouseYNorm - lastActivity.current.y);
+    const dsActivity = Math.abs(scrollY - lastActivity.current.scroll);
+
+    if (dxActivity > 0.001 || dyActivity > 0.001 || dsActivity > 1) {
+      activityLevel.current = 1; // Fully visible
+    } else {
+      // Very slow and smooth fade out when idle
+      activityLevel.current = Math.max(0, activityLevel.current - delta * 0.5);
+    }
+    lastActivity.current = { x: mouseXNorm, y: mouseYNorm, scroll: scrollY };
+
+    if (materialRef.current) {
+      materialRef.current.opacity = activityLevel.current * 0.8;
+    }
+
     // Get mouse position in world space
-    const mouseX = (state.mouse.x * viewport.width) / 2;
-    const mouseY = (state.mouse.y * viewport.height) / 2;
+    const mouseX = (mouseXNorm * viewport.width) / 2;
+    const mouseY = (mouseYNorm * viewport.height) / 2;
 
     const positionsArray = ref.current.geometry.attributes.position.array;
+    const time = state.clock.elapsedTime * 0.2; // Extra slow, luxurious ocean wave
+    const interactionRadius = 8.0; 
 
-    const repulsionRadius = 5.0; // Size of the cursor repulsion field
-    const repulsionStrength = 1.8; // How hard particles are pushed away
-    const springStrength = 0.04; // How fast they return to original position
-    const friction = 0.88; // Physics drag
+    // Scroll reverse animation (Parallax effect)
+    const scrollOffset = scrollY * 0.015;
 
     for (let i = 0; i < count; i++) {
       const ix = i * 3;
       const iy = i * 3 + 1;
       const iz = i * 3 + 2;
 
-      let pX = positionsArray[ix];
-      let pY = positionsArray[iy];
-      let pZ = positionsArray[iz];
-
       const oX = originalPositions[ix];
       const oY = originalPositions[iy];
       const oZ = originalPositions[iz];
 
-      let vX = velocities[ix];
-      let vY = velocities[iy];
-      let vZ = velocities[iz];
+      // Premium Organic Fluid Wave Motion + Reverse Scroll Parallax
+      let targetX = oX;
+      let targetY = oY + scrollOffset;
+      let targetZ = oZ + Math.sin(oX * 0.2 + time) * 1.5 + Math.cos(oY * 0.2 + time) * 1.5;
 
-      // Calculate distance to mouse
-      const dx = pX - mouseX;
-      const dy = pY - mouseY;
+      const dx = targetX - mouseX;
+      const dy = targetY - mouseY;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      // Repulsion force
-      if (dist < repulsionRadius) {
-        const force = (repulsionRadius - dist) / repulsionRadius; // 0 to 1
-        // Avoid division by zero by adding a tiny offset if perfectly on top
-        const pushX = (dx / (dist || 0.01)) * force * repulsionStrength;
-        const pushY = (dy / (dist || 0.01)) * force * repulsionStrength;
-
-        vX += pushX;
-        vY += pushY;
-        vZ += (Math.random() - 0.5) * force * repulsionStrength; // Slight Z pop out of the plane
+      // Trailing Effect (Pulling towards the cursor gently)
+      if (dist < interactionRadius && activityLevel.current > 0) {
+        const force = (interactionRadius - dist) / interactionRadius; 
+        const smoothForce = force * force * (3 - 2 * force); 
+        
+        // Very slow, gentle pull towards mouse
+        targetX -= (dx / (dist || 0.01)) * smoothForce * 1.0;
+        targetY -= (dy / (dist || 0.01)) * smoothForce * 1.0;
+        targetZ += smoothForce * 1.5; 
       }
 
-      // Spring force back to original position
-      vX += (oX - pX) * springStrength;
-      vY += (oY - pY) * springStrength;
-      vZ += (oZ - pZ) * springStrength;
-
-      // Apply friction
-      vX *= friction;
-      vY *= friction;
-      vZ *= friction;
-
-      // Update positions and velocities
-      velocities[ix] = vX;
-      velocities[iy] = vY;
-      velocities[iz] = vZ;
-
-      positionsArray[ix] += vX;
-      positionsArray[iy] += vY;
-      positionsArray[iz] += vZ;
+      // Extremely smooth and slow interpolation (0.02 instead of 0.08)
+      positionsArray[ix] += (targetX - positionsArray[ix]) * 0.02;
+      positionsArray[iy] += (targetY - positionsArray[iy]) * 0.02;
+      positionsArray[iz] += (targetZ - positionsArray[iz]) * 0.02;
     }
 
     ref.current.geometry.attributes.position.needsUpdate = true;
@@ -143,11 +141,10 @@ const InteractiveParticles = () => {
         ref={materialRef}
         transparent 
         vertexColors={true}
-        size={0.06} 
+        size={0.16} 
         sizeAttenuation={true} 
         depthWrite={false} 
         opacity={0.8} 
-        blending={THREE.AdditiveBlending}
       />
     </points>
   );

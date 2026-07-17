@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import './ProductShowcase.css';
 
@@ -40,11 +40,6 @@ const ProductCard = ({ product, index }) => {
   const cardRef = useRef(null);
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   
-  const { scrollYProgress } = useScroll({
-    target: cardRef,
-    offset: ["start end", "end start"]
-  });
-  
   const [isMobile, setIsMobile] = useState(false);
   
   React.useEffect(() => {
@@ -53,10 +48,6 @@ const ProductCard = ({ product, index }) => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Parallax: Disable on mobile to prevent JS/CSS conflicts and lag
-  const yImage = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 0] : [-60, 60]);
-  const yDetails = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 0] : [40, -40]);
 
   const nextImage = () => {
     setCurrentImgIdx((prev) => (prev + 1) % product.images.length);
@@ -75,7 +66,7 @@ const ProductCard = ({ product, index }) => {
       transition={{ duration: 0.8 }}
       className={`product-card glass-card ${index % 2 === 0 ? 'row-normal' : 'row-reverse'}`}
     >
-      <motion.div style={{ y: yImage }} className="product-image-container">
+      <motion.div className="product-image-container">
         
         {/* Left Arrow */}
         <button className="carousel-btn prev-btn" onClick={prevImage}>
@@ -116,7 +107,7 @@ const ProductCard = ({ product, index }) => {
 
       </motion.div>
       
-      <motion.div style={{ y: yDetails }} className="product-details">
+      <motion.div className="product-details">
         <h3 className="product-category text-gold">{product.category}</h3>
         <h2 className="product-name">{product.name}</h2>
         <div className="product-meta">
