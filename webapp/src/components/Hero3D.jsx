@@ -1,136 +1,155 @@
-import React, { useRef, useMemo, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Points, PointMaterial } from '@react-three/drei';
-import * as random from 'maath/random/dist/maath-random.esm';
+import React, { useRef, useMemo } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { motion } from 'framer-motion';
 import * as THREE from 'three';
 import './Hero3D.css';
 
-// Interactive Anti-Gravity Dots (Gold & Green on Light Theme)
+// Interactive Physics Particle Engine (Cursor Repulsion)
 const InteractiveParticles = () => {
   const ref = useRef();
-  const groupRef = useRef();
   const materialRef = useRef();
-  const count = 400; // Reduced number of dots for a cleaner, more minimal look
   
-  const [clickPulse, setClickPulse] = useState(0);
+  const count = 5000; // Dense field of tiny dots
 
-  // Generate original static positions and colors
-  const { positions, originalPositions, colors } = useMemo(() => {
-    const orig = random.inSphere(new Float32Array(count * 3), { radius: 11 });
-    const pos = new Float32Array(orig);
-    
+  // Generate original static positions, colors, and initial velocities
+  const { positions, originalPositions, colors, velocities } = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const orig = new Float32Array(count * 3);
     const cols = new Float32Array(count * 3);
-    const colorGold = new THREE.Color('#d4af37');
-    const colorGreen = new THREE.Color('#059669');
+    const vels = new Float32Array(count * 3);
+    
+    // Requested Theme colors: Blue, Red, Orange, Yellow
+    const colorPalette = [
+      new THREE.Color('#3b82f6'), // Blue
+      new THREE.Color('#ef4444'), // Red
+      new THREE.Color('#f97316'), // Orange
+      new THREE.Color('#eab308')  // Yellow
+    ];
     
     for (let i = 0; i < count; i++) {
-      const isGold = Math.random() > 0.3; 
-      const color = isGold ? colorGold : colorGreen;
+      // Spread particles across a wide 2D plane (x, y) with slight z depth variation
+      const x = (Math.random() - 0.5) * 45; 
+      const y = (Math.random() - 0.5) * 35;
+      const z = (Math.random() - 0.5) * 2; 
+
+      orig[i * 3] = x;
+      orig[i * 3 + 1] = y;
+      orig[i * 3 + 2] = z;
+      
+      pos[i * 3] = x;
+      pos[i * 3 + 1] = y;
+      pos[i * 3 + 2] = z;
+
+      vels[i * 3] = 0;
+      vels[i * 3 + 1] = 0;
+      vels[i * 3 + 2] = 0;
+
+      const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
       cols[i * 3] = color.r;
       cols[i * 3 + 1] = color.g;
       cols[i * 3 + 2] = color.b;
     }
-    return { positions: pos, originalPositions: orig, colors: cols };
+    return { positions: pos, originalPositions: orig, colors: cols, velocities: vels };
   }, [count]);
 
-  // Listen for clicks to trigger the shockwave effect
-  useEffect(() => {
-    const handleClick = () => setClickPulse(1);
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
-  }, []);
-
-  const lastActivity = useRef({ x: 0, y: 0, scroll: 0 });
-  const activityLevel = useRef(0);
+  const { viewport } = useThree();
 
   useFrame((state, delta) => {
-    if (clickPulse > 0) {
-      setClickPulse((prev) => Math.max(0, prev - delta * 1.5));
-    }
+    // Get mouse position in world space
+    const mouseX = (state.mouse.x * viewport.width) / 2;
+    const mouseY = (state.mouse.y * viewport.height) / 2;
 
-    const mouseX = state.mouse.x;
-    const mouseY = state.mouse.y;
-    const scrollY = window.scrollY;
-
-    // Detect user activity (mouse movement or scroll)
-    const dxActivity = Math.abs(mouseX - lastActivity.current.x);
-    const dyActivity = Math.abs(mouseY - lastActivity.current.y);
-    const dsActivity = Math.abs(scrollY - lastActivity.current.scroll);
-
-    if (dxActivity > 0.001 || dyActivity > 0.001 || dsActivity > 1 || clickPulse > 0) {
-      activityLevel.current = 1; // Fully visible
-    } else {
-      // Very slow and smooth fade out when idle
-      activityLevel.current = Math.max(0, activityLevel.current - delta * 0.4);
-    }
-
-    lastActivity.current = { x: mouseX, y: mouseY, scroll: scrollY };
-
-    if (materialRef.current) {
-      materialRef.current.opacity = activityLevel.current * 0.9;
-    }
-
-    // 1. Make the entire sphere FOLLOW the cursor's position smoothly
-    const targetRotX = mouseY * 0.5; 
-    const targetRotY = mouseX * 0.5;
-    
-    // Make the dots physically move left/right/up/down with the cursor
-    const targetPosX = mouseX * 4; 
-    const targetPosY = mouseY * 4;
-
-    groupRef.current.rotation.x += (targetRotX - groupRef.current.rotation.x) * 0.02; 
-    groupRef.current.rotation.y += (targetRotY - groupRef.current.rotation.y) * 0.02;
-    
-    groupRef.current.position.x += (targetPosX - groupRef.current.position.x) * 0.05;
-    groupRef.current.position.y += (targetPosY - groupRef.current.position.y) * 0.05;
-
-    // Update individual particle positions (Only for scroll and shockwave now)
     const positionsArray = ref.current.geometry.attributes.position.array;
-    const scrollOffset = scrollY * 0.005;
+
+    const repulsionRadius = 5.0; // Size of the cursor repulsion field
+    const repulsionStrength = 1.8; // How hard particles are pushed away
+    const springStrength = 0.04; // How fast they return to original position
+    const friction = 0.88; // Physics drag
 
     for (let i = 0; i < count; i++) {
       const ix = i * 3;
       const iy = i * 3 + 1;
       const iz = i * 3 + 2;
 
-      // Base positions with scroll offset
-      let targetX = originalPositions[ix];
-      let targetY = originalPositions[iy] + scrollOffset;
-      let targetZ = originalPositions[iz];
+      let pX = positionsArray[ix];
+      let pY = positionsArray[iy];
+      let pZ = positionsArray[iz];
 
-      // Click Shockwave Logic
-      if (clickPulse > 0) {
-        const waveForce = clickPulse * 4;
-        targetX += (originalPositions[ix] / 10) * waveForce;
-        targetY += (originalPositions[iy] / 10) * waveForce;
-        targetZ += (originalPositions[iz] / 10) * waveForce;
+      const oX = originalPositions[ix];
+      const oY = originalPositions[iy];
+      const oZ = originalPositions[iz];
+
+      let vX = velocities[ix];
+      let vY = velocities[iy];
+      let vZ = velocities[iz];
+
+      // Calculate distance to mouse
+      const dx = pX - mouseX;
+      const dy = pY - mouseY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // Repulsion force
+      if (dist < repulsionRadius) {
+        const force = (repulsionRadius - dist) / repulsionRadius; // 0 to 1
+        // Avoid division by zero by adding a tiny offset if perfectly on top
+        const pushX = (dx / (dist || 0.01)) * force * repulsionStrength;
+        const pushY = (dy / (dist || 0.01)) * force * repulsionStrength;
+
+        vX += pushX;
+        vY += pushY;
+        vZ += (Math.random() - 0.5) * force * repulsionStrength; // Slight Z pop out of the plane
       }
 
-      // Very smooth interpolation back to original shape
-      positionsArray[ix] += (targetX - positionsArray[ix]) * 0.08;
-      positionsArray[iy] += (targetY - positionsArray[iy]) * 0.08;
-      positionsArray[iz] += (targetZ - positionsArray[iz]) * 0.08;
+      // Spring force back to original position
+      vX += (oX - pX) * springStrength;
+      vY += (oY - pY) * springStrength;
+      vZ += (oZ - pZ) * springStrength;
+
+      // Apply friction
+      vX *= friction;
+      vY *= friction;
+      vZ *= friction;
+
+      // Update positions and velocities
+      velocities[ix] = vX;
+      velocities[iy] = vY;
+      velocities[iz] = vZ;
+
+      positionsArray[ix] += vX;
+      positionsArray[iy] += vY;
+      positionsArray[iz] += vZ;
     }
 
     ref.current.geometry.attributes.position.needsUpdate = true;
   });
 
   return (
-    <group ref={groupRef}>
-      <Points ref={ref} positions={positions} stride={3} frustumCulled={false}>
-        <bufferAttribute attach="attributes-color" array={colors} itemSize={3} />
-        <PointMaterial 
-          ref={materialRef}
-          transparent 
-          vertexColors={true}
-          size={0.08} 
-          sizeAttenuation={true} 
-          depthWrite={false} 
-          opacity={0} // Starts invisible
+    <points ref={ref} frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions}
+          itemSize={3}
         />
-      </Points>
-    </group>
+        <bufferAttribute
+          attach="attributes-color"
+          count={count}
+          array={colors}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial 
+        ref={materialRef}
+        transparent 
+        vertexColors={true}
+        size={0.06} 
+        sizeAttenuation={true} 
+        depthWrite={false} 
+        opacity={0.8} 
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
   );
 };
 
