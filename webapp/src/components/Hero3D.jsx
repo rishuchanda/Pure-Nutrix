@@ -46,6 +46,10 @@ const InteractiveParticles = () => {
     return { positions: pos, originalPositions: orig, colors: cols };
   }, [count]);
 
+  const { viewport } = useThree();
+  const lastActivity = useRef({ x: 0, y: 0, scroll: 0 });
+  const activityLevel = useRef(0);
+
   const circleTexture = useMemo(() => {
     if (typeof document === 'undefined') return null;
     const canvas = document.createElement('canvas');
