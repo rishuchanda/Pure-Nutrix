@@ -53,6 +53,24 @@ const InteractiveParticles = () => {
     const mouseY = state.mouse.y;
     const scrollY = window.scrollY;
 
+    // Detect user activity (mouse movement or scroll)
+    const dxActivity = Math.abs(mouseX - lastActivity.current.x);
+    const dyActivity = Math.abs(mouseY - lastActivity.current.y);
+    const dsActivity = Math.abs(scrollY - lastActivity.current.scroll);
+
+    if (dxActivity > 0.001 || dyActivity > 0.001 || dsActivity > 1 || clickPulse > 0) {
+      activityLevel.current = 1; // Fully visible
+    } else {
+      // Very slow and smooth fade out when idle
+      activityLevel.current = Math.max(0, activityLevel.current - delta * 0.4);
+    }
+
+    lastActivity.current = { x: mouseX, y: mouseY, scroll: scrollY };
+
+    if (materialRef.current) {
+      materialRef.current.opacity = activityLevel.current * 0.9;
+    }
+
     // 1. Make the entire sphere FOLLOW the cursor's position smoothly
     const targetRotX = mouseY * 0.5; 
     const targetRotY = mouseX * 0.5;
@@ -122,7 +140,7 @@ const InteractiveParticles = () => {
           size={0.08} 
           sizeAttenuation={true} 
           depthWrite={false} 
-          opacity={1} 
+          opacity={0} 
         />
       </points>
     </group>
