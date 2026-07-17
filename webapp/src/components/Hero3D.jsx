@@ -100,9 +100,22 @@ const InteractiveParticles = () => {
 
   return (
     <group ref={groupRef}>
-      <Points ref={ref} positions={positions} stride={3} frustumCulled={false}>
-        <bufferAttribute attach="attributes-color" array={colors} itemSize={3} />
-        <PointMaterial 
+      <points ref={ref} frustumCulled={false}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={positions.length / 3}
+            array={positions}
+            itemSize={3}
+          />
+          <bufferAttribute
+            attach="attributes-color"
+            count={colors.length / 3}
+            array={colors}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <pointsMaterial 
           ref={materialRef}
           transparent 
           vertexColors={true}
@@ -111,7 +124,7 @@ const InteractiveParticles = () => {
           depthWrite={false} 
           opacity={1} 
         />
-      </Points>
+      </points>
     </group>
   );
 };
