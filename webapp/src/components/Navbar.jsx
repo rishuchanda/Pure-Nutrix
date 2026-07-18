@@ -3,7 +3,7 @@ import { ShoppingCart, Menu, X, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import './Navbar.css';
 
-const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome }) => {
+const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, cartCount = 0 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -35,24 +35,37 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome }) => {
         </div>
 
         <div className="navbar-actions">
-          {user ? (
-            <>
-              <button className="btn-outline account-btn hide-on-mobile-header" onClick={onOpenAccount}>
-                <User size={18} />
-                <span className="hide-on-mobile">My Account</span>
+          {/* Desktop Auth Buttons */}
+          <div className="desktop-auth-actions hide-on-mobile">
+            {user ? (
+              <>
+                <button className="btn-outline account-btn" onClick={onOpenAccount}>
+                  <User size={18} />
+                  <span>My Account</span>
+                </button>
+                <button className="btn-outline" onClick={onSignOut}>
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button className="btn-outline" onClick={onOpenAuth}>
+                Sign In
               </button>
-              <button className="btn-outline hide-on-mobile-header" onClick={onSignOut}>
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <button className="btn-outline hide-on-mobile-header" onClick={onOpenAuth}>
-              Sign In
-            </button>
-          )}
-          <button className="btn-outline cart-btn">
+            )}
+          </div>
+
+          {/* Mobile Account Icon */}
+          <button 
+            className="btn-outline mobile-account-icon hide-on-desktop" 
+            onClick={user ? onOpenAccount : onOpenAuth}
+          >
+            <User size={20} />
+          </button>
+
+          {/* Cart Button */}
+          <button className={`btn-outline cart-btn ${cartCount === 0 ? 'hide-on-mobile' : 'mobile-small-cart'}`}>
             <ShoppingCart size={20} />
-            <span className="cart-count">0</span>
+            <span className="cart-count">{cartCount}</span>
           </button>
           
           <button 
