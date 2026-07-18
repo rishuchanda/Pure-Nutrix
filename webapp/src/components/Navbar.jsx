@@ -3,7 +3,7 @@ import { ShoppingCart, Menu, X, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import './Navbar.css';
 
-const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, cartCount = 0 }) => {
+const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenProducts, cartCount = 0 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -29,7 +29,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, cartCoun
         
         <div className="navbar-links">
           <a href="#home" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); }}>Home</a>
-          <a href="#products" className="nav-link">Products</a>
+          <a href="#products" className="nav-link" onClick={(e) => { e.preventDefault(); onOpenProducts(); }}>Products</a>
           <a href="#about" className="nav-link">Our Science</a>
           <a href="#contact" className="nav-link">Contact</a>
         </div>
@@ -85,7 +85,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, cartCoun
           className="mobile-menu glass"
         >
           <a href="#home" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); }}>Home</a>
-          <a href="#products" className="mobile-nav-link" onClick={() => { setMobileMenuOpen(false); onGoHome(); }}>Products</a>
+          <a href="#products" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenProducts(); }}>Products</a>
           <a href="#about" className="mobile-nav-link" onClick={() => { setMobileMenuOpen(false); onGoHome(); }}>Our Science</a>
           <a href="#contact" className="mobile-nav-link" onClick={() => { setMobileMenuOpen(false); onGoHome(); }}>Contact</a>
           

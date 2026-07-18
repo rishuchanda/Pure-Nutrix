@@ -1,0 +1,23 @@
+.products-page-wrapper {
+  min-height: 100vh;
+  padding-top: 100px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 10px 0;
+  margin-bottom: 20px;
+  transition: color 0.3s ease;
+}
+
+.back-btn:hover {
+  color: var(--color-accent-gold);
+}

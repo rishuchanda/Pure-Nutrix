@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 import './ProductShowcase.css';
 
 const ProductIngredients = ({ ingredients }) => {
@@ -17,17 +18,19 @@ const ProductIngredients = ({ ingredients }) => {
   );
 };
 
-const ProductCard = ({ product, index, onOrder }) => {
+const ProductCard = ({ product, index, onOrder, onProductClick }) => {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
+
+  const imagesList = product.image_urls || product.images || [];
 
   const nextImage = (e) => {
     if(e) e.stopPropagation();
-    setCurrentImgIdx((prev) => (prev + 1) % product.images.length);
+    setCurrentImgIdx((prev) => (prev + 1) % imagesList.length);
   };
 
   const prevImage = (e) => {
     if(e) e.stopPropagation();
-    setCurrentImgIdx((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
+    setCurrentImgIdx((prev) => (prev === 0 ? imagesList.length - 1 : prev - 1));
   };
 
   const swipeConfidenceThreshold = 10000;
@@ -42,6 +45,7 @@ const ProductCard = ({ product, index, onOrder }) => {
       viewport={{ once: true, margin: "0px" }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
       className="product-tile glass-card"
+      onClick={() => onProductClick(product)}
     >
       <div className="product-image-container">
         {/* Left Arrow */}
@@ -54,7 +58,7 @@ const ProductCard = ({ product, index, onOrder }) => {
           <AnimatePresence mode="wait">
             <motion.img 
               key={currentImgIdx}
-              src={product.images[currentImgIdx]} 
+              src={imagesList[currentImgIdx]} 
               alt={`${product.name} - Image ${currentImgIdx + 1}`} 
               className="product-image"
               initial={{ opacity: 0, x: 20 }}
@@ -83,7 +87,7 @@ const ProductCard = ({ product, index, onOrder }) => {
 
         {/* Carousel Dots */}
         <div className="carousel-dots">
-          {product.images.map((_, idx) => (
+          {imagesList.map((_, idx) => (
             <span 
               key={idx} 
               className={`carousel-dot ${idx === currentImgIdx ? 'active' : ''}`}
@@ -100,104 +104,59 @@ const ProductCard = ({ product, index, onOrder }) => {
           <Star size={14} className="star-icon" fill="currentColor" />
           <Star size={14} className="star-icon" fill="currentColor" />
           <Star size={14} className="star-icon" fill="currentColor" />
-          <span className="rating-text">({product.reviews.length * 15}+ Reviews)</span>
+          <span className="rating-text">({(product.reviews && product.reviews.length * 15) || 120}+ Reviews)</span>
         </div>
         
         <h3 className="product-category text-gold">{product.category}</h3>
         <h2 className="product-name">{product.name}</h2>
         
         <div className="product-meta">
-          <span className="product-qty">{product.qty}</span>
-          <span className="product-price">{product.price}</span>
+          <span className="product-qty">{product.quantity || product.qty}</span>
+          <span className="product-price">{typeof product.price === 'number' ? '₹' + product.price : product.price}</span>
         </div>
         
-        <ProductIngredients ingredients={product.ingredients} />
-
-        <div className="product-description-short">
-          <p>{product.description[0]}</p>
+        <div className="product-actions">
+          <button 
+            className="add-to-cart-btn" 
+            onClick={(e) => { e.stopPropagation(); alert('Added to cart!'); }}
+          >
+            Add to Cart
+          </button>
+          <button 
+            className="buy-now-btn" 
+            onClick={(e) => { e.stopPropagation(); onOrder(product); }}
+          >
+            Buy Now
+          </button>
         </div>
-        
-        <button className="btn-primary add-to-cart-btn" onClick={() => onOrder(product)}>
-          Order Now
-        </button>
       </div>
     </motion.div>
   );
 };
 
-const ProductShowcase = ({ onOrder }) => {
-  const products = [
-    {
-      id: 1,
-      name: "Ultra L-Glutathione 500mg with Vitamin C",
-      category: "RADIANCE CAPSULES",
-      qty: "30 Capsules",
-      price: "₹499",
-      images: [
-        "/assets/products/glutathione/1.png",
-        "/assets/products/glutathione/2.png",
-        "/assets/products/glutathione/3.png",
-        "/assets/products/glutathione/4.png",
-        "/assets/products/glutathione/5.png",
-        "/assets/products/glutathione/6.png",
-        "/assets/products/glutathione/7.jpg"
-      ],
-      ingredients: [
-        { name: "L-Glutathione" },
-        { name: "Vitamin C" }
-      ],
-      description: [
-        "ADVANCED SKIN RADIANCE FORMULA: Repairs dull skin and promotes a youthful, luminous radiance."
-      ],
-      reviews: new Array(8).fill({}) 
-    },
-    {
-      id: 2,
-      name: "Advanced Collagen & Biotin with Hyaluronic Acid",
-      category: "RENEWAL CAPSULES",
-      qty: "30 Capsules",
-      price: "₹399",
-      images: [
-        "/assets/products/collagen/collagen 1.jpg",
-        "/assets/products/collagen/collagen 2.jpg",
-        "/assets/products/collagen/collagen 3.jpg",
-        "/assets/products/collagen/collagen 4.jpg",
-        "/assets/products/collagen/collagen 5.jpg",
-        "/assets/products/collagen/collagen 6.jpg",
-        "/assets/products/collagen/collagen 7.jpg",
-        "/assets/products/collagen/collagen 8.jpg",
-        "/assets/products/collagen/collagen 9.jpg"
-      ],
-      ingredients: [
-        { name: "Marine Collagen" },
-        { name: "Biotin" },
-        { name: "Hyaluronic Acid" }
-      ],
-      description: [
-        "CELLULAR SKIN RADIANCE: Improves skin elasticity, retains moisture, and reduces fine lines."
-      ],
-      reviews: new Array(8).fill({}) 
-    },
-    // Adding a placeholder third product to show the grid works well
-    {
-      id: 3,
-      name: "Daily Multivitamin For Men & Women",
-      category: "ESSENTIALS",
-      qty: "60 Capsules",
-      price: "₹599",
-      images: [
-        "/assets/products/glutathione/1.png" // using existing image as placeholder
-      ],
-      ingredients: [
-        { name: "Vitamins A-Z" },
-        { name: "Zinc & Magnesium" }
-      ],
-      description: [
-        "COMPLETE DAILY NUTRITION: Fills dietary gaps and boosts immunity and energy levels."
-      ],
-      reviews: new Array(5).fill({}) 
-    }
-  ];
+const ProductShowcase = ({ onOrder, onProductClick }) => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: true })
+          .limit(2);
+        
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (err) {
+        console.error('Error fetching products:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   return (
     <section className="product-showcase section-padding" id="products">
@@ -214,9 +173,13 @@ const ProductShowcase = ({ onOrder }) => {
         </motion.div>
 
         <div className="products-grid">
-          {products.map((product, index) => (
-            <ProductCard key={product.id} product={product} index={index} onOrder={onOrder} />
-          ))}
+          {loading ? (
+            <div style={{ textAlign: 'center', width: '100%', padding: '40px' }}>Loading premium products...</div>
+          ) : (
+            products.map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} onOrder={onOrder} onProductClick={onProductClick} />
+            ))
+          )}
         </div>
       </div>
     </section>

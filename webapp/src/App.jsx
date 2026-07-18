@@ -9,6 +9,8 @@ import AuthModal from './components/AuthModal';
 import OrderPage from './components/OrderPage';
 import AccountPage from './components/AccountPage';
 import AdminDashboard from './components/AdminDashboard';
+import ProductsPage from './components/ProductsPage';
+import ProductDetailsPage from './components/ProductDetailsPage';
 import { supabase } from './supabaseClient';
 import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
@@ -18,7 +20,7 @@ function App() {
   const { scrollYProgress } = useScroll();
   const [user, setUser] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'order' | 'account'
+  const [currentView, setCurrentView] = useState('home'); // 'home' | 'order' | 'account' | 'products' | 'pdp'
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const handleOpenAccount = () => {
@@ -32,6 +34,17 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleOpenProducts = () => {
+    setCurrentView('products');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenProductDetails = (product) => {
+    setSelectedProduct(product);
+    setCurrentView('pdp');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleBackToHome = () => {
     setCurrentView('home');
     setSelectedProduct(null);
@@ -42,10 +55,6 @@ function App() {
     // Check URL for admin route
     if (window.location.pathname === '/admin') {
       setCurrentView('admin');
-      // Update URL back to / to avoid issues if they refresh, 
-      // or we can keep it as is, but since it's a SPA without react-router, 
-      // it's cleaner to reset the URL visually while keeping them in the admin state
-      window.history.pushState({}, '', '/');
     }
 
     // Check active session
@@ -90,13 +99,16 @@ function App() {
         className="scroll-progress-bar"
         style={{ scaleX: scrollYProgress }}
       />
-      <Navbar 
-        user={user} 
-        onGoHome={handleBackToHome}
-        onOpenAuth={() => setIsAuthModalOpen(true)} 
-        onOpenAccount={handleOpenAccount}
-        onSignOut={() => supabase.auth.signOut()} 
-      />
+      {currentView !== 'admin' && (
+        <Navbar 
+          user={user} 
+          onGoHome={handleBackToHome}
+          onOpenProducts={handleOpenProducts}
+          onOpenAuth={() => setIsAuthModalOpen(true)} 
+          onOpenAccount={handleOpenAccount}
+          onSignOut={() => supabase.auth.signOut()} 
+        />
+      )}
       <AnimatePresence mode="wait">
         {currentView === 'home' ? (
           <motion.div 
@@ -108,7 +120,7 @@ function App() {
           >
             <main>
               <Hero3D />
-              <ProductShowcase onOrder={handleOrder} />
+              <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
               <WhyChooseUs />
               <TrustSection />
             </main>
@@ -134,7 +146,7 @@ function App() {
           >
             <AdminDashboard user={user} onBack={handleBackToHome} />
           </motion.div>
-        ) : (
+        ) : currentView === 'account' ? (
           <motion.div 
             key="account"
             initial={{ opacity: 0 }}
@@ -144,7 +156,27 @@ function App() {
           >
             <AccountPage user={user} onBack={handleBackToHome} onSignOut={() => supabase.auth.signOut()} />
           </motion.div>
-        )}
+        ) : currentView === 'products' ? (
+          <motion.div 
+            key="products"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ProductsPage onProductClick={handleOpenProductDetails} onBack={handleBackToHome} onOrder={handleOrder} />
+          </motion.div>
+        ) : currentView === 'pdp' ? (
+          <motion.div 
+            key="pdp"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} />
+          </motion.div>
+        ) : null}
       </AnimatePresence>
       <AuthModal 
         isOpen={isAuthModalOpen} 

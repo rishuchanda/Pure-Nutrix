@@ -58,9 +58,9 @@ const OrderPage = ({ product, onBack }) => {
             state: formData.state,
             pincode: formData.pincode,
             product_name: product.name,
-            price: Number(product.price.toString().replace(/[^0-9.-]+/g, "")),
+            price: typeof product.price === 'number' ? product.price : Number(product.price.toString().replace(/[^0-9.-]+/g, "")),
             qty: 1, // Defaulting to 1 for now
-            image: product.image,
+            image: (product.image_urls || product.images || [])[0] || '',
             status: 'Processing'
           }
         ]);
@@ -216,7 +216,7 @@ const OrderPage = ({ product, onBack }) => {
                       </div>
 
                       <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing}>
-                        {isProcessing ? 'Processing Securely...' : `Pay ${product.price}`}
+                        {isProcessing ? 'Processing Securely...' : `Pay ${typeof product.price === 'number' ? '₹' + product.price : product.price}`}
                       </button>
                       
                       <div className="secure-badge">
@@ -236,19 +236,19 @@ const OrderPage = ({ product, onBack }) => {
                   
                   <div className="summary-product">
                     <div className="summary-image-wrapper">
-                      <img src={product.images[0]} alt={product.name} />
+                      <img src={(product.image_urls || product.images || [])[0]} alt={product.name} />
                     </div>
                     <div className="summary-details">
                       <h4>{product.name}</h4>
-                      <p>{product.qty}</p>
-                      <p className="summary-price">{product.price}</p>
+                      <p>{product.quantity || product.qty}</p>
+                      <p className="summary-price">{typeof product.price === 'number' ? '₹' + product.price : product.price}</p>
                     </div>
                   </div>
 
                   <div className="summary-calculations">
                     <div className="calc-row">
                       <span>Subtotal</span>
-                      <span>{product.price}</span>
+                      <span>{typeof product.price === 'number' ? '₹' + product.price : product.price}</span>
                     </div>
                     <div className="calc-row">
                       <span>Shipping</span>
@@ -261,7 +261,7 @@ const OrderPage = ({ product, onBack }) => {
                     <div className="calc-divider" />
                     <div className="calc-row total-row">
                       <span>Total</span>
-                      <span>{product.price}</span>
+                      <span>{typeof product.price === 'number' ? '₹' + product.price : product.price}</span>
                     </div>
                   </div>
                 </div>
