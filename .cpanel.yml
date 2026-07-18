@@ -3,3 +3,4 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/purenutr/public_html
     - /bin/cp -R webapp/dist/* $DEPLOYPATH/
+    - /bin/cp webapp/dist/.htaccess $DEPLOYPATH/
