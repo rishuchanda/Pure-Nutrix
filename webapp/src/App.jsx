@@ -5,12 +5,12 @@ import ProductShowcase from './components/ProductShowcase';
 import WhyChooseUs from './components/WhyChooseUs';
 import TrustSection from './components/TrustSection';
 import Footer from './components/Footer';
-import NotificationBell from './components/NotificationBell';
 import AuthModal from './components/AuthModal';
 import OrderPage from './components/OrderPage';
 import AccountPage from './components/AccountPage';
 import AdminDashboard from './components/AdminDashboard';
 import { supabase } from './supabaseClient';
+import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
 
@@ -51,11 +51,17 @@ function App() {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        requestPushPermissionAndSubscribe(session.user);
+      }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        requestPushPermissionAndSubscribe(session.user);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -140,7 +146,6 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
-      <NotificationBell />
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 

@@ -61,6 +61,30 @@ const AdminDashboard = ({ user, onBack }) => {
       
       // Update local state to reflect change instantly
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+
+      // Trigger Push Notification via Edge Function
+      const order = orders.find(o => o.id === orderId);
+      if (order && order.user_id) {
+        // Fetch subscription for this user
+        const { data: subData } = await supabase
+          .from('push_subscriptions')
+          .select('subscription')
+          .eq('user_id', order.user_id)
+          .single();
+
+        if (subData && subData.subscription) {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              subscription: subData.subscription,
+              payload: {
+                title: 'Order Status Update',
+                body: `Your order for ${order.product_name} is now ${newStatus.replace(/_/g, ' ').toUpperCase()}.`
+              }
+            }
+          });
+        }
+      }
+
     } catch (error) {
       console.error('Error updating status:', error.message);
       alert('Failed to update status');
