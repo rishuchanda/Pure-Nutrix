@@ -318,11 +318,15 @@
   z-index: 1;
 }
 
+.mobile-fill {
+  display: none;
+}
+
 .tracking-progress-fill {
-  height: 100%;
   background: linear-gradient(90deg, var(--color-accent-gold), #b8860b);
   border-radius: 4px;
   box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+  height: 100%;
 }
 
 .tracking-steps {
@@ -423,6 +427,16 @@
 }
 
 @media (max-width: 768px) {
+  .account-header {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  .account-page-title {
+    font-size: 2.2rem;
+  }
+
   .account-page-wrapper {
     padding: 100px 15px 40px;
   }
@@ -489,28 +503,39 @@
   }
   
   .tracking-progress-bar {
-    top: 50px;
-    left: 15px;
-    bottom: 50px;
+    top: 30px;
+    left: 20px; /* Align with the center of the icons */
+    bottom: 30px;
     width: 4px;
     height: auto;
     right: auto;
   }
   
-  .tracking-progress-fill {
+  .desktop-fill {
+    display: none;
+  }
+  
+  .mobile-fill {
+    display: block;
     width: 100% !important;
-    height: 100%; /* Ideally driven by framer-motion horizontally, but on mobile we might need vertical. For simplicity here, we'll hide steps labels or let it scroll */
+    background: linear-gradient(180deg, var(--color-accent-gold), #b8860b);
   }
 
   /* Simpler mobile tracking */
   .tracking-steps {
     flex-direction: column;
     align-items: flex-start;
-    gap: 30px;
+    gap: 40px; /* Give room for vertical line */
   }
   
   .tracking-step {
     flex-direction: row;
     text-align: left;
+    position: relative;
+    z-index: 2; /* keep above the bar */
+  }
+  
+  .step-label {
+    font-size: 1rem; /* Slightly larger text on mobile for readability */
   }
 }

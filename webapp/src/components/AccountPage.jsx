@@ -21,10 +21,18 @@ const OrderTracking = ({ status }) => {
   return (
     <div className="tracking-container">
       <div className="tracking-progress-bar">
+        {/* Desktop animated bar */}
         <motion.div 
-          className="tracking-progress-fill"
+          className="tracking-progress-fill desktop-fill"
           initial={{ width: 0 }}
           animate={{ width: `${(currentStepIndex / (TRACKING_STEPS.length - 1)) * 100}%` }}
+          transition={{ duration: 1, ease: 'easeOut' }}
+        />
+        {/* Mobile animated bar */}
+        <motion.div 
+          className="tracking-progress-fill mobile-fill"
+          initial={{ height: 0 }}
+          animate={{ height: `${(currentStepIndex / (TRACKING_STEPS.length - 1)) * 100}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}
         />
       </div>
