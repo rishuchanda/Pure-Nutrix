@@ -178,12 +178,19 @@
 }
 
 .profile-form .input-group input {
-  padding: 12px 15px;
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  padding: 12px 0;
+  border: none;
+  border-bottom: 2px solid #e4e4e7;
+  border-radius: 0;
   font-family: var(--font-primary);
-  font-size: 1rem;
-  background: var(--color-bg-secondary);
+  font-size: 1.05rem;
+  background: transparent;
+  transition: border-color 0.3s ease;
+}
+
+.profile-form .input-group input:focus {
+  outline: none;
+  border-bottom-color: var(--color-accent-gold);
 }
 
 .update-btn {
@@ -441,21 +448,35 @@
   }
 
   .account-nav {
-    flex-direction: column;
-    overflow-x: visible;
-    padding-bottom: 0;
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 15px;
+    gap: 10px;
+    /* Hide scrollbar for clean look */
+    scrollbar-width: none;
+  }
+  .account-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .nav-item {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 12px 15px;
-    background: var(--color-bg-secondary);
-    margin-bottom: 10px;
+    width: auto;
+    white-space: nowrap;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid #e4e4e7;
+    border-radius: 30px;
+    margin-bottom: 0;
   }
 
   .nav-item.active {
-    background: rgba(212, 175, 55, 0.1);
+    background: #111111;
+    color: #ffffff;
+    border-color: #111111;
+  }
+  
+  .nav-item.active svg {
+    color: #ffffff;
   }
   
   .sign-out-btn {

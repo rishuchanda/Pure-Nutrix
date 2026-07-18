@@ -16,8 +16,8 @@
   --font-primary: 'Lato', sans-serif;
   --font-display: 'Cinzel', serif;
 
-  --glass-bg: rgba(255, 255, 255, 0.6);
-  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(212, 175, 55, 0.15); /* Subtle gold border instead of grey */
   
   --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -46,17 +46,19 @@ html, body {
 }
 
 .glass-card {
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
-  border-radius: 32px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.02);
   transition: var(--transition-smooth);
 }
 
 .glass-card:hover {
-  transform: translateY(-5px);
-  border-color: #d1d5db;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.05), 0 5px 15px rgba(212, 175, 55, 0.05);
 }
 
 /* Typography Utilities */
@@ -103,42 +105,44 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Buttons */
 .btn-primary {
-  background: linear-gradient(45deg, #d4af37, #b8860b);
-  color: #000;
-  border: none;
+  background: linear-gradient(135deg, #111111 0%, #2a2a2a 100%);
+  color: #ffffff;
+  border: 1px solid rgba(212, 175, 55, 0.3);
   padding: 14px 32px;
-  border-radius: 30px;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.1rem;
+  border-radius: 8px; /* Sleeker, less pill-like */
+  font-family: var(--font-primary);
+  font-weight: 400;
+  font-size: 1.05rem;
   cursor: pointer;
   transition: var(--transition-smooth);
-  box-shadow: 0 4px 15px var(--color-accent-gold-glow);
-  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   letter-spacing: 1px;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15);
 }
 
 .btn-outline {
   background: transparent;
   color: var(--color-text-primary);
-  border: 1px solid var(--glass-border);
+  border: 1px solid #e4e4e7;
   padding: 12px 28px;
-  border-radius: 30px;
-  font-family: var(--font-display);
-  font-weight: 500;
+  border-radius: 8px;
+  font-family: var(--font-primary);
+  font-weight: 400;
   font-size: 1rem;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: #f9fafb;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
 }
 
 /* Canvas Container */
