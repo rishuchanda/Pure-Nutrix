@@ -21,13 +21,18 @@ const ProductCard = ({ product, index, onOrder }) => {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
 
   const nextImage = (e) => {
-    e.stopPropagation();
+    if(e) e.stopPropagation();
     setCurrentImgIdx((prev) => (prev + 1) % product.images.length);
   };
 
   const prevImage = (e) => {
-    e.stopPropagation();
+    if(e) e.stopPropagation();
     setCurrentImgIdx((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
+  };
+
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset, velocity) => {
+    return Math.abs(offset) * velocity;
   };
 
   return (
@@ -45,17 +50,28 @@ const ProductCard = ({ product, index, onOrder }) => {
         </button>
 
         {/* Image with simple fade */}
-        <div className="image-wrapper">
+        <div className="image-wrapper" style={{ touchAction: 'none' }}>
           <AnimatePresence mode="wait">
             <motion.img 
               key={currentImgIdx}
               src={product.images[currentImgIdx]} 
               alt={`${product.name} - Image ${currentImgIdx + 1}`} 
               className="product-image"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, { offset, velocity }) => {
+                const swipe = swipePower(offset.x, velocity.x);
+                if (swipe < -swipeConfidenceThreshold) {
+                  nextImage(null);
+                } else if (swipe > swipeConfidenceThreshold) {
+                  prevImage(null);
+                }
+              }}
             />
           </AnimatePresence>
         </div>

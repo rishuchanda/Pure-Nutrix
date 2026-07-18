@@ -370,6 +370,9 @@
   .carousel-btn {
     display: none; /* Hide arrows on small screens, rely on swipe/dots */
   }
+  .product-image-container {
+    margin-bottom: 40px; /* Give room for absolute dots so they don't overlap rating */
+  }
   .product-tile {
     padding: 25px 20px;
   }
