@@ -178,6 +178,7 @@
 }
 
 .profile-form .input-group input {
+  width: 100%;
   padding: 12px 0;
   border: none;
   border-bottom: 2px solid #e4e4e7;
@@ -186,6 +187,7 @@
   font-size: 1.05rem;
   background: transparent;
   transition: border-color 0.3s ease;
+  box-sizing: border-box;
 }
 
 .profile-form .input-group input:focus {
@@ -457,6 +459,12 @@
     overflow: hidden;
   }
 
+  /* CRITICAL FIX: Prevent grid/flex children from expanding the screen width */
+  .account-layout, .account-sidebar, .account-content, .tab-content {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .user-profile-summary {
     flex-direction: row;
     text-align: left;
@@ -512,6 +520,14 @@
 
   .profile-form .input-row {
     flex-direction: column;
+    gap: 15px;
+  }
+  
+  .order-history-card {
+    padding: 20px 15px; /* Reduce padding so it fits in screen */
+  }
+
+  .order-product-details {
     gap: 15px;
   }
   
