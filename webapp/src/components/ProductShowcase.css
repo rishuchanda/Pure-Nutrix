@@ -13,7 +13,7 @@
 .section-title {
   font-size: 3rem;
   margin-bottom: 15px;
-  color: #111111;
+  color: var(--color-title-text);
   letter-spacing: -1px;
 }
 
@@ -24,33 +24,25 @@
   margin: 0 auto;
 }
 
-.products-list {
-  display: flex;
-  flex-direction: column;
-  gap: 100px;
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 40px;
 }
 
-.product-card {
+.product-tile {
   display: flex;
-  align-items: center;
-  gap: 60px;
-  padding: 60px;
+  flex-direction: column;
+  padding: 30px;
+  gap: 30px;
   background-color: #ffffff;
   border: 1px solid #e4e4e7;
   border-radius: 32px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.03);
 }
 
-.row-normal {
-  flex-direction: row;
-}
-
-.row-reverse {
-  flex-direction: row-reverse;
-}
-
 .product-image-container {
-  flex: 1;
+  width: 100%;
   position: relative;
   display: flex;
   justify-content: center;
@@ -92,7 +84,9 @@
 }
 
 .product-details {
-  flex: 1.2;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
   min-width: 0; /* Critical fix: prevents the reviews slider from breaking the flex layout */
 }
 
@@ -327,17 +321,10 @@
 }
 
 @media (max-width: 992px) {
-  .product-card {
-    flex-direction: column !important;
-    padding: 40px 30px;
-    gap: 40px;
+  .products-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
   
-  .product-image-container, .product-details {
-    flex: none;
-    width: 100%;
-  }
-
   .product-name {
     font-size: 2rem;
   }
@@ -347,9 +334,9 @@
   .section-title {
     font-size: 2.2rem;
   }
-  .product-card {
-    padding: 30px 20px;
-    gap: 30px;
+  .product-tile {
+    padding: 25px 20px;
+    gap: 20px;
   }
   .product-image {
     max-width: 100%;
@@ -371,7 +358,7 @@
 }
 
 @media (max-width: 480px) {
-  .product-card {
+  .product-tile {
     padding: 20px 15px;
   }
   .product-name {

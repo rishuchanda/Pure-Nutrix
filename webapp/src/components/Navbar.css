@@ -84,7 +84,7 @@
   gap: 15px;
 }
 
-.cart-btn {
+.cart-btn, .account-btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -149,7 +149,11 @@
   .logo-img {
     height: 55px;
   }
-  .cart-btn {
+  .hide-on-mobile {
+    display: none;
+  }
+  
+  .cart-btn, .account-btn {
     padding: 8px 12px;
   }
 }

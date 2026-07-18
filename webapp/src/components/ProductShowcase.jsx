@@ -1,17 +1,15 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import './ProductShowcase.css';
 
 const ProductIngredients = ({ ingredients }) => {
   return (
     <div className="product-ingredients-container">
-      <h4 className="section-mini-title">Key Ingredients</h4>
       <div className="ingredients-list">
         {ingredients.map((ing, i) => (
           <div key={i} className="ingredient-pill">
             <span className="ing-name">{ing.name}</span>
-            <span className="ing-desc">{ing.desc}</span>
           </div>
         ))}
       </div>
@@ -19,71 +17,44 @@ const ProductIngredients = ({ ingredients }) => {
   );
 };
 
-const ProductReviews = ({ reviews }) => {
-  return (
-    <div className="product-reviews-container">
-      <h4 className="section-mini-title">Real Results</h4>
-      <div className="reviews-slider" data-lenis-prevent="true">
-        {reviews.map((review, i) => (
-          <div key={i} className="review-card">
-            <div className="stars">★★★★★</div>
-            <p className="review-text">"{review.text}"</p>
-            <p className="review-author">- {review.name}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const ProductCard = ({ product, index }) => {
-  const cardRef = useRef(null);
+const ProductCard = ({ product, index, onOrder }) => {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
-  
-  const [isMobile, setIsMobile] = useState(false);
-  
-  React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 992);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
-  const nextImage = () => {
+  const nextImage = (e) => {
+    e.stopPropagation();
     setCurrentImgIdx((prev) => (prev + 1) % product.images.length);
   };
 
-  const prevImage = () => {
+  const prevImage = (e) => {
+    e.stopPropagation();
     setCurrentImgIdx((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
   };
 
   return (
     <motion.div 
-      ref={cardRef}
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "0px" }}
-      transition={{ duration: 0.8 }}
-      className={`product-card glass-card ${index % 2 === 0 ? 'row-normal' : 'row-reverse'}`}
+      transition={{ duration: 0.6, delay: index * 0.1 }}
+      className="product-tile glass-card"
     >
-      <motion.div className="product-image-container">
-        
+      <div className="product-image-container">
         {/* Left Arrow */}
         <button className="carousel-btn prev-btn" onClick={prevImage}>
-          <ChevronLeft size={24} />
+          <ChevronLeft size={20} />
         </button>
 
-        {/* Image with Tilt */}
-        <div className="tilt-wrapper">
+        {/* Image with simple fade */}
+        <div className="image-wrapper">
           <AnimatePresence mode="wait">
             <motion.img 
               key={currentImgIdx}
               src={product.images[currentImgIdx]} 
               alt={`${product.name} - Image ${currentImgIdx + 1}`} 
               className="product-image"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             />
           </AnimatePresence>
@@ -91,7 +62,7 @@ const ProductCard = ({ product, index }) => {
 
         {/* Right Arrow */}
         <button className="carousel-btn next-btn" onClick={nextImage}>
-          <ChevronRight size={24} />
+          <ChevronRight size={20} />
         </button>
 
         {/* Carousel Dots */}
@@ -100,41 +71,45 @@ const ProductCard = ({ product, index }) => {
             <span 
               key={idx} 
               className={`carousel-dot ${idx === currentImgIdx ? 'active' : ''}`}
-              onClick={() => setCurrentImgIdx(idx)}
+              onClick={(e) => { e.stopPropagation(); setCurrentImgIdx(idx); }}
             />
           ))}
         </div>
-
-      </motion.div>
+      </div>
       
-      <motion.div className="product-details">
+      <div className="product-details">
+        <div className="product-rating">
+          <Star size={14} className="star-icon" fill="currentColor" />
+          <Star size={14} className="star-icon" fill="currentColor" />
+          <Star size={14} className="star-icon" fill="currentColor" />
+          <Star size={14} className="star-icon" fill="currentColor" />
+          <Star size={14} className="star-icon" fill="currentColor" />
+          <span className="rating-text">({product.reviews.length * 15}+ Reviews)</span>
+        </div>
+        
         <h3 className="product-category text-gold">{product.category}</h3>
         <h2 className="product-name">{product.name}</h2>
+        
         <div className="product-meta">
           <span className="product-qty">{product.qty}</span>
           <span className="product-price">{product.price}</span>
         </div>
         
-        {/* Embedded Ingredients Spotlight */}
         <ProductIngredients ingredients={product.ingredients} />
 
-        <div className="product-description">
-          <ul>
-            {product.description.map((desc, i) => (
-              <li key={i}>{desc}</li>
-            ))}
-          </ul>
+        <div className="product-description-short">
+          <p>{product.description[0]}</p>
         </div>
-        <button className="btn-ag-primary add-to-cart-btn">Add To Cart</button>
         
-        {/* Embedded Reviews Slider */}
-        <ProductReviews reviews={product.reviews} />
-      </motion.div>
+        <button className="btn-primary add-to-cart-btn" onClick={() => onOrder(product)}>
+          Order Now
+        </button>
+      </div>
     </motion.div>
   );
 };
 
-const ProductShowcase = () => {
+const ProductShowcase = ({ onOrder }) => {
   const products = [
     {
       id: 1,
@@ -152,25 +127,13 @@ const ProductShowcase = () => {
         "/assets/products/glutathione/7.jpg"
       ],
       ingredients: [
-        { name: "L-Glutathione", desc: "Skin Brightening" },
-        { name: "Vitamin C", desc: "Boosts Absorption" }
+        { name: "L-Glutathione" },
+        { name: "Vitamin C" }
       ],
       description: [
-        "ADVANCED SKIN RADIANCE FORMULA: Repairs dull skin and promotes a youthful, luminous radiance.",
-        "POWERFUL COMBINATION WITH VITAMIN C: Aids in the maximum absorption of Glutathione.",
-        "FIGHTS PIGMENTATION & DARK SPOTS: Regulates melanin production, effectively reducing dark spots.",
-        "ANTI-AGING & ANTIOXIDANT SUPPORT: Fights free radicals and helps prevent fine lines."
+        "ADVANCED SKIN RADIANCE FORMULA: Repairs dull skin and promotes a youthful, luminous radiance."
       ],
-      reviews: [
-        { name: "Sneha R., Mumbai", text: "Amazing for skin brightening! Saw results in 4 weeks." },
-        { name: "Anjali D., Delhi", text: "Pigmentation on my cheeks has visibly faded." },
-        { name: "Riya K., Pune", text: "Love the glow it gives. Very premium packaging." },
-        { name: "Neha S., Bangalore", text: "Best Glutathione supplement in India. Highly recommended." },
-        { name: "Pooja M., Jaipur", text: "Dark spots are almost gone. My skin tone looks even now." },
-        { name: "Shruti T., Hyderabad", text: "I take this with Vitamin C and the results are unbelievable." },
-        { name: "Kavya P., Chennai", text: "Worth the price. You can feel the quality from day one." },
-        { name: "Meera J., Ahmedabad", text: "My dermatologist recommended this, and I'm very happy." }
-      ]
+      reviews: new Array(8).fill({}) 
     },
     {
       id: 2,
@@ -190,26 +153,33 @@ const ProductShowcase = () => {
         "/assets/products/collagen/collagen 9.jpg"
       ],
       ingredients: [
-        { name: "Marine Collagen", desc: "Skin Elasticity" },
-        { name: "Biotin", desc: "Hair Strength" },
-        { name: "Hyaluronic Acid", desc: "Deep Hydration" }
+        { name: "Marine Collagen" },
+        { name: "Biotin" },
+        { name: "Hyaluronic Acid" }
       ],
       description: [
-        "CELLULAR SKIN RADIANCE: Improves skin elasticity, retains moisture, and reduces fine lines.",
-        "HAIR ROOT DEFENSE: Strengthens hair follicles, reduces hair fall, and supports thicker hair.",
-        "ANTIOXIDANT POWERHOUSE: Vitamin C boosts collagen synthesis and protects skin cells.",
-        "PREMIUM QUALITY & SAFE: Formulated for maximum bioavailability."
+        "CELLULAR SKIN RADIANCE: Improves skin elasticity, retains moisture, and reduces fine lines."
       ],
-      reviews: [
-        { name: "Ritu V., Delhi", text: "Hair fall stopped completely! Nails are much stronger." },
-        { name: "Aisha N., Bangalore", text: "My skin feels so hydrated and plump. Highly impressed." },
-        { name: "Simran K., Chandigarh", text: "Fine lines around my eyes have reduced visibly." },
-        { name: "Nidhi P., Mumbai", text: "Very effective collagen. Taste is neutral and works fast." },
-        { name: "Kritika B., Pune", text: "Joint pain is gone and my skin is glowing naturally." },
-        { name: "Swati L., Kolkata", text: "I’ve tried many, but this one actually shows results." },
-        { name: "Divya C., Gurgaon", text: "A must-have in my daily routine. Will buy again." },
-        { name: "Tanya M., Noida", text: "Premium ingredients. My hair volume has improved massively." }
-      ]
+      reviews: new Array(8).fill({}) 
+    },
+    // Adding a placeholder third product to show the grid works well
+    {
+      id: 3,
+      name: "Daily Multivitamin For Men & Women",
+      category: "ESSENTIALS",
+      qty: "60 Capsules",
+      price: "₹599",
+      images: [
+        "/assets/products/glutathione/1.png" // using existing image as placeholder
+      ],
+      ingredients: [
+        { name: "Vitamins A-Z" },
+        { name: "Zinc & Magnesium" }
+      ],
+      description: [
+        "COMPLETE DAILY NUTRITION: Fills dietary gaps and boosts immunity and energy levels."
+      ],
+      reviews: new Array(5).fill({}) 
     }
   ];
 
@@ -223,13 +193,13 @@ const ProductShowcase = () => {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
         >
-          <h2 className="section-title">Our Premium <span className="text-gradient">Collection</span></h2>
-          <p className="section-subtitle">Scientifically backed ingredients for visible, lasting results.</p>
+          <h2 className="section-title">Our Premium <span className="text-gradient">Products</span></h2>
+          <p className="section-subtitle">Scientifically backed ingredients for visible, lasting results. Available in a compact grid view.</p>
         </motion.div>
 
-        <div className="products-list">
+        <div className="products-grid">
           {products.map((product, index) => (
-            <ProductCard key={product.id} product={product} index={index} />
+            <ProductCard key={product.id} product={product} index={index} onOrder={onOrder} />
           ))}
         </div>
       </div>

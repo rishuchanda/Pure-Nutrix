@@ -1,0 +1,197 @@
+.why-choose-us {
+  position: relative;
+  padding: 100px 0;
+  background-color: transparent;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.why-choose-us::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, rgba(255,255,255,0) 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.wcu-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.wcu-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.wcu-title {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--color-title-text);
+  margin-bottom: 15px;
+  letter-spacing: -0.5px;
+}
+
+.wcu-title-highlight {
+  background: linear-gradient(to right, #d4af37 0%, #b8860b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.wcu-subtitle {
+  font-size: 1.1rem;
+  color: #52525b;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.wcu-table-container {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  overflow-x: auto;
+}
+
+.wcu-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 15px;
+  min-width: 800px;
+}
+
+.wcu-table th {
+  text-align: left;
+  padding: 15px 25px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111111;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.wcu-th-feature {
+  width: 25%;
+}
+
+.wcu-th-other {
+  width: 35%;
+  color: #71717a !important; /* Muted grey for other brands */
+}
+
+.wcu-th-pure {
+  width: 40%;
+  background: linear-gradient(to right, #d4af37 0%, #b8860b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  font-size: 1.5rem !important;
+}
+
+.wcu-table tbody tr {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, background-color 0.4s ease;
+  background-color: #ffffff;
+  border-radius: 12px;
+}
+
+.wcu-table tbody tr:hover {
+  transform: scale(1.02) translateY(-2px);
+  background-color: var(--color-bg-secondary);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  z-index: 10;
+  position: relative;
+}
+
+.wcu-table td {
+  padding: 20px 25px;
+  vertical-align: middle;
+}
+
+.wcu-td-feature {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  border-left: 2px solid transparent;
+}
+
+.wcu-table tbody tr:hover .wcu-td-feature {
+  border-left: 2px solid #d4af37; /* Gold accent on hover */
+}
+
+.wcu-td-pure {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  background: rgba(212, 175, 55, 0.05); /* Very light gold tint */
+  border-left: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.wcu-feature-inner {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-weight: 700;
+  color: #111111;
+  font-size: 1.1rem;
+}
+
+.wcu-feature-inner svg {
+  color: #d4af37;
+  flex-shrink: 0;
+}
+
+.wcu-td-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.wcu-td-other .wcu-td-content {
+  color: #52525b; /* Muted text for other brands */
+}
+
+.wcu-td-pure .wcu-td-content {
+  color: #111111; /* Slightly darker than other brands for emphasis */
+  font-weight: 600;
+}
+
+.wcu-check-icon {
+  color: #059669; /* Emerald green for checkmarks */
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.wcu-cross-icon {
+  color: #ef4444; /* Soft red for cross */
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .wcu-table-container {
+    padding: 15px;
+  }
+  
+  .wcu-table {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 600px) {
+  .wcu-title {
+    font-size: 2.2rem;
+  }
+  
+  .why-choose-us {
+    padding: 70px 0;
+  }
+}

@@ -1,187 +1,152 @@
-import React, { useRef, useMemo } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import * as THREE from 'three';
 import './Hero3D.css';
 
-// Interactive Physics Particle Engine (Cursor Repulsion)
+// A simple, elegant 2D constellation particle system
 const InteractiveParticles = () => {
-  const ref = useRef();
-  const materialRef = useRef();
-  
-  const count = 3000; // Less dense for a cleaner, premium look
+  const canvasRef = useRef(null);
 
-  // Generate original static positions and colors
-  const { positions, originalPositions, colors } = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    const orig = new Float32Array(count * 3);
-    const cols = new Float32Array(count * 3);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
     
-    // Pure Nutrix Theme Colors: Gold, Dark Gold, Health Green, and Light Beige
-    const colorPalette = [
-      new THREE.Color('#d4af37'), // Gold
-      new THREE.Color('#b5952f'), // Dark Gold
-      new THREE.Color('#059669'), // Health Green
-      new THREE.Color('#ebdca2')  // Light Beige/Gold
-    ];
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const particles = [];
+    const count = window.innerWidth < 768 ? 80 : 150; // More particles since they are small dots
     
-    for (let i = 0; i < count; i++) {
-      const x = (Math.random() - 0.5) * 45; 
-      const y = (Math.random() - 0.5) * 35;
-      const z = (Math.random() - 0.5) * 2; 
+    const colors = ['#111111', '#6b7280', '#9ca3af', '#d1d5db']; // Black, dark grey, medium grey, light grey
 
-      orig[i * 3] = x;
-      orig[i * 3 + 1] = y;
-      orig[i * 3 + 2] = z;
-      
-      pos[i * 3] = x;
-      pos[i * 3 + 1] = y;
-      pos[i * 3 + 2] = z;
-
-      const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
-      cols[i * 3] = color.r;
-      cols[i * 3 + 1] = color.g;
-      cols[i * 3 + 2] = color.b;
-    }
-    return { positions: pos, originalPositions: orig, colors: cols };
-  }, [count]);
-
-  const { viewport } = useThree();
-  const lastActivity = useRef({ x: 0, y: 0, scroll: 0 });
-  const activityLevel = useRef(0);
-
-  const circleTexture = useMemo(() => {
-    if (typeof document === 'undefined') return null;
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const context = canvas.getContext('2d');
-    context.beginPath();
-    context.arc(32, 32, 30, 0, 2 * Math.PI);
-    context.fillStyle = 'white';
-    context.fill();
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  }, []);
-
-  useFrame((state, delta) => {
-    // Detect user activity (mouse movement and scroll)
-    const mouseXNorm = state.mouse.x;
-    const mouseYNorm = state.mouse.y;
-    const scrollY = window.scrollY;
-
-    const dxActivity = Math.abs(mouseXNorm - lastActivity.current.x);
-    const dyActivity = Math.abs(mouseYNorm - lastActivity.current.y);
-    const dsActivity = Math.abs(scrollY - lastActivity.current.scroll);
-
-    if (dxActivity > 0.001 || dyActivity > 0.001 || dsActivity > 1) {
-      activityLevel.current = 1; // Fully visible
-    } else {
-      // Very slow and smooth fade out when idle
-      activityLevel.current = Math.max(0, activityLevel.current - delta * 0.5);
-    }
-    lastActivity.current = { x: mouseXNorm, y: mouseYNorm, scroll: scrollY };
-
-    if (materialRef.current) {
-      materialRef.current.opacity = activityLevel.current * 0.8;
-    }
-
-    // Get mouse position in world space
-    const mouseX = (mouseXNorm * viewport.width) / 2;
-    const mouseY = (mouseYNorm * viewport.height) / 2;
-
-    const positionsArray = ref.current.geometry.attributes.position.array;
-    const time = state.clock.elapsedTime * 0.3; // Slightly faster base wave for more life
-    const interactionRadius = 8.0; 
-
-    // Scroll reverse animation (Parallax effect)
-    const scrollOffset = scrollY * 0.015;
+    let mouse = { x: -1000, y: -1000, vx: 0, vy: 0 };
+    let lastMouse = { x: -1000, y: -1000 };
 
     for (let i = 0; i < count; i++) {
-      const ix = i * 3;
-      const iy = i * 3 + 1;
-      const iz = i * 3 + 2;
-
-      const oX = originalPositions[ix];
-      const oY = originalPositions[iy];
-      const oZ = originalPositions[iz];
-
-      // Premium Organic Fluid Wave Motion + Reverse Scroll Parallax
-      let targetX = oX;
-      let targetY = oY + scrollOffset;
-      let targetZ = oZ + Math.sin(oX * 0.2 + time) * 1.5 + Math.cos(oY * 0.2 + time) * 1.5;
-
-      const dx = targetX - mouseX;
-      const dy = targetY - mouseY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      // Trailing Effect (Pulling towards the cursor gently)
-      if (dist < interactionRadius && activityLevel.current > 0) {
-        const force = (interactionRadius - dist) / interactionRadius; 
-        const smoothForce = force * force * (3 - 2 * force); 
-        
-        // Increased pull for more visible motion
-        targetX -= (dx / (dist || 0.01)) * smoothForce * 2.0;
-        targetY -= (dy / (dist || 0.01)) * smoothForce * 2.0;
-        targetZ += smoothForce * 2.5; 
+      let radius;
+      if (Math.random() > 0.85) {
+        radius = Math.random() * 2 + 2.5; // 15% chance for larger dots (2.5 to 4.5)
+      } else {
+        radius = Math.random() * 1.5 + 0.5; // 85% chance for normal small dots (0.5 to 2.0)
       }
 
-      // Slightly faster interpolation for more responsiveness
-      positionsArray[ix] += (targetX - positionsArray[ix]) * 0.04;
-      positionsArray[iy] += (targetY - positionsArray[iy]) * 0.04;
-      positionsArray[iz] += (targetZ - positionsArray[iz]) * 0.04;
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.3, // Very slow base movement
+        vy: (Math.random() - 0.5) * 0.3,
+        baseVx: (Math.random() - 0.5) * 0.3,
+        baseVy: (Math.random() - 0.5) * 0.3,
+        radius: radius,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
     }
 
-    ref.current.geometry.attributes.position.needsUpdate = true;
-  });
+    const handleMouseMove = (e) => {
+      lastMouse.x = mouse.x;
+      lastMouse.y = mouse.y;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY; // Canvas is now fixed, so clientY directly maps to canvas Y
+      
+      mouse.vx = mouse.x - lastMouse.x;
+      mouse.vy = mouse.y - lastMouse.y;
+    };
+    
+    const handleMouseLeave = () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+      mouse.vx = 0;
+      mouse.vy = 0;
+    };
 
-  return (
-    <points ref={ref} frustumCulled={false}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={count}
-          array={positions}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          count={count}
-          array={colors}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial 
-        ref={materialRef}
-        transparent 
-        vertexColors={true}
-        size={0.16} 
-        sizeAttenuation={true} 
-        depthWrite={false} 
-        opacity={0.8} 
-        map={circleTexture}
-        alphaTest={0.5}
-      />
-    </points>
-  );
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
+
+    let animationFrameId;
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Decay mouse velocity if idle
+      mouse.vx *= 0.9;
+      mouse.vy *= 0.9;
+
+      for (let i = 0; i < count; i++) {
+        let p = particles[i];
+        
+        // Distance to cursor
+        let dx = mouse.x - p.x;
+        let dy = mouse.y - p.y;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        
+        // Magnet effect: pull particles within radius
+        const interactionRadius = 150;
+        
+        if (dist < interactionRadius) {
+          const force = (interactionRadius - dist) / interactionRadius;
+          
+          // Pull towards cursor position
+          p.vx += dx * force * 0.005;
+          p.vy += dy * force * 0.005;
+          
+          // Also apply cursor's velocity (drag effect)
+          p.vx += mouse.vx * force * 0.05;
+          p.vy += mouse.vy * force * 0.05;
+        } else {
+          // Slowly return to natural base velocity
+          p.vx += (p.baseVx - p.vx) * 0.02;
+          p.vy += (p.baseVy - p.vy) * 0.02;
+        }
+
+        // Apply friction/damping to prevent explosive speeds
+        p.vx *= 0.96;
+        p.vy *= 0.96;
+
+        // Move
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // Bounce off edges smoothly
+        if (p.x < 0) { p.x = 0; p.vx *= -1; p.baseVx *= -1; }
+        if (p.x > width) { p.x = width; p.vx *= -1; p.baseVx *= -1; }
+        if (p.y < 0) { p.y = 0; p.vy *= -1; p.baseVy *= -1; }
+        if (p.y > height) { p.y = height; p.vy *= -1; p.baseVy *= -1; }
+
+        // Draw particle
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="hero-canvas-interactive" />;
 };
 
 const Hero3D = () => {
   return (
     <section className="hero-section-interactive" id="home">
       
-      {/* Interactive 3D Canvas */}
-      <div className="hero-canvas-interactive">
-        <Canvas 
-          camera={{ position: [0, 0, 20], fov: 45 }}
-          eventSource={typeof document !== 'undefined' ? document.body : undefined} // Track mouse globally
-          eventPrefix="client"
-        >
-          <ambientLight intensity={0.5} />
-          <InteractiveParticles />
-        </Canvas>
-      </div>
+      {/* 2D Physics Canvas Background */}
+      <InteractiveParticles />
 
       {/* Foreground Content */}
       <div className="hero-content-interactive container">
@@ -200,7 +165,7 @@ const Hero3D = () => {
             Awaken Your <br />
             Pure Radiance.
           </motion.h1>
-
+          
           <motion.div 
             className="interactive-actions"
             initial={{ opacity: 0, y: 20 }}

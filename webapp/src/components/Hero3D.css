@@ -8,15 +8,14 @@
   background-color: transparent;
 }
 
-/* Make canvas fixed to the viewport background */
 .hero-canvas-interactive {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
-  z-index: -1;
-  background-color: #ffffff; /* Pure white background like Antigravity */
+  z-index: 0;
+  background-color: #ffffff; /* Pure white background */
 }
 
 .hero-content-interactive {
@@ -47,7 +46,7 @@
   margin-bottom: 50px;
   letter-spacing: -3px; /* Very tight spacing for the brutalist/antigravity look */
   font-weight: 500;
-  color: #111111; /* Pitch black */
+  color: var(--color-title-text);
 }
 
 .interactive-actions {

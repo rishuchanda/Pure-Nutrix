@@ -1,7 +1,9 @@
 .science-section {
+  padding: 100px 5%;
+  background-color: transparent;
   position: relative;
+  overflow: hidden;
   z-index: 2;
-  background-color: #ffffff;
 }
 
 .science-grid {
@@ -52,7 +54,7 @@
   font-size: 3.5rem;
   line-height: 1.1;
   margin-bottom: 30px;
-  color: #111111;
+  color: var(--color-title-text);
   letter-spacing: -1px;
 }
 
