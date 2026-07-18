@@ -1,6 +1,6 @@
 .admin-dashboard-wrapper {
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   display: flex;
   font-family: var(--font-sans);
   background-color: var(--admin-bg);
