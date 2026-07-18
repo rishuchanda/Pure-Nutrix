@@ -183,18 +183,96 @@
   .wcu-table-container {
     padding: 15px;
   }
-  
-  .wcu-table {
-    min-width: 600px;
-  }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+  .why-choose-us {
+    padding: 70px 0;
+  }
   .wcu-title {
     font-size: 2.2rem;
   }
   
-  .why-choose-us {
-    padding: 70px 0;
+  /* Transform table into stacked cards */
+  .wcu-table-container {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+  
+  .wcu-table {
+    display: block;
+    min-width: 100%;
+  }
+  
+  .wcu-table thead {
+    display: none;
+  }
+  
+  .wcu-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .wcu-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #e4e4e7;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  }
+  
+  .wcu-table td {
+    display: flex;
+    flex-direction: column;
+    padding: 15px 0;
+    border-bottom: 1px solid #f3f4f6;
+    width: 100% !important;
+  }
+  
+  .wcu-table td:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  .wcu-td-feature {
+    border-radius: 0;
+    border-bottom: 2px solid #e4e4e7 !important;
+    border-left: none !important;
+    padding-top: 0;
+  }
+  
+  .wcu-table tbody tr:hover .wcu-td-feature {
+    border-left: none !important;
+  }
+
+  .wcu-td-pure {
+    border-radius: 0;
+    background: transparent;
+    border-left: none;
+  }
+
+  /* Add labels before the content */
+  .wcu-td-other::before {
+    content: 'Other Brands';
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #a1a1aa;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  
+  .wcu-td-pure::before {
+    content: 'Pure Nutrix';
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #d4af37;
+    text-transform: uppercase;
+    margin-bottom: 8px;
   }
 }
+

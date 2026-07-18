@@ -142,6 +142,22 @@
   border-bottom: none;
 }
 
+.mobile-menu-auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.mobile-full-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 1.1rem;
+}
+
 @media (max-width: 768px) {
   .navbar {
     padding: 10px 0;
@@ -151,6 +167,10 @@
   }
   .hide-on-mobile {
     display: none;
+  }
+  
+  .hide-on-mobile-header {
+    display: none !important;
   }
   
   .cart-btn, .account-btn {

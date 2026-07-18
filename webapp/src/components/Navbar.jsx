@@ -37,16 +37,16 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome }) => {
         <div className="navbar-actions">
           {user ? (
             <>
-              <button className="btn-outline account-btn" onClick={onOpenAccount}>
+              <button className="btn-outline account-btn hide-on-mobile-header" onClick={onOpenAccount}>
                 <User size={18} />
                 <span className="hide-on-mobile">My Account</span>
               </button>
-              <button className="btn-outline" onClick={onSignOut}>
+              <button className="btn-outline hide-on-mobile-header" onClick={onSignOut}>
                 Sign Out
               </button>
             </>
           ) : (
-            <button className="btn-outline" onClick={onOpenAuth}>
+            <button className="btn-outline hide-on-mobile-header" onClick={onOpenAuth}>
               Sign In
             </button>
           )}
@@ -75,6 +75,24 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome }) => {
           <a href="#products" className="mobile-nav-link" onClick={() => { setMobileMenuOpen(false); onGoHome(); }}>Products</a>
           <a href="#about" className="mobile-nav-link" onClick={() => { setMobileMenuOpen(false); onGoHome(); }}>Our Science</a>
           <a href="#contact" className="mobile-nav-link" onClick={() => { setMobileMenuOpen(false); onGoHome(); }}>Contact</a>
+          
+          <div className="mobile-menu-auth-actions">
+            {user ? (
+              <>
+                <button className="btn-outline account-btn mobile-full-btn" onClick={() => { setMobileMenuOpen(false); onOpenAccount(); }}>
+                  <User size={18} />
+                  <span>My Account</span>
+                </button>
+                <button className="btn-outline mobile-full-btn" onClick={() => { setMobileMenuOpen(false); onSignOut(); }}>
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button className="btn-outline mobile-full-btn" onClick={() => { setMobileMenuOpen(false); onOpenAuth(); }}>
+                Sign In
+              </button>
+            )}
+          </div>
         </motion.div>
       )}
     </motion.nav>
