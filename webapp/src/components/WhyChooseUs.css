@@ -193,57 +193,85 @@
     font-size: 2.2rem;
   }
   
-  /* Keep table structure but make it horizontally scrollable to save vertical space */
+  /* Fit full table without sliding with 3:5 aspect ratio (Width: 3, Height: 5) */
   .wcu-table-container {
-    padding: 15px;
-    border-radius: 16px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    padding: 10px 5px;
+    border-radius: 12px;
     width: 100%;
-    /* Keep a compact aspect ratio on screen */
-    aspect-ratio: 4 / 5;
-    max-height: 80vh;
-    overflow-y: auto;
+    /* Aspect ratio width / height = 3 / 5 */
+    aspect-ratio: 3 / 5;
     background: #ffffff;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden; /* No scrolling */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .wcu-table {
-    min-width: 650px; /* Ensure content doesn't squash, triggers horizontal scroll */
-    font-size: 0.9rem;
-    border-spacing: 0 8px;
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    font-size: 0.75rem;
+    border-spacing: 0 5px;
+    table-layout: fixed; /* Force exact column widths */
   }
   
   .wcu-table th {
-    padding: 10px 15px;
-    font-size: 1.05rem;
-    white-space: nowrap;
+    padding: 5px;
+    font-size: 0.75rem;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .wcu-th-feature { width: 30%; }
+  .wcu-th-other { width: 35%; }
+  .wcu-th-pure { 
+    width: 35%; 
+    font-size: 0.85rem !important; 
   }
   
   .wcu-table td {
-    padding: 12px 15px;
-  }
-  
-  .wcu-th-pure {
-    font-size: 1.2rem !important;
+    padding: 5px;
+    vertical-align: middle;
   }
   
   .wcu-feature-inner {
-    font-size: 0.95rem;
-    gap: 10px;
+    font-size: 0.7rem;
+    gap: 4px;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+  }
+  
+  .wcu-feature-inner svg {
+    width: 18px;
+    height: 18px;
+    margin: 0 auto;
   }
   
   .wcu-td-content {
-    font-size: 0.9rem;
-    gap: 8px;
+    font-size: 0.65rem;
+    gap: 4px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    line-height: 1.3;
   }
 
+  .wcu-check-icon, .wcu-cross-icon {
+    width: 16px;
+    height: 16px;
+    margin-top: 0;
+  }
+  
   .wcu-table tbody tr {
-    border-radius: 8px;
+    border-radius: 6px;
   }
 
   .wcu-td-feature, .wcu-td-pure {
-    border-radius: 8px;
+    border-radius: 6px;
   }
 }
 
