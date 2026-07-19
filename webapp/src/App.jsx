@@ -30,6 +30,38 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cartItems, setCartItems] = useState([]);
 
+  useEffect(() => {
+    const handlePopState = (event) => {
+      const state = event.state;
+      if (state && state.view) {
+        setCurrentView(state.view);
+        if (state.product) setSelectedProduct(state.product);
+      } else {
+        const hash = window.location.hash.replace('#', '');
+        const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support'];
+        if (validViews.includes(hash)) {
+          setCurrentView(hash);
+        } else {
+          setCurrentView('home');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // Initial load
+    const initialHash = window.location.hash.replace('#', '');
+    const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support'];
+    if (validViews.includes(initialHash)) {
+      setCurrentView(initialHash);
+      window.history.replaceState({ view: initialHash }, '', '#' + initialHash);
+    } else {
+      window.history.replaceState({ view: 'home' }, '', '#home');
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const handleAddToCart = (product) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.product.id === product.id);
@@ -52,49 +84,58 @@ function App() {
 
   const handleOpenCart = () => {
     setCurrentView('cart');
+    window.history.pushState({ view: 'cart' }, '', '#cart');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenAccount = () => {
     setCurrentView('account');
+    window.history.pushState({ view: 'account' }, '', '#account');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOrder = (product) => {
     setSelectedProduct(product);
     setCurrentView('order');
+    window.history.pushState({ view: 'order', product }, '', '#order');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenProducts = () => {
     setCurrentView('products');
+    window.history.pushState({ view: 'products' }, '', '#products');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenQuality = () => {
     setCurrentView('quality-standards');
+    window.history.pushState({ view: 'quality-standards' }, '', '#quality-standards');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenLegalPolicy = () => {
     setCurrentView('legal-policy');
+    window.history.pushState({ view: 'legal-policy' }, '', '#legal-policy');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenSupport = () => {
     setCurrentView('support');
+    window.history.pushState({ view: 'support' }, '', '#support');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenProductDetails = (product) => {
     setSelectedProduct(product);
     setCurrentView('pdp');
+    window.history.pushState({ view: 'pdp', product }, '', '#pdp');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToHome = () => {
     setCurrentView('home');
     setSelectedProduct(null);
+    window.history.pushState({ view: 'home' }, '', '#home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
