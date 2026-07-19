@@ -112,7 +112,7 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
         <h2 className="product-name">{product.name}</h2>
         
         <div className="product-meta">
-          <span className="product-qty">{product.product_form || 'Dietary Supplement'}</span>
+          <span className="product-qty">{product.pack_of || '30'} {product.product_form || 'Capsules'}</span>
           <span className="product-price">{typeof product.price === 'number' ? '₹' + product.price : product.price}</span>
         </div>
         

@@ -44,7 +44,7 @@ const AdminDashboard = ({ user }) => {
     name: '', category: '', price: '', quantity: '',
     sku: '', brand: 'Pure Nutrix', tax: '18%', 
     short_description: '', nutrient_content: '', composition: '',
-    weight: '', dimensions: ''
+    weight: '', dimensions: '', pack_of: 1, product_form: 'Capsules'
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -211,7 +211,9 @@ const AdminDashboard = ({ user }) => {
       nutrient_content: product.nutrient_content || '',
       composition: product.composition || '',
       weight: product.weight || '',
-      dimensions: product.dimensions || ''
+      dimensions: product.dimensions || '',
+      pack_of: product.pack_of || 1,
+      product_form: product.product_form || 'Capsules'
     });
     setIsAddProductModalOpen(true);
   };
@@ -220,7 +222,8 @@ const AdminDashboard = ({ user }) => {
     setEditingProduct(null);
     setNewProduct({
       name: '', category: '', price: '', quantity: '', sku: '', brand: 'Pure Nutrix', tax: '18%', 
-      short_description: '', nutrient_content: '', composition: '', weight: '', dimensions: ''
+      short_description: '', nutrient_content: '', composition: '', weight: '', dimensions: '',
+      pack_of: 1, product_form: 'Capsules'
     });
     setIsAddProductModalOpen(true);
   };
@@ -848,6 +851,18 @@ const AdminDashboard = ({ user }) => {
                   <div className="form-group">
                     <label>SKU (Stock Keeping Unit)</label>
                     <input type="text" className="admin-input" value={newProduct.sku} onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})} placeholder="e.g. PN-WHEY-CHOC-2KG" />
+                  </div>
+                </div>
+
+                <h3 className="form-section-title">Product Format</h3>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Pack Size (e.g. 30, 60)</label>
+                    <input type="number" className="admin-input" value={newProduct.pack_of} onChange={(e) => setNewProduct({...newProduct, pack_of: e.target.value})} placeholder="30" />
+                  </div>
+                  <div className="form-group">
+                    <label>Form (e.g. Capsules, Powder)</label>
+                    <input type="text" className="admin-input" value={newProduct.product_form} onChange={(e) => setNewProduct({...newProduct, product_form: e.target.value})} placeholder="Capsules" />
                   </div>
                 </div>
 

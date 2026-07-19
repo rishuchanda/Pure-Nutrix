@@ -78,7 +78,7 @@ const ProductsPage = ({ onProductClick, onBack, onOrder, onAddToCart }) => {
                   <h2 className="product-name">{product.name}</h2>
                   
                   <div className="product-meta">
-                    <span className="product-qty">{product.product_form || 'Dietary Supplement'}</span>
+                    <span className="product-qty">{product.pack_of || '30'} {product.product_form || 'Capsules'}</span>
                     <span className="product-price">₹{product.price}</span>
                   </div>
 
