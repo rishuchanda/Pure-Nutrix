@@ -61,6 +61,24 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderId);
+      if (error) throw error;
+      
+      // Update local state
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o));
+      alert('Order cancelled successfully.');
+    } catch (err) {
+      console.error('Failed to cancel order:', err);
+      alert('Failed to cancel order. Please try again.');
+    }
+  };
+
   // If no user is passed (edge case), just use mock details
   const userEmail = user?.email || 'premium.member@purenutrix.com';
   const userName = userEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ') || 'Valued Member';
@@ -221,7 +239,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                                 {new Date(order.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                               </span>
                             </div>
-                            <span className={`order-status-badge ${order.status.toLowerCase() === 'delivered' ? 'success' : 'pending'}`}>
+                            <span className={`order-status-badge ${order.status.toLowerCase() === 'delivered' ? 'success' : order.status.toLowerCase() === 'cancelled' ? 'error' : 'pending'}`}>
                               {order.status.replace(/_/g, ' ').toUpperCase()}
                             </span>
                           </div>
@@ -233,6 +251,17 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                               <p>Qty: {order.qty}</p>
                               <span className="product-price">₹{order.price}</span>
                             </div>
+                            
+                            {/* Cancel Button for valid states */}
+                            {(order.status.toLowerCase() === 'pending' || order.status.toLowerCase() === 'packing') && (
+                              <button 
+                                onClick={() => handleCancelOrder(order.id)}
+                                className="btn-outline" 
+                                style={{ marginLeft: 'auto', alignSelf: 'center', color: '#ef4444', borderColor: '#ef4444' }}
+                              >
+                                Cancel Order
+                              </button>
+                            )}
                           </div>
 
                           <div className="order-tracking-section">

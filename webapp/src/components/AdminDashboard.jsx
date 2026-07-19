@@ -525,8 +525,8 @@ const AdminDashboard = ({ user }) => {
                     </div>
                   </div>
 
-                  <div className="order-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                    {['pending', 'packing', 'shipped', 'delivered'].map(status => (
+                  <div className="order-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    {['pending', 'packing', 'shipped', 'delivered', 'cancelled'].map(status => (
                       <button 
                         key={status}
                         onClick={() => setOrderFilter(status)}
@@ -574,14 +574,24 @@ const AdminDashboard = ({ user }) => {
                               <td style={{ color: 'var(--admin-text-muted)' }}>{new Date(order.created_at).toLocaleDateString('en-GB')}</td>
                               <td>
                                 {orderFilter === 'pending' && (
-                                  <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'packing')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
-                                    Accept Order
-                                  </button>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'packing')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
+                                      Accept Order
+                                    </button>
+                                    <button className="admin-btn admin-btn-secondary" onClick={() => updateOrderStatus(order.id, 'cancelled')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', color: '#ef4444' }}>
+                                      Cancel
+                                    </button>
+                                  </div>
                                 )}
                                 {orderFilter === 'packing' && (
-                                  <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'shipped')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#3b82f6', borderColor: '#3b82f6' }}>
-                                    Mark as Shipped
-                                  </button>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'shipped')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#3b82f6', borderColor: '#3b82f6' }}>
+                                      Mark as Shipped
+                                    </button>
+                                    <button className="admin-btn admin-btn-secondary" onClick={() => updateOrderStatus(order.id, 'cancelled')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', color: '#ef4444' }}>
+                                      Cancel
+                                    </button>
+                                  </div>
                                 )}
                                 {orderFilter === 'shipped' && (
                                   <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'delivered')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#10b981', borderColor: '#10b981' }}>
@@ -590,6 +600,9 @@ const AdminDashboard = ({ user }) => {
                                 )}
                                 {orderFilter === 'delivered' && (
                                   <span className="admin-badge badge-success">Completed</span>
+                                )}
+                                {orderFilter === 'cancelled' && (
+                                  <span className="admin-badge badge-error">Cancelled</span>
                                 )}
                               </td>
                             </tr>

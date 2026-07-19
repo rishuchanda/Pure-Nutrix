@@ -568,3 +568,9 @@
     font-size: 1rem; /* Slightly larger text on mobile for readability */
   }
 }
+
+.order-status-badge.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
