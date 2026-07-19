@@ -44,7 +44,7 @@ const AdminDashboard = ({ user }) => {
     name: '', category: '', price: '', quantity: '',
     sku: '', brand: 'Pure Nutrix', tax: '18%', 
     short_description: '', nutrient_content: '', composition: '',
-    weight: '', dimensions: '', pack_of: 1, product_form: 'Capsules'
+    weight: '', dimensions: '', pack_of: 1, product_form: 'Capsules', original_price: ''
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -213,7 +213,8 @@ const AdminDashboard = ({ user }) => {
       weight: product.weight || '',
       dimensions: product.dimensions || '',
       pack_of: product.pack_of || 1,
-      product_form: product.product_form || 'Capsules'
+      product_form: product.product_form || 'Capsules',
+      original_price: product.original_price || ''
     });
     setIsAddProductModalOpen(true);
   };
@@ -223,7 +224,7 @@ const AdminDashboard = ({ user }) => {
     setNewProduct({
       name: '', category: '', price: '', quantity: '', sku: '', brand: 'Pure Nutrix', tax: '18%', 
       short_description: '', nutrient_content: '', composition: '', weight: '', dimensions: '',
-      pack_of: 1, product_form: 'Capsules'
+      pack_of: 1, product_form: 'Capsules', original_price: ''
     });
     setIsAddProductModalOpen(true);
   };
@@ -242,7 +243,8 @@ const AdminDashboard = ({ user }) => {
       const productPayload = {
         ...validFields,
         price: Number(newProduct.price),
-        quantity: Number(newProduct.quantity)
+        quantity: Number(newProduct.quantity),
+        original_price: newProduct.original_price ? Number(newProduct.original_price) : null
       };
 
       if (editingProduct) {
@@ -870,7 +872,7 @@ const AdminDashboard = ({ user }) => {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Maximum Retail Price (MRP) (₹)</label>
-                    <input type="number" className="admin-input" placeholder="0.00" value={newProduct.price ? (newProduct.price * 1.2).toFixed(0) : ''} readOnly />
+                    <input type="number" className="admin-input" placeholder="e.g. 599" value={newProduct.original_price} onChange={(e) => setNewProduct({...newProduct, original_price: e.target.value})} />
                   </div>
                   <div className="form-group">
                     <label>Selling Price (₹) *</label>

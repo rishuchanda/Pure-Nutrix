@@ -48,7 +48,10 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
             
             <div className="pdp-price-row">
               <span className="pdp-price">₹{product.price}</span>
-              <span className="pdp-tax-inclusive">(Inclusive of all taxes)</span>
+              {product.original_price && product.original_price > product.price && (
+                <span className="pdp-mrp" style={{ textDecoration: 'line-through', color: '#888', marginLeft: '10px', fontSize: '1.2rem' }}>₹{product.original_price}</span>
+              )}
+              <span className="pdp-tax-inclusive" style={{ marginLeft: '10px' }}>(Inclusive of all taxes)</span>
             </div>
 
             <p className="pdp-short-desc">{product.short_description}</p>
