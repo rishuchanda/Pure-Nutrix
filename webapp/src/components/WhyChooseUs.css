@@ -193,86 +193,57 @@
     font-size: 2.2rem;
   }
   
-  /* Transform table into stacked cards */
+  /* Keep table structure but make it horizontally scrollable to save vertical space */
   .wcu-table-container {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
+    padding: 15px;
+    border-radius: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    /* Keep a compact aspect ratio on screen */
+    aspect-ratio: 4 / 5;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   }
   
   .wcu-table {
-    display: block;
-    min-width: 100%;
+    min-width: 650px; /* Ensure content doesn't squash, triggers horizontal scroll */
+    font-size: 0.9rem;
+    border-spacing: 0 8px;
   }
   
-  .wcu-table thead {
-    display: none;
-  }
-  
-  .wcu-table tbody {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .wcu-table tbody tr {
-    display: flex;
-    flex-direction: column;
-    background: #ffffff;
-    border: 1px solid #e4e4e7;
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  .wcu-table th {
+    padding: 10px 15px;
+    font-size: 1.05rem;
+    white-space: nowrap;
   }
   
   .wcu-table td {
-    display: flex;
-    flex-direction: column;
-    padding: 15px 0;
-    border-bottom: 1px solid #f3f4f6;
-    width: 100% !important;
+    padding: 12px 15px;
   }
   
-  .wcu-table td:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
+  .wcu-th-pure {
+    font-size: 1.2rem !important;
   }
   
-  .wcu-td-feature {
-    border-radius: 0;
-    border-bottom: 2px solid #e4e4e7 !important;
-    border-left: none !important;
-    padding-top: 0;
+  .wcu-feature-inner {
+    font-size: 0.95rem;
+    gap: 10px;
   }
   
-  .wcu-table tbody tr:hover .wcu-td-feature {
-    border-left: none !important;
+  .wcu-td-content {
+    font-size: 0.9rem;
+    gap: 8px;
   }
 
-  .wcu-td-pure {
-    border-radius: 0;
-    background: transparent;
-    border-left: none;
+  .wcu-table tbody tr {
+    border-radius: 8px;
   }
 
-  /* Add labels before the content */
-  .wcu-td-other::before {
-    content: 'Other Brands';
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #a1a1aa;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  
-  .wcu-td-pure::before {
-    content: 'Pure Nutrix';
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #d4af37;
-    text-transform: uppercase;
-    margin-bottom: 8px;
+  .wcu-td-feature, .wcu-td-pure {
+    border-radius: 8px;
   }
 }
 
