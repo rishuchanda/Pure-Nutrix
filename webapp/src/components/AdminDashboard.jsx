@@ -533,7 +533,10 @@ const AdminDashboard = ({ user }) => {
                         className={`admin-btn ${orderFilter === status ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
                         style={{ textTransform: 'capitalize', padding: '8px 16px' }}
                       >
-                        {status} ({orders.filter(o => (o.status || 'pending').toLowerCase() === status).length})
+                        {status} ({orders.filter(o => {
+                          const s = (o.status || 'pending').toLowerCase();
+                          return (s === 'processing' ? 'pending' : s === 'out_for_delivery' ? 'shipped' : s) === status;
+                        }).length})
                       </button>
                     ))}
                   </div>
@@ -552,10 +555,16 @@ const AdminDashboard = ({ user }) => {
                       <tbody>
                         {loadingOrders ? (
                           <tr><td colSpan="5" style={{textAlign: 'center'}}>Loading live orders...</td></tr>
-                        ) : orders.filter(o => (o.status || 'pending').toLowerCase() === orderFilter).length === 0 ? (
+                        ) : orders.filter(o => {
+                          const s = (o.status || 'pending').toLowerCase();
+                          return (s === 'processing' ? 'pending' : s === 'out_for_delivery' ? 'shipped' : s) === orderFilter;
+                        }).length === 0 ? (
                           <tr><td colSpan="5" style={{textAlign: 'center'}}>No {orderFilter} orders found.</td></tr>
                         ) : (
-                          orders.filter(o => (o.status || 'pending').toLowerCase() === orderFilter).map(order => (
+                          orders.filter(o => {
+                            const s = (o.status || 'pending').toLowerCase();
+                            return (s === 'processing' ? 'pending' : s === 'out_for_delivery' ? 'shipped' : s) === orderFilter;
+                          }).map(order => (
                             <tr key={order.id}>
                               <td style={{fontFamily: 'monospace', color: 'var(--admin-text-muted)'}}>#{order.id.split('-')[0].toUpperCase()}</td>
                               <td>
