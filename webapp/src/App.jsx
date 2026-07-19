@@ -14,6 +14,7 @@ import ProductDetailsPage from './components/ProductDetailsPage';
 import CartPage from './components/CartPage';
 import QualityStandardsPage from './components/QualityStandardsPage';
 import LegalPolicyPage from './components/LegalPolicyPage';
+import SupportPage from './components/SupportPage';
 import { supabase } from './supabaseClient';
 import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
@@ -77,6 +78,11 @@ function App() {
 
   const handleOpenLegalPolicy = () => {
     setCurrentView('legal-policy');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenSupport = () => {
+    setCurrentView('support');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -146,6 +152,7 @@ function App() {
           onGoHome={handleBackToHome}
           onOpenProducts={handleOpenProducts}
           onOpenQuality={handleOpenQuality}
+          onOpenSupport={handleOpenSupport}
           onOpenAuth={() => setIsAuthModalOpen(true)} 
           onOpenAccount={handleOpenAccount}
           onSignOut={() => supabase.auth.signOut()} 
@@ -169,7 +176,7 @@ function App() {
               <WhyChooseUs />
               <TrustSection />
             </main>
-            <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} />
+            <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} onOpenSupport={handleOpenSupport} />
           </motion.div>
         ) : currentView === 'order' ? (
           <motion.div 
@@ -260,6 +267,16 @@ function App() {
             transition={{ duration: 0.5 }}
           >
             <LegalPolicyPage onBack={handleBackToHome} />
+          </motion.div>
+        ) : currentView === 'support' ? (
+          <motion.div 
+            key="support"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <SupportPage onBack={handleBackToHome} />
           </motion.div>
         ) : null}
       </AnimatePresence>
