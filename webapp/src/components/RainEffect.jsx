@@ -1,5 +1,6 @@
 import React from 'react';
 import './RainEffect.css';
+import rainVideo from '../assets/rain-drop-on-glass.mp4';
 
 const RainEffect = () => {
   return (
@@ -10,7 +11,7 @@ const RainEffect = () => {
       playsInline
       className="rain-canvas"
     >
-      <source src="/rain-drop-on-glass.mp4" type="video/mp4" />
+      <source src={rainVideo} type="video/mp4" />
     </video>
   );
 };
