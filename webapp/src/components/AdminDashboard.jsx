@@ -4,7 +4,7 @@ import {
   Users, Package, Truck, BarChart2, ShieldCheck, Lock,
   Moon, Sun, LogOut, Search, ChevronRight, ShoppingBag, 
   Upload, Trash2, Image as ImageIcon, Bell, Settings, Edit,
-  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus, Save
+  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus, Save, Menu, X
 } from 'lucide-react';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../supabaseClient';
 import { createClient } from '@supabase/supabase-js';
@@ -13,6 +13,7 @@ import './AdminDashboard.css';
 const AdminDashboard = ({ user }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [theme, setTheme] = useState('dark');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Security
   const [isAuthenticatedAdmin, setIsAuthenticatedAdmin] = useState(false);
@@ -331,9 +332,12 @@ const AdminDashboard = ({ user }) => {
   return (
     <div className={`admin-dashboard-wrapper admin-theme-${theme}`}>
       {/* Sidebar */}
-      <aside className="admin-sidebar">
+      <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="admin-brand">
           <h2>PURE <span className="gold-text">NUTRIX</span></h2>
+          <button className="header-icon-btn hide-on-desktop" onClick={() => setMobileMenuOpen(false)} style={{ marginLeft: 'auto', display: 'flex' }}>
+            <X size={20} />
+          </button>
         </div>
         
         <nav className="admin-nav">
@@ -343,7 +347,10 @@ const AdminDashboard = ({ user }) => {
               <button
                 key={item.id}
                 className={`admin-nav-item ${activeTab === item.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileMenuOpen(false);
+                }}
               >
                 <Icon size={18} />
                 {item.label}
@@ -376,9 +383,14 @@ const AdminDashboard = ({ user }) => {
       <div className="admin-main">
         {/* Top Header */}
         <header className="admin-top-header">
-          <div className="admin-search-container">
-            <Search size={18} color="var(--admin-text-muted)" />
-            <input type="text" placeholder="Search orders, SKUs, or products..." />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <button className="header-icon-btn hide-on-desktop mobile-menu-toggle" onClick={() => setMobileMenuOpen(true)}>
+              <Menu size={20} />
+            </button>
+            <div className="admin-search-container">
+              <Search size={18} color="var(--admin-text-muted)" />
+              <input type="text" placeholder="Search orders, SKUs..." />
+            </div>
           </div>
           
           <div className="admin-header-actions">
