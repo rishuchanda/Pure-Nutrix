@@ -8,8 +8,8 @@
   --color-title-text: #5a5f66; /* Dark platinum for titles */
   
   /* Gold / Emerald Theme */
-  --color-accent-gold: #d4af37;
-  --color-accent-gold-glow: rgba(212, 175, 55, 0.4);
+  --color-accent-gold: #b8860b; /* Darker, richer gold for better contrast */
+  --color-accent-gold-glow: rgba(184, 134, 11, 0.4);
   --color-accent-emerald: #059669;
   
   /* Luxurious Skincare Fonts */
@@ -76,7 +76,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .text-gold {
-  background: linear-gradient(to right, #f6d365 0%, #fda085 100%);
+  background: linear-gradient(to right, #b8860b 0%, #996515 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
