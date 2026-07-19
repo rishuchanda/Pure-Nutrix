@@ -7,6 +7,12 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
   const certifications = [
     {
       id: 1,
+      title: 'FSSAI Approved',
+      desc: 'Meeting India\'s highest food safety standards.',
+      icon: <ShieldCheck size={40} className="cert-icon" />
+    },
+    {
+      id: 2,
       title: 'HACCP',
       desc: 'Hazard Analysis & Critical Control Points compliance for food safety.',
       icon: <ShieldCheck size={40} className="cert-icon" />
@@ -228,7 +234,7 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
       </section>
 
       {/* Section 5: Complete Transparency (Lab Reports) */}
-      <section className="quality-section bg-gradient">
+      <section className="quality-section bg-gradient" id="proof-section">
         <div className="container text-center">
           <motion.h2 
             className="section-title"
@@ -247,16 +253,46 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
             transition={{ delay: 0.2 }}
             style={{ maxWidth: '800px', margin: '20px auto' }}
           >
-            Trust is built on proof. We subject our finished products to strict independent third-party lab testing. This ensures that the protein percentage, ingredient profile, and safety metrics perfectly match our nutritional label.
+            Trust is built on proof. We subject our finished products to strict independent third-party testing. View our official certifications below.
           </motion.p>
+          
+          <div className="pdf-preview-grid">
+            {[
+              { id: 'fssai', name: 'FSSAI License', file: 'fssai.pdf' },
+              { id: 'haccp', name: 'HACCP Certificate', file: 'haccp.pdf' },
+              { id: 'fda', name: 'FDA Registration', file: 'fda.pdf' },
+              { id: 'kosher', name: 'KOSHER Certificate', file: 'kosher.pdf' },
+              { id: 'iso22000', name: 'ISO 22000:2018', file: 'iso22000.pdf' },
+              { id: 'iso9001', name: 'ISO 9001:2015', file: 'iso9001.pdf' }
+            ].map((doc, idx) => (
+              <motion.div 
+                key={doc.id}
+                className="pdf-card"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 + (idx * 0.1) }}
+                onClick={() => window.open(`/assets/certificates/${doc.file}`, '_blank')}
+              >
+                <div className="pdf-icon">
+                  <FileText size={48} />
+                </div>
+                <div className="pdf-info">
+                  <h4>{doc.name}</h4>
+                  <span>Click to view PDF</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
           <motion.button 
             className="btn-primary"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
-            onClick={() => alert("Lab Reports / COA feature coming soon!")}
-            style={{ marginTop: '30px' }}
+            transition={{ delay: 0.8 }}
+            onClick={() => alert("Detailed Lab Reports / COA feature coming soon!")}
+            style={{ marginTop: '50px' }}
           >
             View Our Latest Lab Reports / COA
           </motion.button>
