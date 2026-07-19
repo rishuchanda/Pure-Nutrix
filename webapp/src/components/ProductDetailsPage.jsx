@@ -82,7 +82,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
                   </tr>
                   <tr>
                     <th>Quantity</th>
-                    <td>{product.pack_of || '30'} {product.product_form || 'Capsules'}</td>
+                    <td>{product.quantity || '30'} {product.product_form || 'Capsules'}</td>
                   </tr>
                   <tr>
                     <th>Product Type</th>

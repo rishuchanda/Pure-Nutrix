@@ -41,10 +41,10 @@ const AdminDashboard = ({ user }) => {
   const [editingProduct, setEditingProduct] = useState(null);
   
   const [newProduct, setNewProduct] = useState({
-    name: '', category: '', price: '', quantity: '',
+    name: '', category: '', price: '', quantity: '', stock: '',
     sku: '', brand: 'Pure Nutrix', tax: '18%', 
     short_description: '', nutrient_content: '', composition: '',
-    weight: '', dimensions: '', pack_of: 1, product_form: 'Capsules', original_price: ''
+    weight: '', dimensions: '', product_form: 'Capsules', original_price: ''
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -189,9 +189,9 @@ const AdminDashboard = ({ user }) => {
     try {
       const qty = parseInt(newQuantity, 10);
       if (isNaN(qty)) return;
-      const { error } = await supabase.from('products').update({ quantity: qty }).eq('id', productId);
+      const { error } = await supabase.from('products').update({ stock: qty }).eq('id', productId);
       if (error) throw error;
-      setInventoryList(inventoryList.map(p => p.id === productId ? { ...p, quantity: qty } : p));
+      setInventoryList(inventoryList.map(p => p.id === productId ? { ...p, stock: qty } : p));
     } catch (error) {
       alert('Failed to update stock');
     }
@@ -212,7 +212,7 @@ const AdminDashboard = ({ user }) => {
       composition: product.composition || '',
       weight: product.weight || '',
       dimensions: product.dimensions || '',
-      pack_of: product.pack_of || 1,
+      stock: product.stock || 0,
       product_form: product.product_form || 'Capsules',
       original_price: product.original_price || ''
     });
@@ -222,9 +222,9 @@ const AdminDashboard = ({ user }) => {
   const handleAddNewProductClick = () => {
     setEditingProduct(null);
     setNewProduct({
-      name: '', category: '', price: '', quantity: '', sku: '', brand: 'Pure Nutrix', tax: '18%', 
+      name: '', category: '', price: '', quantity: '', stock: '', sku: '', brand: 'Pure Nutrix', tax: '18%', 
       short_description: '', nutrient_content: '', composition: '', weight: '', dimensions: '',
-      pack_of: 1, product_form: 'Capsules', original_price: ''
+      product_form: 'Capsules', original_price: ''
     });
     setIsAddProductModalOpen(true);
   };
@@ -243,7 +243,7 @@ const AdminDashboard = ({ user }) => {
       const productPayload = {
         ...validFields,
         price: Number(newProduct.price),
-        quantity: Number(newProduct.quantity),
+        stock: Number(newProduct.stock),
         original_price: newProduct.original_price ? Number(newProduct.original_price) : null
       };
 
@@ -654,7 +654,7 @@ const AdminDashboard = ({ user }) => {
                           <tr><td colSpan="4" style={{textAlign: 'center'}}>No inventory found.</td></tr>
                         ) : (
                           inventoryList.map(item => {
-                            const stockLevel = item.quantity || 0;
+                            const stockLevel = item.stock || 0;
                             const status = stockLevel <= 0 ? 'Out of Stock' : (stockLevel < 10 ? 'Low Stock' : 'In Stock');
                             return (
                               <tr key={item.id}>
@@ -794,13 +794,15 @@ const AdminDashboard = ({ user }) => {
                             </td>
                             <td style={{ color: 'var(--admin-text-muted)', fontFamily: 'monospace' }}>{product.sku || 'N/A'}</td>
                             <td>{product.category || 'General'}</td>
-                            <td style={{ color: 'var(--admin-text-muted)', textDecoration: 'line-through' }}>₹{(Number(product.price) * 1.2).toFixed(0)}</td>
+                            <td style={{ color: 'var(--admin-text-muted)', textDecoration: 'line-through' }}>₹{product.original_price || (Number(product.price) * 1.2).toFixed(0)}</td>
                             <td style={{ fontWeight: 600 }}>₹{product.price}</td>
                             <td>
-                              <span className={product.quantity > 10 ? 'text-green-500' : 'text-red-500'}>{product.quantity || 0} in stock</span>
-                            </td>
-                            <td>
-                              <span className="admin-badge badge-success">Active</span>
+                              <span className={`admin-badge ${(product.stock || 0) > 10 ? 'badge-success' : (product.stock || 0) > 0 ? 'badge-warning' : 'badge-error'}`}>
+                                {product.stock || 0} left
+                              </span>
+                              <div style={{ fontSize: '0.75rem', marginTop: '4px', color: 'var(--admin-text-muted)' }}>
+                                {product.quantity || 0} per unit
+                              </div>
                             </td>
                             <td>
                               <div style={{ display: 'flex', gap: '8px' }}>
@@ -859,8 +861,8 @@ const AdminDashboard = ({ user }) => {
                 <h3 className="form-section-title">Product Format</h3>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>Pack Size (e.g. 30, 60)</label>
-                    <input type="number" className="admin-input" value={newProduct.pack_of} onChange={(e) => setNewProduct({...newProduct, pack_of: e.target.value})} placeholder="30" />
+                    <label>Quantity (e.g. 30, 500g)</label>
+                    <input type="text" className="admin-input" value={newProduct.quantity} onChange={(e) => setNewProduct({...newProduct, quantity: e.target.value})} placeholder="30" />
                   </div>
                   <div className="form-group">
                     <label>Form (e.g. Capsules, Powder)</label>
@@ -888,8 +890,8 @@ const AdminDashboard = ({ user }) => {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Available Quantity *</label>
-                    <input type="number" required className="admin-input" value={newProduct.quantity} onChange={(e) => setNewProduct({...newProduct, quantity: e.target.value})} placeholder="0" />
+                    <label>Inventory Stock *</label>
+                    <input type="number" required className="admin-input" value={newProduct.stock} onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})} placeholder="0" />
                   </div>
                 </div>
 
