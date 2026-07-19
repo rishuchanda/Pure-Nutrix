@@ -112,8 +112,8 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
           </div>
 
           <div className="pdp-info">
-            <div className="pdp-bogo-banner" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', padding: '10px 15px', borderRadius: '8px', marginBottom: '15px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)', fontSize: '0.95rem' }}>
-              🌧️ Monsoon Sale: Buy 1 Get 1 FREE Automatically Applied!
+            <div className="pdp-bogo-banner">
+              <span className="bogo-icon">🌧️</span> <span className="bogo-text-content">Monsoon Sale: Buy 1 Get 1 FREE Automatically Applied!</span>
             </div>
             
             <h3 className="pdp-category text-gold">{product.category}</h3>
@@ -122,23 +122,23 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
             <div className="pdp-price-row">
               <span className="pdp-price">₹{product.price}</span>
               {product.original_price && product.original_price > product.price && (
-                <>
-                  <span className="pdp-mrp" style={{ textDecoration: 'line-through', color: 'var(--color-text-secondary)', marginLeft: '10px', fontSize: '1.2rem' }}>₹{product.original_price}</span>
-                  <span className="pdp-discount" style={{ color: '#059669', marginLeft: '10px', fontSize: '1.1rem', fontWeight: '600' }}>
+                <div className="pdp-price-details">
+                  <span className="pdp-mrp">₹{product.original_price}</span>
+                  <span className="pdp-discount">
                     ({Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF)
                   </span>
-                </>
+                </div>
               )}
-              <span className="pdp-tax-inclusive" style={{ marginLeft: '10px' }}>(Inclusive of all taxes)</span>
+              <span className="pdp-tax-inclusive">(Inclusive of all taxes)</span>
             </div>
 
             <p className="pdp-short-desc">{product.short_description}</p>
 
-            <div className="pdp-actions" style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-              <button className="btn-outline pdp-cart-btn" onClick={() => onAddToCart && onAddToCart(product)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <div className="pdp-actions">
+              <button className="btn-outline pdp-cart-btn" onClick={() => onAddToCart && onAddToCart(product)}>
                 <ShoppingBag size={20} /> Add to Cart
               </button>
-              <button className="btn-primary pdp-order-btn" onClick={() => onOrder(product)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: 0 }}>
+              <button className="btn-primary pdp-order-btn" onClick={() => onOrder(product)}>
                 <ShoppingBag size={20} /> Buy Now
               </button>
             </div>
