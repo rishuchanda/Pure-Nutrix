@@ -38,6 +38,10 @@ const OrderPage = ({ product, cartItems, onBack }) => {
       return acc + (price * item.quantity);
     }, 0);
     
+    const shippingFee = totalPrice < 499 ? 28 : 0;
+    const codFee = paymentMethod === 'cod' ? 19 : 0;
+    const finalTotal = totalPrice + shippingFee + codFee;
+    
     // BOGO: Every item gets a free copy.
 
     const handlePayment = async (e) => {
@@ -80,7 +84,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
             state: formData.state,
             pincode: formData.pincode,
             product_name: finalProductName,
-            price: totalPrice,
+            price: finalTotal,
             qty: totalQuantity,
             image: firstProductImage,
             status: 'Processing'
@@ -238,7 +242,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                       </div>
 
                       <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing}>
-                        {isProcessing ? 'Processing Securely...' : `Pay ₹${totalPrice}`}
+                        {isProcessing ? 'Processing Securely...' : `Pay ₹${finalTotal}`}
                       </button>
                       
                       <div className="secure-badge">
@@ -303,8 +307,18 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                     </div>
                     <div className="calc-row">
                       <span>Shipping</span>
-                      <span className="text-emerald" style={{color: 'var(--color-accent-emerald)', fontWeight: 600}}>Free</span>
+                      {shippingFee > 0 ? (
+                        <span>₹{shippingFee}</span>
+                      ) : (
+                        <span className="text-emerald" style={{color: 'var(--color-accent-emerald)', fontWeight: 600}}>Free</span>
+                      )}
                     </div>
+                    {paymentMethod === 'cod' && (
+                      <div className="calc-row">
+                        <span>COD Handling Fee</span>
+                        <span>₹{codFee}</span>
+                      </div>
+                    )}
                     <div className="calc-row">
                       <span>Taxes</span>
                       <span>Included</span>
@@ -312,7 +326,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                     <div className="calc-divider" />
                     <div className="calc-row total-row">
                       <span>Total</span>
-                      <span>₹{totalPrice}</span>
+                      <span>₹{finalTotal}</span>
                     </div>
                   </div>
                 </div>
