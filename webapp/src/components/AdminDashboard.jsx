@@ -4,7 +4,7 @@ import {
   Users, Package, Truck, BarChart2, ShieldCheck, Lock,
   Moon, Sun, LogOut, Search, ChevronRight, ShoppingBag, 
   Upload, Trash2, Image as ImageIcon, Bell, Settings, Edit,
-  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus
+  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus, Save
 } from 'lucide-react';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../supabaseClient';
 import { createClient } from '@supabase/supabase-js';
@@ -27,40 +27,25 @@ const AdminDashboard = ({ user }) => {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
-  // Modal State
-  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
-
   // Inventory State
   const [inventoryList, setInventoryList] = useState([]);
   const [loadingInventory, setLoadingInventory] = useState(true);
+
+  // Customers State
+  const [usersList, setUsersList] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+
+  // Modal State
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   
-  // Handlers
-  const updateOrderStatus = async (orderId, newStatus) => {
-    if (adminRole === 'viewer') return;
-    try {
-      const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
-      if (error) throw error;
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-    } catch (error) {
-      console.error('Error updating status:', error.message);
-      alert('Failed to update status');
-    }
-  };
-
-  const fetchInventory = async () => {
-    try {
-      setLoadingInventory(true);
-      // Fetching from the main 'products' table to ensure accurate stock
-      const { data, error } = await supabase.from('products').select('*').order('name', { ascending: true });
-      if (error) throw error;
-      setInventoryList(data || []);
-    } catch (error) {
-      console.error('Error fetching inventory:', error.message);
-    } finally {
-      setLoadingInventory(false);
-    }
-  };
-
+  const [newProduct, setNewProduct] = useState({
+    name: '', category: '', price: '', quantity: '',
+    sku: '', brand: 'Pure Nutrix', tax: '18%', 
+    short_description: '', nutrient_content: '', composition: '',
+    weight: '', dimensions: ''
+  });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Check if already logged in as admin
   useEffect(() => {
@@ -87,14 +72,11 @@ const AdminDashboard = ({ user }) => {
   // Toggle Theme
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
-  // Fetch Data
+  // Fetch Data Functions
   const fetchOrders = async () => {
     try {
       setLoadingOrders(true);
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       setOrders(data);
     } catch (error) {
@@ -107,10 +89,7 @@ const AdminDashboard = ({ user }) => {
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
@@ -120,12 +99,54 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
+  const fetchInventory = async () => {
+    try {
+      setLoadingInventory(true);
+      const { data, error } = await supabase.from('products').select('*').order('name', { ascending: true });
+      if (error) throw error;
+      setInventoryList(data || []);
+    } catch (error) {
+      console.error('Error fetching inventory:', error.message);
+    } finally {
+      setLoadingInventory(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const { data: admins } = await supabase.from('admin_roles').select('id');
+      const adminIds = (admins || []).map(a => a.id);
+
+      const { data: usersData, error: usersError } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      if (usersError) throw usersError;
+
+      const filteredUsers = usersData.filter(u => !adminIds.includes(u.id));
+
+      const { data: ordersData } = await supabase.from('orders').select('user_id, price, qty');
+      const userLTV = {};
+      if (ordersData) {
+        ordersData.forEach(order => {
+          if (order.user_id) userLTV[order.user_id] = (userLTV[order.user_id] || 0) + (order.price * order.qty);
+        });
+      }
+
+      setUsersList(filteredUsers.map(u => ({ ...u, calculated_ltv: userLTV[u.id] || 0 })));
+    } catch (error) {
+      console.error('Error fetching users:', error.message);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'dashboard' || activeTab === 'orders') fetchOrders();
     if (activeTab === 'catalog') fetchProducts();
     if (activeTab === 'inventory') fetchInventory();
+    if (activeTab === 'users') fetchUsers();
   }, [activeTab]);
 
+  // Handlers
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -148,6 +169,106 @@ const AdminDashboard = ({ user }) => {
       setAdminRole(profile.role);
     } catch (error) {
       setLoginError(error.message || 'Login failed.');
+    }
+  };
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    if (adminRole === 'viewer') return;
+    try {
+      const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+      if (error) throw error;
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    } catch (error) {
+      alert('Failed to update status');
+    }
+  };
+
+  const updateInventoryStock = async (productId, newQuantity) => {
+    if (adminRole === 'viewer') return;
+    try {
+      const qty = parseInt(newQuantity, 10);
+      if (isNaN(qty)) return;
+      const { error } = await supabase.from('products').update({ quantity: qty }).eq('id', productId);
+      if (error) throw error;
+      setInventoryList(inventoryList.map(p => p.id === productId ? { ...p, quantity: qty } : p));
+    } catch (error) {
+      alert('Failed to update stock');
+    }
+  };
+
+  const handleEditProductClick = (product) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name || '',
+      category: product.category || '',
+      price: product.price || '',
+      quantity: product.quantity || '',
+      sku: product.sku || '',
+      brand: product.brand || 'Pure Nutrix',
+      tax: product.tax || '18%',
+      short_description: product.short_description || '',
+      nutrient_content: product.nutrient_content || '',
+      composition: product.composition || '',
+      weight: product.weight || '',
+      dimensions: product.dimensions || ''
+    });
+    setIsAddProductModalOpen(true);
+  };
+
+  const handleAddNewProductClick = () => {
+    setEditingProduct(null);
+    setNewProduct({
+      name: '', category: '', price: '', quantity: '', sku: '', brand: 'Pure Nutrix', tax: '18%', 
+      short_description: '', nutrient_content: '', composition: '', weight: '', dimensions: ''
+    });
+    setIsAddProductModalOpen(true);
+  };
+
+  const handleSaveProduct = async (e) => {
+    e.preventDefault();
+    if (adminRole === 'viewer') return;
+    
+    try {
+      setUploadingImage(true);
+      // In a real app we would upload the image to storage here.
+      
+      const productPayload = {
+        ...newProduct,
+        price: Number(newProduct.price),
+        quantity: Number(newProduct.quantity)
+      };
+
+      if (editingProduct) {
+        const { error } = await supabase.from('products').update(productPayload).eq('id', editingProduct.id);
+        if (error) throw error;
+        alert('Product updated successfully!');
+      } else {
+        const { error } = await supabase.from('products').insert(productPayload);
+        if (error) throw error;
+        alert('Product added successfully!');
+      }
+
+      setIsAddProductModalOpen(false);
+      fetchProducts();
+      if (activeTab === 'inventory') fetchInventory();
+
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('Failed to save product: ' + error.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const deleteProduct = async (id, name) => {
+    if (adminRole === 'viewer') return;
+    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+      fetchProducts();
+    } catch (error) {
+      alert('Failed to delete product.');
     }
   };
 
@@ -187,8 +308,6 @@ const AdminDashboard = ({ user }) => {
     { id: 'catalog', label: 'Catalog / Listings', icon: ShoppingBag },
     { id: 'orders', label: 'Orders', icon: Truck },
     { id: 'inventory', label: 'Inventory', icon: Package },
-    { id: 'returns', label: 'Returns', icon: RefreshCcw },
-    { id: 'analytics', label: 'Analytics', icon: BarChart2 },
     { id: 'users', label: 'Customers', icon: Users },
   ];
 
@@ -319,16 +438,6 @@ const AdminDashboard = ({ user }) => {
                         <ArrowUpRight size={16} /> <span>8.4% vs last week</span>
                       </div>
                     </div>
-                    <div className="admin-kpi-card">
-                      <div className="kpi-header">
-                        <h3 className="kpi-title">Low Stock Alerts</h3>
-                        <div className="kpi-icon" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)' }}><Package size={20} /></div>
-                      </div>
-                      <p className="kpi-value">4</p>
-                      <div className="kpi-trend" style={{ color: 'var(--admin-text-muted)' }}>
-                        <span>Items need restocking</span>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Sales Graph Mock */}
@@ -356,12 +465,11 @@ const AdminDashboard = ({ user }) => {
                           <th>Date</th>
                           <th>Payment</th>
                           <th>Status</th>
-                          <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {loadingOrders ? (
-                          <tr><td colSpan="7" style={{textAlign: 'center'}}>Loading live orders...</td></tr>
+                          <tr><td colSpan="6" style={{textAlign: 'center'}}>Loading live orders...</td></tr>
                         ) : orders.slice(0, 10).map(order => (
                           <tr key={order.id}>
                             <td style={{fontFamily: 'monospace', color: 'var(--admin-text-muted)'}}>#{order.id.split('-')[0].toUpperCase()}</td>
@@ -384,9 +492,6 @@ const AdminDashboard = ({ user }) => {
                               <span className={`admin-badge ${order.status?.toLowerCase() === 'delivered' ? 'badge-success' : order.status?.toLowerCase() === 'processing' ? 'badge-warning' : 'badge-info'}`}>
                                 {order.status || 'Processing'}
                               </span>
-                            </td>
-                            <td>
-                              <button className="admin-btn admin-btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>View</button>
                             </td>
                           </tr>
                         ))}
@@ -468,7 +573,7 @@ const AdminDashboard = ({ user }) => {
                   <div className="admin-page-header">
                     <div>
                       <h1>Inventory Management</h1>
-                      <p>Track stock levels across all your products.</p>
+                      <p>Track stock levels and easily update quantities inline.</p>
                     </div>
                   </div>
                   <div className="admin-table-container">
@@ -476,9 +581,9 @@ const AdminDashboard = ({ user }) => {
                       <thead>
                         <tr>
                           <th>Product / SKU</th>
-                          <th>Batch No.</th>
-                          <th>Stock Level</th>
                           <th>Status</th>
+                          <th>Stock Level</th>
+                          <th>Quick Update</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -496,16 +601,76 @@ const AdminDashboard = ({ user }) => {
                                   <div style={{ fontWeight: 500 }}>{item.name}</div>
                                   <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', fontFamily: 'monospace' }}>{item.sku || 'N/A'}</div>
                                 </td>
-                                <td style={{ color: 'var(--admin-text-muted)' }}>{item.batch_no || '-'}</td>
-                                <td style={{ fontWeight: 600 }}>{stockLevel} units</td>
                                 <td>
                                   <span className={`admin-badge ${status === 'In Stock' ? 'badge-success' : status === 'Low Stock' ? 'badge-warning' : 'badge-error'}`}>
                                     {status}
                                   </span>
                                 </td>
+                                <td style={{ fontWeight: 600 }}>{stockLevel} units</td>
+                                <td>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <input 
+                                      type="number" 
+                                      className="admin-input" 
+                                      style={{ width: '80px', padding: '6px 10px' }} 
+                                      defaultValue={stockLevel}
+                                      id={`stock-input-${item.id}`}
+                                    />
+                                    <button 
+                                      className="admin-btn admin-btn-primary" 
+                                      style={{ padding: '6px 12px' }}
+                                      onClick={() => {
+                                        const newVal = document.getElementById(`stock-input-${item.id}`).value;
+                                        updateInventoryStock(item.id, newVal);
+                                      }}
+                                    >
+                                      <Save size={16} /> Update
+                                    </button>
+                                  </div>
+                                </td>
                               </tr>
                             );
                           })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* === USERS / CUSTOMERS TAB === */}
+              {activeTab === 'users' && (
+                <div>
+                  <div className="admin-page-header">
+                    <div>
+                      <h1>Customer Management</h1>
+                      <p>View registered customers and their lifetime value.</p>
+                    </div>
+                  </div>
+                  <div className="admin-table-container">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Registered</th>
+                          <th>Lifetime Value (LTV)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loadingUsers ? (
+                          <tr><td colSpan="4" style={{textAlign: 'center'}}>Loading users...</td></tr>
+                        ) : usersList.length === 0 ? (
+                          <tr><td colSpan="4" style={{textAlign: 'center'}}>No users found.</td></tr>
+                        ) : (
+                          usersList.map(u => (
+                            <tr key={u.id}>
+                              <td style={{ fontWeight: 500 }}>{u.full_name || 'Anonymous User'}</td>
+                              <td style={{ color: 'var(--admin-text-muted)' }}>{u.email}</td>
+                              <td style={{ color: 'var(--admin-text-muted)' }}>{new Date(u.created_at).toLocaleDateString('en-GB')}</td>
+                              <td style={{ fontWeight: 600 }}>₹{(u.calculated_ltv || 0).toLocaleString()}</td>
+                            </tr>
+                          ))
                         )}
                       </tbody>
                     </table>
@@ -523,7 +688,7 @@ const AdminDashboard = ({ user }) => {
                     </div>
                     <div style={{ display: 'flex', gap: '12px' }}>
                       <button className="admin-btn admin-btn-secondary"><Upload size={18} /> Bulk Upload (CSV)</button>
-                      <button className="admin-btn admin-btn-primary" onClick={() => setIsAddProductModalOpen(true)}><Plus size={18} /> Add New Listing</button>
+                      <button className="admin-btn admin-btn-primary" onClick={handleAddNewProductClick}><Plus size={18} /> Add New Listing</button>
                     </div>
                   </div>
 
@@ -538,11 +703,6 @@ const AdminDashboard = ({ user }) => {
                           <option>All Categories</option>
                           <option>Whey Protein</option>
                           <option>Vitamins</option>
-                        </select>
-                        <select className="admin-select" style={{ width: '150px' }}>
-                          <option>All Status</option>
-                          <option>Active</option>
-                          <option>Out of Stock</option>
                         </select>
                       </div>
                     </div>
@@ -579,14 +739,12 @@ const AdminDashboard = ({ user }) => {
                               <span className={product.quantity > 10 ? 'text-green-500' : 'text-red-500'}>{product.quantity || 0} in stock</span>
                             </td>
                             <td>
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                <input type="checkbox" checked={true} readOnly style={{ accentColor: 'var(--admin-accent)' }} /> Active
-                              </label>
+                              <span className="admin-badge badge-success">Active</span>
                             </td>
                             <td>
                               <div style={{ display: 'flex', gap: '8px' }}>
-                                <button className="header-icon-btn"><Edit size={18} /></button>
-                                <button className="header-icon-btn" style={{ color: '#ef4444' }}><Trash2 size={18} /></button>
+                                <button className="header-icon-btn" onClick={() => handleEditProductClick(product)}><Edit size={18} /></button>
+                                <button className="header-icon-btn" style={{ color: '#ef4444' }} onClick={() => deleteProduct(product.id, product.name)}><Trash2 size={18} /></button>
                               </div>
                             </td>
                           </tr>
@@ -601,7 +759,7 @@ const AdminDashboard = ({ user }) => {
         </main>
       </div>
 
-      {/* Add New Listing Modal */}
+      {/* Add / Edit Listing Modal */}
       <AnimatePresence>
         {isAddProductModalOpen && (
           <div className="admin-modal-overlay">
@@ -612,49 +770,44 @@ const AdminDashboard = ({ user }) => {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
             >
               <div className="admin-modal-header">
-                <h2>Add New Product Listing</h2>
+                <h2>{editingProduct ? 'Edit Product Listing' : 'Add New Product Listing'}</h2>
                 <button className="header-icon-btn" onClick={() => setIsAddProductModalOpen(false)}>✕</button>
               </div>
-              <div className="admin-modal-body">
+              <form onSubmit={handleSaveProduct} className="admin-modal-body">
                 
                 <h3 className="form-section-title">Basic Information</h3>
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Product Title *</label>
-                    <input type="text" className="admin-input" placeholder="e.g. Premium 100% Whey Protein" />
+                    <input type="text" required className="admin-input" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} placeholder="e.g. Premium 100% Whey Protein" />
                   </div>
                   <div className="form-group">
                     <label>Category *</label>
-                    <select className="admin-select">
-                      <option>Select Category...</option>
-                      <option>Whey Protein</option>
-                      <option>Vitamins & Supplements</option>
-                      <option>Pre-Workout</option>
-                    </select>
+                    <input type="text" required className="admin-input" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} placeholder="e.g. Whey Protein" />
                   </div>
                   <div className="form-group">
                     <label>Brand</label>
-                    <input type="text" className="admin-input" defaultValue="Pure Nutrix" />
+                    <input type="text" className="admin-input" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} />
                   </div>
                   <div className="form-group">
                     <label>SKU (Stock Keeping Unit)</label>
-                    <input type="text" className="admin-input" placeholder="e.g. PN-WHEY-CHOC-2KG" />
+                    <input type="text" className="admin-input" value={newProduct.sku} onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})} placeholder="e.g. PN-WHEY-CHOC-2KG" />
                   </div>
                 </div>
 
                 <h3 className="form-section-title">Pricing & Stock</h3>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>Maximum Retail Price (MRP) (₹) *</label>
-                    <input type="number" className="admin-input" placeholder="0.00" />
+                    <label>Maximum Retail Price (MRP) (₹)</label>
+                    <input type="number" className="admin-input" placeholder="0.00" value={newProduct.price ? (newProduct.price * 1.2).toFixed(0) : ''} readOnly />
                   </div>
                   <div className="form-group">
                     <label>Selling Price (₹) *</label>
-                    <input type="number" className="admin-input" placeholder="0.00" />
+                    <input type="number" required className="admin-input" value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} placeholder="0.00" />
                   </div>
                   <div className="form-group">
                     <label>Tax / GST %</label>
-                    <select className="admin-select">
+                    <select className="admin-select" value={newProduct.tax} onChange={(e) => setNewProduct({...newProduct, tax: e.target.value})}>
                       <option>18% (Standard)</option>
                       <option>12%</option>
                       <option>5%</option>
@@ -663,50 +816,33 @@ const AdminDashboard = ({ user }) => {
                   </div>
                   <div className="form-group">
                     <label>Available Quantity *</label>
-                    <input type="number" className="admin-input" placeholder="0" />
+                    <input type="number" required className="admin-input" value={newProduct.quantity} onChange={(e) => setNewProduct({...newProduct, quantity: e.target.value})} placeholder="0" />
                   </div>
-                </div>
-
-                <h3 className="form-section-title">Product Media</h3>
-                <div className="drag-drop-zone">
-                  <ImageIcon size={32} style={{ marginBottom: '10px' }} />
-                  <p style={{ margin: '0 0 5px 0', fontWeight: 500, color: 'var(--admin-text)' }}>Drag and drop product images here</p>
-                  <p style={{ margin: 0, fontSize: '0.85rem' }}>or click to browse files (JPEG, PNG, WebP up to 5MB)</p>
                 </div>
 
                 <h3 className="form-section-title">Product Details</h3>
                 <div className="form-group" style={{ marginBottom: '20px' }}>
                   <label>Full Description</label>
-                  <textarea className="admin-textarea" rows="4" placeholder="Detailed product description..."></textarea>
+                  <textarea className="admin-textarea" rows="4" value={newProduct.short_description} onChange={(e) => setNewProduct({...newProduct, short_description: e.target.value})} placeholder="Detailed product description..."></textarea>
                 </div>
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Nutritional Information</label>
-                    <textarea className="admin-textarea" rows="3" placeholder="e.g. 24g Protein, 5.5g BCAAs per scoop..."></textarea>
+                    <textarea className="admin-textarea" rows="3" value={newProduct.nutrient_content} onChange={(e) => setNewProduct({...newProduct, nutrient_content: e.target.value})} placeholder="e.g. 24g Protein, 5.5g BCAAs per scoop..."></textarea>
                   </div>
                   <div className="form-group">
                     <label>Ingredients</label>
-                    <textarea className="admin-textarea" rows="3" placeholder="Whey Protein Isolate, Cocoa Powder..."></textarea>
+                    <textarea className="admin-textarea" rows="3" value={newProduct.composition} onChange={(e) => setNewProduct({...newProduct, composition: e.target.value})} placeholder="Whey Protein Isolate, Cocoa Powder..."></textarea>
                   </div>
                 </div>
 
-                <h3 className="form-section-title">Shipping & Logistics</h3>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Package Weight (kg)</label>
-                    <input type="number" step="0.1" className="admin-input" placeholder="e.g. 2.5" />
-                  </div>
-                  <div className="form-group">
-                    <label>Dimensions (L x W x H cm)</label>
-                    <input type="text" className="admin-input" placeholder="e.g. 30 x 20 x 20" />
-                  </div>
+                <div className="admin-modal-footer" style={{ border: 'none', padding: '20px 0 0 0', marginTop: '20px' }}>
+                  <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setIsAddProductModalOpen(false)}>Cancel</button>
+                  <button type="submit" className="admin-btn admin-btn-primary" disabled={uploadingImage}>
+                    {uploadingImage ? 'Saving...' : (editingProduct ? 'Save Changes' : 'Save Product Listing')}
+                  </button>
                 </div>
-
-              </div>
-              <div className="admin-modal-footer">
-                <button className="admin-btn admin-btn-secondary" onClick={() => setIsAddProductModalOpen(false)}>Cancel</button>
-                <button className="admin-btn admin-btn-primary">Save Product Listing</button>
-              </div>
+              </form>
             </motion.div>
           </div>
         )}
