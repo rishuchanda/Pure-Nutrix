@@ -7,39 +7,51 @@ import './TrustSection.css';
 const trustBadges = [
   {
     id: 1,
-    icon: <ShieldCheck size={36} className="trust-icon" />,
-    title: "FSSAI Approved",
-    desc: "Meeting India's highest food safety standards."
+    icon: <img src="/assets/certificates/fda.png" alt="FDA" className="trust-cert-icon" />,
+    title: "FDA Registered",
+    desc: "Regulatory Guideline for Food and Drug Administration."
   },
   {
     id: 2,
-    icon: <Award size={36} className="trust-icon" />,
-    title: "GMP Certified",
-    desc: "Good Manufacturing Practice for consistent quality."
+    icon: <img src="/assets/certificates/haccp.png" alt="HACCP" className="trust-cert-icon" />,
+    title: "HACCP",
+    desc: "Hazard Analysis & Critical Control Points compliance."
   },
   {
     id: 3,
-    icon: <CheckCircle size={36} className="trust-icon" />,
+    icon: <img src="/assets/certificates/iso22000.png" alt="ISO 22000" className="trust-cert-icon" />,
+    title: "ISO 22000:2018",
+    desc: "Food Safety Management System certification."
+  },
+  {
+    id: 4,
+    icon: <img src="/assets/certificates/iso9001.png" alt="ISO 9001" className="trust-cert-icon" />,
     title: "ISO 9001:2015",
     desc: "Global standard for quality management."
   },
   {
-    id: 4,
-    icon: <Leaf size={36} className="trust-icon" />,
-    title: "100% Vegan & Natural",
-    desc: "Plant-based, cruelty-free ingredients."
-  },
-  {
     id: 5,
-    icon: <Microscope size={36} className="trust-icon" />,
-    title: "Clinically Tested",
-    desc: "Backed by science and tested for purity."
+    icon: <img src="/assets/certificates/kosher.png" alt="KOSHER" className="trust-cert-icon" />,
+    title: "KOSHER",
+    desc: "Certified Kosher for purity and rigorous preparation."
   },
   {
     id: 6,
-    icon: <Sprout size={36} className="trust-icon" />,
-    title: "Non-GMO",
-    desc: "Free from genetically modified organisms."
+    icon: <img src="/assets/certificates/organic.png" alt="Organic" className="trust-cert-icon" />,
+    title: "Organic Certified",
+    desc: "Made with 100% organic raw materials."
+  },
+  {
+    id: 7,
+    icon: <img src="/assets/certificates/who-gmp.png" alt="WHO-GMP" className="trust-cert-icon" />,
+    title: "WHO-GMP",
+    desc: "World Health Organization Good Manufacturing Practice."
+  },
+  {
+    id: 8,
+    icon: <ShieldCheck size={36} className="trust-icon" />,
+    title: "FSSAI Approved",
+    desc: "Meeting India's highest food safety standards."
   }
 ];
 
