@@ -411,7 +411,7 @@ const AdminDashboard = ({ user }) => {
 
                   {/* KPIs */}
                   <div className="admin-grid">
-                    <div className="admin-kpi-card">
+                    <div className="admin-kpi-card" onClick={() => setActiveTab('orders')} style={{ cursor: 'pointer' }}>
                       <div className="kpi-header">
                         <h3 className="kpi-title">Total Sales</h3>
                         <div className="kpi-icon"><ShoppingBag size={20} /></div>
@@ -421,7 +421,7 @@ const AdminDashboard = ({ user }) => {
                         <ArrowUpRight size={16} /> <span>12.5% vs last week</span>
                       </div>
                     </div>
-                    <div className="admin-kpi-card">
+                    <div className="admin-kpi-card" onClick={() => setActiveTab('orders')} style={{ cursor: 'pointer' }}>
                       <div className="kpi-header">
                         <h3 className="kpi-title">Active Orders</h3>
                         <div className="kpi-icon"><Truck size={20} /></div>
@@ -431,7 +431,7 @@ const AdminDashboard = ({ user }) => {
                         <ArrowDownRight size={16} /> <span>2.1% vs last week</span>
                       </div>
                     </div>
-                    <div className="admin-kpi-card">
+                    <div className="admin-kpi-card" onClick={() => setActiveTab('orders')} style={{ cursor: 'pointer' }}>
                       <div className="kpi-header">
                         <h3 className="kpi-title">Total Revenue</h3>
                         <div className="kpi-icon"><BarChart2 size={20} /></div>
@@ -439,6 +439,16 @@ const AdminDashboard = ({ user }) => {
                       <p className="kpi-value">₹{(totalRevenue / 1000).toFixed(1)}k</p>
                       <div className="kpi-trend trend-up">
                         <ArrowUpRight size={16} /> <span>8.4% vs last week</span>
+                      </div>
+                    </div>
+                    <div className="admin-kpi-card" onClick={() => setActiveTab('inventory')} style={{ cursor: 'pointer' }}>
+                      <div className="kpi-header">
+                        <h3 className="kpi-title">Low Stock Alerts</h3>
+                        <div className="kpi-icon" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)' }}><Package size={20} /></div>
+                      </div>
+                      <p className="kpi-value">{inventoryList.filter(p => p.quantity < 10).length}</p>
+                      <div className="kpi-trend" style={{ color: 'var(--admin-text-muted)' }}>
+                        <span>Items need restocking</span>
                       </div>
                     </div>
                   </div>
@@ -474,7 +484,7 @@ const AdminDashboard = ({ user }) => {
                         {loadingOrders ? (
                           <tr><td colSpan="6" style={{textAlign: 'center'}}>Loading live orders...</td></tr>
                         ) : orders.slice(0, 10).map(order => (
-                          <tr key={order.id}>
+                          <tr key={order.id} onClick={() => setActiveTab('orders')} style={{ cursor: 'pointer', transition: 'background 0.2s' }} className="hover-row">
                             <td style={{fontFamily: 'monospace', color: 'var(--admin-text-muted)'}}>#{order.id.split('-')[0].toUpperCase()}</td>
                             <td>
                               <div className="table-product-cell">
