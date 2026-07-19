@@ -1,6 +1,9 @@
 .pdp-wrapper {
   min-height: 100vh;
   padding-top: 100px;
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .pdp-grid {
@@ -8,11 +11,18 @@
   grid-template-columns: 1fr 1fr;
   gap: 50px;
   margin-top: 20px;
+  max-width: 100%;
+}
+
+.pdp-gallery, .pdp-info {
+  max-width: 100%;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
   .pdp-grid {
     grid-template-columns: 1fr;
+    max-width: 100%;
   }
 }
 
@@ -83,6 +93,7 @@
   line-height: 1.1;
   margin-bottom: 20px;
   color: var(--color-title-text);
+  word-break: break-word;
 }
 
 .pdp-price-row {
@@ -232,9 +243,12 @@
     width: 100%;
     box-sizing: border-box;
     padding: 15px !important;
+    word-break: break-word;
   }
   .bogo-text-content {
     margin-bottom: 10px;
+    white-space: normal;
+    width: 100%;
   }
   .pdp-price-details {
     margin-left: 0;
@@ -279,6 +293,7 @@
 .pdp-specs-table td {
   color: var(--color-text-primary);
   font-weight: 500;
+  word-break: break-word;
 }
 
 .pdp-details-sections {
