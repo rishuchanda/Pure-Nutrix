@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, ShieldCheck, Truck, ArrowLeft, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingBag, ShieldCheck, Truck, ArrowLeft, CheckCircle, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { getProductReviews } from '../utils/mockReviews';
 import './ProductDetailsPage.css';
 
 const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
@@ -8,6 +9,8 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
   const [direction, setDirection] = useState(0); // For animation direction
 
   if (!product) return null;
+
+  const reviewData = getProductReviews(product);
 
   const handleNextImage = () => {
     if (product.image_urls && product.image_urls.length > 0) {
@@ -185,6 +188,50 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
               <div className="pdp-detail-section">
                 <h3 className="pdp-section-title">Usage Instructions</h3>
                 <p>{product.usage_instructions || 'N/A'}</p>
+              </div>
+            </div>
+            
+            {/* Customer Reviews Section */}
+            <div className="pdp-reviews-section">
+              <h3 className="pdp-section-title">Customer Reviews</h3>
+              
+              <div className="pdp-reviews-summary">
+                <div className="pdp-reviews-overall">
+                  <span className="pdp-rating-big">{reviewData.rating}</span>
+                  <div className="pdp-rating-stars">
+                    <Star size={18} fill="currentColor" className="text-gold" />
+                    <Star size={18} fill="currentColor" className="text-gold" />
+                    <Star size={18} fill="currentColor" className="text-gold" />
+                    <Star size={18} fill="currentColor" className="text-gold" />
+                    <Star size={18} fill="currentColor" className="text-gold" />
+                  </div>
+                  <span className="pdp-rating-count">Based on {reviewData.totalCount} reviews</span>
+                </div>
+              </div>
+
+              <div className="pdp-reviews-list">
+                {reviewData.reviewsList.map(review => (
+                  <div key={review.id} className="pdp-review-card">
+                    <div className="pdp-review-header">
+                      <div className="pdp-reviewer-info">
+                        <div className="pdp-reviewer-avatar">
+                          {review.name.charAt(0)}
+                        </div>
+                        <div>
+                          <h4 className="pdp-reviewer-name">{review.name}</h4>
+                          <span className="pdp-verified-badge">✔ Verified Buyer</span>
+                        </div>
+                      </div>
+                      <span className="pdp-review-date">{review.date}</span>
+                    </div>
+                    <div className="pdp-review-stars">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} size={14} fill={i < review.rating ? "currentColor" : "none"} className={i < review.rating ? "text-gold" : "text-gray"} />
+                      ))}
+                    </div>
+                    <p className="pdp-review-text">{review.comment}</p>
+                  </div>
+                ))}
               </div>
             </div>
 

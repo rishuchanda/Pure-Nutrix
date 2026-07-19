@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { getProductReviews } from '../utils/mockReviews';
 import RainEffect from './RainEffect';
 import './ProductShowcase.css';
 
@@ -98,15 +99,15 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
         </div>
       </div>
       
-      <div className="product-details">
-        <div className="product-rating">
-          <Star size={14} className="star-icon" fill="currentColor" />
-          <Star size={14} className="star-icon" fill="currentColor" />
-          <Star size={14} className="star-icon" fill="currentColor" />
-          <Star size={14} className="star-icon" fill="currentColor" />
-          <Star size={14} className="star-icon" fill="currentColor" />
-          <span className="rating-text">({(product.reviews && product.reviews.length * 15) || 120}+ Reviews)</span>
-        </div>
+        <div className="product-details">
+          <div className="product-rating">
+            <Star size={14} className="star-icon" fill="currentColor" />
+            <Star size={14} className="star-icon" fill="currentColor" />
+            <Star size={14} className="star-icon" fill="currentColor" />
+            <Star size={14} className="star-icon" fill="currentColor" />
+            <Star size={14} className="star-icon" fill="currentColor" />
+            <span className="rating-text">({getProductReviews(product).totalCount}+ Reviews)</span>
+          </div>
         
         <h3 className="product-category text-gold">{product.category}</h3>
         <h2 className="product-name">{product.name}</h2>
