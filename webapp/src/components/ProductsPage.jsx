@@ -82,7 +82,12 @@ const ProductsPage = ({ onProductClick, onBack, onOrder, onAddToCart }) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span className="product-price">₹{product.price}</span>
                       {product.original_price && product.original_price > product.price && (
-                        <span style={{ textDecoration: 'line-through', color: '#888', fontSize: '0.9rem' }}>₹{product.original_price}</span>
+                        <>
+                          <span style={{ textDecoration: 'line-through', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>₹{product.original_price}</span>
+                          <span style={{ color: '#059669', fontSize: '0.85rem', fontWeight: '600' }}>
+                            ({Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF)
+                          </span>
+                        </>
                       )}
                     </div>
                   </div>

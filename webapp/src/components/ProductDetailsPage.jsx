@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ShoppingBag, ShieldCheck, Truck, RefreshCw } from 'lucide-react';
+import { ShoppingBag, ShieldCheck, Truck, ArrowLeft, CheckCircle } from 'lucide-react';
 import './ProductDetailsPage.css';
 
 const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
@@ -49,7 +49,12 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
             <div className="pdp-price-row">
               <span className="pdp-price">₹{product.price}</span>
               {product.original_price && product.original_price > product.price && (
-                <span className="pdp-mrp" style={{ textDecoration: 'line-through', color: '#888', marginLeft: '10px', fontSize: '1.2rem' }}>₹{product.original_price}</span>
+                <>
+                  <span className="pdp-mrp" style={{ textDecoration: 'line-through', color: 'var(--color-text-secondary)', marginLeft: '10px', fontSize: '1.2rem' }}>₹{product.original_price}</span>
+                  <span className="pdp-discount" style={{ color: '#059669', marginLeft: '10px', fontSize: '1.1rem', fontWeight: '600' }}>
+                    ({Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF)
+                  </span>
+                </>
               )}
               <span className="pdp-tax-inclusive" style={{ marginLeft: '10px' }}>(Inclusive of all taxes)</span>
             </div>
@@ -66,9 +71,9 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
             </div>
 
             <div className="pdp-trust-badges">
-              <div className="pdp-trust-badge"><ShieldCheck size={20} className="text-gold"/> Authentic Quality</div>
-              <div className="pdp-trust-badge"><Truck size={20} className="text-gold"/> Fast Shipping</div>
-              <div className="pdp-trust-badge"><RefreshCw size={20} className="text-gold"/> Easy Returns</div>
+              <div className="pdp-trust-badge"><CheckCircle size={20} className="text-gold"/> 100% Authentic</div>
+              <div className="pdp-trust-badge"><Truck size={20} className="text-gold"/> 2-5 Days Delivery</div>
+              <div className="pdp-trust-badge"><ShieldCheck size={20} className="text-gold"/> Secure Payment</div>
             </div>
 
             {/* Granular Details requested by user */}
