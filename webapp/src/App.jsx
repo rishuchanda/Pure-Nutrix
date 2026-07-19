@@ -17,6 +17,7 @@ import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import RainEffect from './components/RainEffect';
+import MonsoonSalePopup from './components/MonsoonSalePopup';
 
 function App() {
   const { scrollYProgress } = useScroll();
