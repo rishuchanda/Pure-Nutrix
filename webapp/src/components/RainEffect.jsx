@@ -9,6 +9,9 @@ const RainEffect = () => {
       loop
       muted
       playsInline
+      controls={false}
+      disablePictureInPicture
+      poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
       className="rain-canvas"
     >
       <source src={rainVideo} type="video/mp4" />
