@@ -263,7 +263,9 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
               { id: 'fda', name: 'FDA Registration', file: 'fda.pdf' },
               { id: 'kosher', name: 'KOSHER Certificate', file: 'kosher.pdf' },
               { id: 'iso22000', name: 'ISO 22000:2018', file: 'iso22000.pdf' },
-              { id: 'iso9001', name: 'ISO 9001:2015', file: 'iso9001.pdf' }
+              { id: 'iso9001', name: 'ISO 9001:2015', file: 'iso9001.pdf' },
+              { id: 'whogmp', name: 'WHO-GMP Certified', file: 'who-gmp.pdf' },
+              { id: 'organic', name: 'Organic Certified', file: 'organic.pdf' }
             ].map((doc, idx) => (
               <motion.div 
                 key={doc.id}
