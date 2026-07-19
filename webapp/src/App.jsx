@@ -12,6 +12,7 @@ import AdminDashboard from './components/AdminDashboard';
 import ProductsPage from './components/ProductsPage';
 import ProductDetailsPage from './components/ProductDetailsPage';
 import CartPage from './components/CartPage';
+import QualityStandardsPage from './components/QualityStandardsPage';
 import { supabase } from './supabaseClient';
 import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
@@ -65,6 +66,11 @@ function App() {
 
   const handleOpenProducts = () => {
     setCurrentView('products');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenQuality = () => {
+    setCurrentView('quality-standards');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -133,6 +139,7 @@ function App() {
           user={user} 
           onGoHome={handleBackToHome}
           onOpenProducts={handleOpenProducts}
+          onOpenQuality={handleOpenQuality}
           onOpenAuth={() => setIsAuthModalOpen(true)} 
           onOpenAccount={handleOpenAccount}
           onSignOut={() => supabase.auth.signOut()} 
@@ -156,7 +163,7 @@ function App() {
               <WhyChooseUs />
               <TrustSection />
             </main>
-            <Footer />
+            <Footer onOpenQuality={handleOpenQuality} />
           </motion.div>
         ) : currentView === 'order' ? (
           <motion.div 
@@ -227,6 +234,16 @@ function App() {
             transition={{ duration: 0.5 }}
           >
             <ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} />
+          </motion.div>
+        ) : currentView === 'quality-standards' ? (
+          <motion.div 
+            key="quality-standards"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <QualityStandardsPage onBack={handleBackToHome} onExplore={handleOpenProducts} />
           </motion.div>
         ) : null}
       </AnimatePresence>

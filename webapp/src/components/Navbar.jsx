@@ -3,7 +3,7 @@ import { ShoppingCart, Menu, X, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import './Navbar.css';
 
-const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenProducts, cartCount = 0, onOpenCart }) => {
+const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenProducts, onOpenQuality, cartCount = 0, onOpenCart }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -30,8 +30,9 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
         <div className="navbar-links">
           <a href="#home" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); }}>Home</a>
           <a href="#products" className="nav-link" onClick={(e) => { e.preventDefault(); onOpenProducts(); }}>Products</a>
-          <a href="#about" className="nav-link">Our Science</a>
-          <a href="#contact" className="nav-link">Contact</a>
+          <a href="#quality" className="nav-link" onClick={(e) => { e.preventDefault(); onOpenQuality(); }}>Quality</a>
+          <a href="#about" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); setTimeout(() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Our Science</a>
+          <a href="#contact" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); setTimeout(() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Contact</a>
         </div>
 
         <div className="navbar-actions">
@@ -88,8 +89,9 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
         >
           <a href="#home" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); }}>Home</a>
           <a href="#products" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenProducts(); }}>Products</a>
-          <a href="#about" className="mobile-nav-link" onClick={() => { setMobileMenuOpen(false); onGoHome(); }}>Our Science</a>
-          <a href="#contact" className="mobile-nav-link" onClick={() => { setMobileMenuOpen(false); onGoHome(); }}>Contact</a>
+          <a href="#quality" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenQuality(); }}>Quality</a>
+          <a href="#about" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); setTimeout(() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Our Science</a>
+          <a href="#contact" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); setTimeout(() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Contact</a>
           
           <div className="mobile-menu-auth-actions">
             {user ? (
