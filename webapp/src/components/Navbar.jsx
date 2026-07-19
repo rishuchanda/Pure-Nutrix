@@ -3,7 +3,7 @@ import { ShoppingCart, Menu, X, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import './Navbar.css';
 
-const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenProducts, onOpenQuality, cartCount = 0, onOpenCart }) => {
+const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenProducts, onOpenQuality, onOpenSupport, cartCount = 0, onOpenCart }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
