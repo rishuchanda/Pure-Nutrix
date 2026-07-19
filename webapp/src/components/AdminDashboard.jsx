@@ -232,8 +232,11 @@ const AdminDashboard = ({ user }) => {
       setUploadingImage(true);
       // In a real app we would upload the image to storage here.
       
+      // Remove fields that do not exist in the database schema to prevent errors
+      const { brand, sku, tax, weight, dimensions, ...validFields } = newProduct;
+
       const productPayload = {
-        ...newProduct,
+        ...validFields,
         price: Number(newProduct.price),
         quantity: Number(newProduct.quantity)
       };
