@@ -150,6 +150,7 @@ function App() {
           >
             <main>
               <Hero3D />
+              <MonsoonSalePopup onShopClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })} />
               <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} onAddToCart={handleAddToCart} />
               <WhyChooseUs />
               <TrustSection />
