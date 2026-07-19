@@ -7,10 +7,10 @@ const Hero3D = () => {
   return (
     <section className="hero-section-interactive" id="home">
       <RainEffect />
-      
+
       {/* Foreground Content */}
       <div className="hero-content-interactive container">
-        <motion.div 
+        <motion.div
           className="interactive-text-wrapper"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -26,7 +26,7 @@ const Hero3D = () => {
             Buy 2 Get 1 Free — Monsoon Sale
           </motion.div>
 
-          <motion.h1 
+          <motion.h1
             className="interactive-title"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -35,8 +35,8 @@ const Hero3D = () => {
             Awaken Your <br />
             Pure Radiance.
           </motion.h1>
-          
-          <motion.div 
+
+          <motion.div
             className="interactive-actions"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -52,7 +52,7 @@ const Hero3D = () => {
           </motion.div>
         </motion.div>
       </div>
-      
+
     </section>
   );
 };
