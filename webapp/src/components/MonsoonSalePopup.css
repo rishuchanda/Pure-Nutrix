@@ -1,41 +1,49 @@
 .sale-popup-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  bottom: 20px;
+  right: 20px;
   z-index: 10000;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  pointer-events: none; /* Let clicks pass through outside the popup */
+}
+
+@media (max-width: 768px) {
+  .sale-popup-overlay {
+    bottom: 15px;
+    right: 15px;
+    left: 15px; /* Center on mobile if needed, or stretch */
+  }
 }
 
 .sale-popup-card {
+  pointer-events: auto; /* Re-enable clicks for the popup card */
   position: relative;
   width: 100%;
-  max-width: 480px;
-  padding: 40px;
-  text-align: center;
+  max-width: 320px;
+  padding: 20px;
+  text-align: left;
   background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px rgba(5, 150, 105, 0.15);
-  border-radius: 24px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.2), 0 0 20px rgba(5, 150, 105, 0.1);
+  border-radius: 16px;
+}
+
+@media (max-width: 768px) {
+  .sale-popup-card {
+    max-width: 100%;
+  }
 }
 
 .sale-popup-close {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 10px;
+  right: 10px;
   background: transparent;
   border: none;
   cursor: pointer;
   color: var(--color-text-secondary);
   transition: var(--transition-smooth);
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -50,38 +58,45 @@
 .sale-popup-content {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+}
+
+.sale-popup-header-row {
+  display: flex;
   align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .sale-popup-icon {
-  width: 80px;
-  height: 80px;
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.2) 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  flex-shrink: 0;
   box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.5);
 }
 
 .sale-popup-title {
-  font-size: 2.2rem;
-  margin-bottom: 5px;
+  font-size: 1.2rem;
+  margin-bottom: 2px;
   font-family: var(--font-display);
 }
 
 .sale-popup-subtitle {
-  font-size: 1.6rem;
-  margin-bottom: 20px;
+  font-size: 1.05rem;
+  margin-bottom: 0;
   font-family: var(--font-display);
 }
 
 .sale-popup-desc {
   color: var(--color-text-secondary);
-  line-height: 1.6;
-  margin-bottom: 35px;
-  font-size: 1.05rem;
+  line-height: 1.4;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
 }
 
 .sale-popup-btn {
@@ -89,7 +104,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  font-size: 1.1rem;
-  padding: 18px;
+  gap: 8px;
+  font-size: 0.95rem;
+  padding: 12px;
 }
