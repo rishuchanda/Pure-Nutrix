@@ -9,8 +9,6 @@ const CartPage = ({ cartItems, onUpdateQuantity, onRemoveItem, onCheckout, onBac
     const price = typeof item.product.price === 'number' ? item.product.price : Number(item.product.price.toString().replace(/[^0-9.-]+/g, ""));
     return acc + (price * item.quantity);
   }, 0);
-  
-  const hasFreeGift = totalQuantity >= 2;
 
   return (
     <div className="cart-page-wrapper section-padding">
@@ -41,58 +39,57 @@ const CartPage = ({ cartItems, onUpdateQuantity, onRemoveItem, onCheckout, onBac
               {cartItems.map((item) => {
                 const basePrice = typeof item.product.price === 'number' ? item.product.price : Number(item.product.price.toString().replace(/[^0-9.-]+/g, ""));
                 return (
-                  <motion.div 
-                    key={item.product.id} 
-                    className="cart-item"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                  >
-                    <img src={(item.product.image_urls || item.product.images || [])[0]} alt={item.product.name} className="cart-item-image" />
-                    <div className="cart-item-details">
-                      <h3 className="cart-item-title">{item.product.name}</h3>
-                      <p className="cart-item-price">₹{basePrice}</p>
-                      <div className="cart-item-actions">
-                        <div className="qty-selector" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <button className="qty-btn" onClick={() => onUpdateQuantity(item.product.id, Math.max(1, item.quantity - 1))}>-</button>
-                          <span>{item.quantity}</span>
-                          <button className="qty-btn" onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}>+</button>
+                  <React.Fragment key={item.product.id}>
+                    <motion.div 
+                      className="cart-item"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                    >
+                      <img src={(item.product.image_urls || item.product.images || [])[0]} alt={item.product.name} className="cart-item-image" />
+                      <div className="cart-item-details">
+                        <h3 className="cart-item-title">{item.product.name}</h3>
+                        <p className="cart-item-price">₹{basePrice}</p>
+                        <div className="cart-item-actions">
+                          <div className="qty-selector" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <button className="qty-btn" onClick={() => onUpdateQuantity(item.product.id, Math.max(1, item.quantity - 1))}>-</button>
+                            <span>{item.quantity}</span>
+                            <button className="qty-btn" onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}>+</button>
+                          </div>
+                          <button className="remove-btn" onClick={() => onRemoveItem(item.product.id)}>
+                            <Trash2 size={18} />
+                          </button>
                         </div>
-                        <button className="remove-btn" onClick={() => onRemoveItem(item.product.id)}>
-                          <Trash2 size={18} />
-                        </button>
                       </div>
-                    </div>
-                    <div className="cart-item-total" style={{ fontWeight: 600, fontSize: '1.2rem' }}>
-                      ₹{basePrice * item.quantity}
-                    </div>
-                  </motion.div>
+                      <div className="cart-item-total" style={{ fontWeight: 600, fontSize: '1.2rem' }}>
+                        ₹{basePrice * item.quantity}
+                      </div>
+                    </motion.div>
+
+                    {/* BOGO Free Item */}
+                    <motion.div 
+                      className="cart-item free-gift-item"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      style={{ marginTop: '-15px', borderTop: 'none', background: 'rgba(5, 150, 105, 0.05)' }}
+                    >
+                      <div className="free-gift-badge" style={{ background: '#059669' }}>Buy 1 Get 1 FREE</div>
+                      <img src={(item.product.image_urls || item.product.images || [])[0]} alt={item.product.name} className="cart-item-image" style={{ filter: 'grayscale(20%)', opacity: 0.9 }} />
+                      <div className="cart-item-details">
+                        <h3 className="cart-item-title text-emerald" style={{ color: '#059669' }}>{item.product.name} (Free)</h3>
+                        <p className="cart-item-price" style={{ textDecoration: 'line-through', color: '#888' }}>₹{basePrice}</p>
+                        <p className="cart-item-price text-emerald" style={{ color: '#059669', marginTop: '-5px', fontWeight: 'bold' }}>₹0</p>
+                        <div className="cart-item-actions">
+                          <span style={{ padding: '4px 12px', background: 'rgba(0,0,0,0.05)', borderRadius: '20px', fontSize: '0.9rem', color: '#555' }}>Qty: {item.quantity}</span>
+                        </div>
+                      </div>
+                      <div className="cart-item-total text-emerald" style={{ fontWeight: 600, fontSize: '1.2rem', color: '#059669' }}>
+                        ₹0
+                      </div>
+                    </motion.div>
+                  </React.Fragment>
                 );
               })}
-
-              {hasFreeGift && (
-                <motion.div 
-                  className="cart-item free-gift-item"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <div className="free-gift-badge">Free Gift</div>
-                  <div className="cart-item-image" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', fontSize: '3rem' }}>
-                    ✨
-                  </div>
-                  <div className="cart-item-details">
-                    <h3 className="cart-item-title text-gold">L-Glutathione</h3>
-                    <p className="cart-item-price" style={{ textDecoration: 'line-through', color: '#888' }}>₹1999</p>
-                    <p className="cart-item-price text-emerald" style={{ color: 'var(--color-accent-emerald)', marginTop: '-5px' }}>FREE</p>
-                    <div className="cart-item-actions">
-                      <span style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', fontSize: '0.9rem' }}>Qty: 1</span>
-                    </div>
-                  </div>
-                  <div className="cart-item-total text-emerald" style={{ fontWeight: 600, fontSize: '1.2rem', color: 'var(--color-accent-emerald)' }}>
-                    ₹0
-                  </div>
-                </motion.div>
-              )}
             </div>
 
             <div className="cart-summary-section">

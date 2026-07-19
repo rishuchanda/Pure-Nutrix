@@ -38,7 +38,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
       return acc + (price * item.quantity);
     }, 0);
     
-    const hasFreeGift = totalQuantity >= 2;
+    // BOGO: Every item gets a free copy.
 
     const handlePayment = async (e) => {
     e.preventDefault();
@@ -58,8 +58,11 @@ const OrderPage = ({ product, cartItems, onBack }) => {
       // Prepare order data
       const addressString = `${formData.flat}, ${formData.area}`;
       
-      const itemNames = orderItems.map(item => `${item.quantity}x ${item.product.name}`).join(', ');
-      const finalProductName = itemNames + (hasFreeGift ? ' (+ 1x Free L-Glutathione)' : '');
+      const itemNames = orderItems.map(item => {
+        const qty = cartItems ? item.quantity : singleProductQty;
+        return `${qty}x ${item.product.name} (+ ${qty}x Free BOGO)`;
+      }).join(', ');
+      const finalProductName = itemNames;
       
       // Use the first image from the first product as thumbnail
       const firstProductImage = orderItems.length > 0 ? (orderItems[0].product.image_urls || orderItems[0].product.images || [])[0] || '' : '';
@@ -255,41 +258,43 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                   
                   {orderItems.map((item, idx) => {
                     const basePrice = typeof item.product.price === 'number' ? item.product.price : Number(item.product.price.toString().replace(/[^0-9.-]+/g, ""));
+                    const qty = cartItems ? item.quantity : singleProductQty;
                     return (
-                      <div className="summary-product" key={item.product.id || idx}>
-                        <div className="summary-image-wrapper">
-                          <img src={(item.product.image_urls || item.product.images || [])[0]} alt={item.product.name} />
+                      <React.Fragment key={item.product.id || idx}>
+                        <div className="summary-product">
+                          <div className="summary-image-wrapper">
+                            <img src={(item.product.image_urls || item.product.images || [])[0]} alt={item.product.name} />
+                          </div>
+                          <div className="summary-details">
+                            <h4>{item.product.name}</h4>
+                            {cartItems ? (
+                               <p>Qty: {item.quantity}</p>
+                            ) : (
+                              <div className="qty-selector" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '8px 0' }}>
+                                <button type="button" onClick={() => setSingleProductQty(Math.max(1, singleProductQty - 1))} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>-</button>
+                                <span>{singleProductQty}</span>
+                                <button type="button" onClick={() => setSingleProductQty(singleProductQty + 1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>+</button>
+                              </div>
+                            )}
+                            <p className="summary-price">₹{basePrice}</p>
+                          </div>
                         </div>
-                        <div className="summary-details">
-                          <h4>{item.product.name}</h4>
-                          {cartItems ? (
-                             <p>Qty: {item.quantity}</p>
-                          ) : (
-                            <div className="qty-selector" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '8px 0' }}>
-                              <button type="button" onClick={() => setSingleProductQty(Math.max(1, singleProductQty - 1))} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>-</button>
-                              <span>{singleProductQty}</span>
-                              <button type="button" onClick={() => setSingleProductQty(singleProductQty + 1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>+</button>
-                            </div>
-                          )}
-                          <p className="summary-price">₹{basePrice}</p>
+
+                        {/* BOGO Free Item */}
+                        <div className="summary-product free-item" style={{ marginTop: '5px', padding: '10px', background: 'rgba(5, 150, 105, 0.05)', borderRadius: '8px', border: '1px dashed #059669' }}>
+                          <div className="summary-image-wrapper">
+                            <img src={(item.product.image_urls || item.product.images || [])[0]} alt={item.product.name} style={{ filter: 'grayscale(20%)', opacity: 0.9 }} />
+                          </div>
+                          <div className="summary-details">
+                            <h4 style={{ color: '#059669' }}>{item.product.name} (Free BOGO)</h4>
+                            <p>Qty: {qty}</p>
+                            <p className="summary-price" style={{ textDecoration: 'line-through', color: '#888' }}>₹{basePrice}</p>
+                            <p className="summary-price" style={{ color: '#059669', fontWeight: 'bold' }}>₹0</p>
+                          </div>
                         </div>
-                      </div>
+                      </React.Fragment>
                     );
                   })}
-
-                  {hasFreeGift && (
-                    <div className="summary-product free-item" style={{ marginTop: '15px', padding: '10px', background: 'rgba(255, 215, 0, 0.1)', borderRadius: '8px', border: '1px dashed var(--color-accent-gold)' }}>
-                      <div className="summary-image-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-                        <span style={{ fontSize: '24px' }}>✨</span>
-                      </div>
-                      <div className="summary-details">
-                        <h4 style={{ color: 'var(--color-accent-gold)' }}>L-Glutathione (Free Gift)</h4>
-                        <p>1</p>
-                        <p className="summary-price" style={{ textDecoration: 'line-through', color: '#888' }}>₹1999</p>
-                        <p className="summary-price" style={{ color: 'var(--color-accent-emerald)' }}>FREE</p>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="summary-calculations">
                     <div className="calc-row">
