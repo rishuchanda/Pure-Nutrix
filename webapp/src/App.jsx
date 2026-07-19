@@ -11,6 +11,7 @@ import AccountPage from './components/AccountPage';
 import AdminDashboard from './components/AdminDashboard';
 import ProductsPage from './components/ProductsPage';
 import ProductDetailsPage from './components/ProductDetailsPage';
+import CartPage from './components/CartPage';
 import { supabase } from './supabaseClient';
 import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
@@ -21,8 +22,34 @@ function App() {
   const { scrollYProgress } = useScroll();
   const [user, setUser] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'order' | 'account' | 'products' | 'pdp'
+  const [currentView, setCurrentView] = useState('home'); // 'home' | 'order' | 'account' | 'products' | 'pdp' | 'cart'
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [cartItems, setCartItems] = useState([]);
+
+  const handleAddToCart = (product) => {
+    setCartItems(prev => {
+      const existing = prev.find(item => item.product.id === product.id);
+      if (existing) {
+        return prev.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...prev, { product, quantity: 1 }];
+    });
+    // Visual feedback handled by alert for now, or just let them know
+    alert('Added to cart!');
+  };
+
+  const handleUpdateCartQty = (productId, qty) => {
+    setCartItems(prev => prev.map(item => item.product.id === productId ? { ...item, quantity: qty } : item));
+  };
+
+  const handleRemoveFromCart = (productId) => {
+    setCartItems(prev => prev.filter(item => item.product.id !== productId));
+  };
+
+  const handleOpenCart = () => {
+    setCurrentView('cart');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleOpenAccount = () => {
     setCurrentView('account');
@@ -108,6 +135,8 @@ function App() {
           onOpenAuth={() => setIsAuthModalOpen(true)} 
           onOpenAccount={handleOpenAccount}
           onSignOut={() => supabase.auth.signOut()} 
+          onOpenCart={handleOpenCart}
+          cartCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)}
         />
       )}
       <AnimatePresence mode="wait">
@@ -121,7 +150,7 @@ function App() {
           >
             <main>
               <Hero3D />
-              <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
+              <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} onAddToCart={handleAddToCart} />
               <WhyChooseUs />
               <TrustSection />
             </main>
@@ -135,7 +164,27 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <OrderPage product={selectedProduct} onBack={handleBackToHome} />
+            <OrderPage product={selectedProduct} cartItems={currentView === 'order' && !selectedProduct ? cartItems : null} onBack={handleBackToHome} />
+          </motion.div>
+        ) : currentView === 'cart' ? (
+          <motion.div 
+            key="cart"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <CartPage 
+              cartItems={cartItems} 
+              onUpdateQuantity={handleUpdateCartQty} 
+              onRemoveItem={handleRemoveFromCart} 
+              onBack={handleBackToHome}
+              onCheckout={() => {
+                setSelectedProduct(null); // Clear selected product so OrderPage uses cartItems
+                setCurrentView('order');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
           </motion.div>
         ) : currentView === 'admin' ? (
           <motion.div 
@@ -165,7 +214,7 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <ProductsPage onProductClick={handleOpenProductDetails} onBack={handleBackToHome} onOrder={handleOrder} />
+            <ProductsPage onProductClick={handleOpenProductDetails} onBack={handleBackToHome} onOrder={handleOrder} onAddToCart={handleAddToCart} />
           </motion.div>
         ) : currentView === 'pdp' ? (
           <motion.div 
@@ -175,7 +224,7 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} />
+            <ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} />
           </motion.div>
         ) : null}
       </AnimatePresence>

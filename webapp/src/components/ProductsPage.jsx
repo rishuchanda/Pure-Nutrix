@@ -4,7 +4,7 @@ import { ChevronRight, ArrowLeft } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import './ProductsPage.css';
 
-const ProductsPage = ({ onProductClick, onBack, onOrder }) => {
+const ProductsPage = ({ onProductClick, onBack, onOrder, onAddToCart }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -85,7 +85,7 @@ const ProductsPage = ({ onProductClick, onBack, onOrder }) => {
                   <div className="product-actions">
                     <button 
                       className="add-to-cart-btn" 
-                      onClick={(e) => { e.stopPropagation(); alert('Added to cart!'); }}
+                      onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); }}
                     >
                       Add to Cart
                     </button>

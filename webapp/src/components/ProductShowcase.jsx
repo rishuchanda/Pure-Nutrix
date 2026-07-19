@@ -19,7 +19,7 @@ const ProductIngredients = ({ ingredients }) => {
   );
 };
 
-const ProductCard = ({ product, index, onOrder, onProductClick }) => {
+const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) => {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
 
   const imagesList = product.image_urls || product.images || [];
@@ -119,7 +119,7 @@ const ProductCard = ({ product, index, onOrder, onProductClick }) => {
         <div className="product-actions">
           <button 
             className="add-to-cart-btn" 
-            onClick={(e) => { e.stopPropagation(); alert('Added to cart!'); }}
+            onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); }}
           >
             Add to Cart
           </button>
@@ -135,7 +135,7 @@ const ProductCard = ({ product, index, onOrder, onProductClick }) => {
   );
 };
 
-const ProductShowcase = ({ onOrder, onProductClick }) => {
+const ProductShowcase = ({ onOrder, onProductClick, onAddToCart }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -179,7 +179,7 @@ const ProductShowcase = ({ onOrder, onProductClick }) => {
             <div style={{ textAlign: 'center', width: '100%', padding: '40px' }}>Loading premium products...</div>
           ) : (
             products.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} onOrder={onOrder} onProductClick={onProductClick} />
+              <ProductCard key={product.id} product={product} index={index} onOrder={onOrder} onProductClick={onProductClick} onAddToCart={onAddToCart} />
             ))
           )}
         </div>

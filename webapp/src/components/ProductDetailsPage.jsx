@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingBag, ShieldCheck, Truck, RefreshCw } from 'lucide-react';
 import './ProductDetailsPage.css';
 
-const ProductDetailsPage = ({ product, onBack, onOrder }) => {
+const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
   const [activeImage, setActiveImage] = useState(0);
 
   if (!product) return null;
@@ -53,9 +53,14 @@ const ProductDetailsPage = ({ product, onBack, onOrder }) => {
 
             <p className="pdp-short-desc">{product.short_description}</p>
 
-            <button className="btn-primary pdp-order-btn" onClick={() => onOrder(product)}>
-              <ShoppingBag size={20} /> Buy Now
-            </button>
+            <div className="pdp-actions" style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+              <button className="btn-outline pdp-cart-btn" onClick={() => onAddToCart && onAddToCart(product)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <ShoppingBag size={20} /> Add to Cart
+              </button>
+              <button className="btn-primary pdp-order-btn" onClick={() => onOrder(product)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: 0 }}>
+                <ShoppingBag size={20} /> Buy Now
+              </button>
+            </div>
 
             <div className="pdp-trust-badges">
               <div className="pdp-trust-badge"><ShieldCheck size={20} className="text-gold"/> Authentic Quality</div>

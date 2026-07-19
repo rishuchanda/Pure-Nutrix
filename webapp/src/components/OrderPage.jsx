@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2, CreditCard, Wallet, Truck, ShieldCheck } from 
 import { supabase } from '../supabaseClient';
 import './OrderPage.css';
 
-const OrderPage = ({ product, onBack }) => {
+const OrderPage = ({ product, cartItems, onBack }) => {
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -27,10 +27,18 @@ const OrderPage = ({ product, onBack }) => {
 
   const [authError, setAuthError] = useState(null);
 
-    const [quantity, setQuantity] = useState(1);
-    const basePrice = typeof product.price === 'number' ? product.price : Number(product.price.toString().replace(/[^0-9.-]+/g, ""));
-    const totalPrice = basePrice * quantity;
-    const hasFreeGift = quantity >= 2;
+    // Normalization: if cartItems is provided, use it. Otherwise, use the single product with quantity state.
+    const [singleProductQty, setSingleProductQty] = useState(1);
+    
+    const orderItems = cartItems || (product ? [{ product, quantity: singleProductQty }] : []);
+    
+    const totalQuantity = orderItems.reduce((acc, item) => acc + item.quantity, 0);
+    const totalPrice = orderItems.reduce((acc, item) => {
+      const price = typeof item.product.price === 'number' ? item.product.price : Number(item.product.price.toString().replace(/[^0-9.-]+/g, ""));
+      return acc + (price * item.quantity);
+    }, 0);
+    
+    const hasFreeGift = totalQuantity >= 2;
 
     const handlePayment = async (e) => {
     e.preventDefault();
@@ -49,7 +57,12 @@ const OrderPage = ({ product, onBack }) => {
 
       // Prepare order data
       const addressString = `${formData.flat}, ${formData.area}`;
-      const finalProductName = product.name + (hasFreeGift ? ' (+ 1x Free L-Glutathione)' : '');
+      
+      const itemNames = orderItems.map(item => `${item.quantity}x ${item.product.name}`).join(', ');
+      const finalProductName = itemNames + (hasFreeGift ? ' (+ 1x Free L-Glutathione)' : '');
+      
+      // Use the first image from the first product as thumbnail
+      const firstProductImage = orderItems.length > 0 ? (orderItems[0].product.image_urls || orderItems[0].product.images || [])[0] || '' : '';
       
       // Insert into Supabase
       const { error } = await supabase
@@ -65,8 +78,8 @@ const OrderPage = ({ product, onBack }) => {
             pincode: formData.pincode,
             product_name: finalProductName,
             price: totalPrice,
-            qty: quantity,
-            image: (product.image_urls || product.images || [])[0] || '',
+            qty: totalQuantity,
+            image: firstProductImage,
             status: 'Processing'
           }
         ]);
@@ -86,7 +99,7 @@ const OrderPage = ({ product, onBack }) => {
     }
   };
 
-  if (!product) return null;
+  if (!product && (!cartItems || cartItems.length === 0)) return null;
 
   return (
     <div className="order-page-wrapper">
@@ -240,20 +253,29 @@ const OrderPage = ({ product, onBack }) => {
                 <div className="glass-card summary-card">
                   <h3 className="summary-title">Order Summary</h3>
                   
-                  <div className="summary-product">
-                    <div className="summary-image-wrapper">
-                      <img src={(product.image_urls || product.images || [])[0]} alt={product.name} />
-                    </div>
-                    <div className="summary-details">
-                      <h4>{product.name}</h4>
-                      <div className="qty-selector" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '8px 0' }}>
-                        <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>-</button>
-                        <span>{quantity}</span>
-                        <button type="button" onClick={() => setQuantity(quantity + 1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>+</button>
+                  {orderItems.map((item, idx) => {
+                    const basePrice = typeof item.product.price === 'number' ? item.product.price : Number(item.product.price.toString().replace(/[^0-9.-]+/g, ""));
+                    return (
+                      <div className="summary-product" key={item.product.id || idx}>
+                        <div className="summary-image-wrapper">
+                          <img src={(item.product.image_urls || item.product.images || [])[0]} alt={item.product.name} />
+                        </div>
+                        <div className="summary-details">
+                          <h4>{item.product.name}</h4>
+                          {cartItems ? (
+                             <p>Qty: {item.quantity}</p>
+                          ) : (
+                            <div className="qty-selector" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '8px 0' }}>
+                              <button type="button" onClick={() => setSingleProductQty(Math.max(1, singleProductQty - 1))} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>-</button>
+                              <span>{singleProductQty}</span>
+                              <button type="button" onClick={() => setSingleProductQty(singleProductQty + 1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>+</button>
+                            </div>
+                          )}
+                          <p className="summary-price">₹{basePrice}</p>
+                        </div>
                       </div>
-                      <p className="summary-price">₹{basePrice}</p>
-                    </div>
-                  </div>
+                    );
+                  })}
 
                   {hasFreeGift && (
                     <div className="summary-product free-item" style={{ marginTop: '15px', padding: '10px', background: 'rgba(255, 215, 0, 0.1)', borderRadius: '8px', border: '1px dashed var(--color-accent-gold)' }}>
@@ -313,7 +335,7 @@ const OrderPage = ({ product, onBack }) => {
               <h1 className="success-title">Order Confirmed!</h1>
               <p className="success-desc">
                 Thank you, <span className="text-gold" style={{fontWeight: 600}}>{formData.name || 'Valued Customer'}</span>. <br/>
-                Your order for <strong>{product.name}</strong> is being processed. 
+                Your order is being processed. 
                 We'll send the tracking updates to your mobile number <strong>{formData.mobile}</strong> shortly.
               </p>
               

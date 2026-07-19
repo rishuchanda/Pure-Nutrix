@@ -62,8 +62,10 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
             <User size={20} />
           </button>
 
-          {/* Cart Button */}
-          <button className={`btn-outline cart-btn ${cartCount === 0 ? 'hide-on-mobile' : 'mobile-small-cart'}`}>
+          <button 
+            className={`btn-outline cart-btn ${cartCount === 0 ? 'hide-on-mobile' : 'mobile-small-cart'}`}
+            onClick={onOpenCart}
+          >
             <ShoppingCart size={20} />
             <span className="cart-count">{cartCount}</span>
           </button>
