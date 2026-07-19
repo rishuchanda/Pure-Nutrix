@@ -13,6 +13,7 @@ import ProductsPage from './components/ProductsPage';
 import ProductDetailsPage from './components/ProductDetailsPage';
 import CartPage from './components/CartPage';
 import QualityStandardsPage from './components/QualityStandardsPage';
+import LegalPolicyPage from './components/LegalPolicyPage';
 import { supabase } from './supabaseClient';
 import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
@@ -71,6 +72,11 @@ function App() {
 
   const handleOpenQuality = () => {
     setCurrentView('quality-standards');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenLegalPolicy = () => {
+    setCurrentView('legal-policy');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -163,7 +169,7 @@ function App() {
               <WhyChooseUs />
               <TrustSection />
             </main>
-            <Footer onOpenQuality={handleOpenQuality} />
+            <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} />
           </motion.div>
         ) : currentView === 'order' ? (
           <motion.div 
@@ -244,6 +250,16 @@ function App() {
             transition={{ duration: 0.5 }}
           >
             <QualityStandardsPage onBack={handleBackToHome} onExplore={handleOpenProducts} />
+          </motion.div>
+        ) : currentView === 'legal-policy' ? (
+          <motion.div 
+            key="legal-policy"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <LegalPolicyPage onBack={handleBackToHome} />
           </motion.div>
         ) : null}
       </AnimatePresence>

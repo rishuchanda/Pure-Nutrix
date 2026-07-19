@@ -1,7 +1,7 @@
 import React from 'react';
 import './Footer.css';
 
-const Footer = ({ onOpenQuality }) => {
+const Footer = ({ onOpenQuality, onOpenLegalPolicy }) => {
   return (
     <footer className="footer glass">
       <div className="container footer-content">
@@ -22,7 +22,7 @@ const Footer = ({ onOpenQuality }) => {
           <h3>Company</h3>
           <a href="#">Our Story</a>
           <a href="#" onClick={(e) => { e.preventDefault(); if (onOpenQuality) onOpenQuality(); }}>Quality & Standards</a>
-          <a href="#">Science & Research</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); if (onOpenLegalPolicy) onOpenLegalPolicy(); }}>Legal & Policy</a>
           <a href="#">Contact Us</a>
         </div>
       </div>
