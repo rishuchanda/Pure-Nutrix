@@ -50,7 +50,8 @@ const AdminDashboard = ({ user }) => {
   const fetchInventory = async () => {
     try {
       setLoadingInventory(true);
-      const { data, error } = await supabase.from('inventory').select('*').order('product_name', { ascending: true });
+      // Fetching from the main 'products' table to ensure accurate stock
+      const { data, error } = await supabase.from('products').select('*').order('name', { ascending: true });
       if (error) throw error;
       setInventoryList(data || []);
     } catch (error) {
@@ -486,21 +487,25 @@ const AdminDashboard = ({ user }) => {
                         ) : inventoryList.length === 0 ? (
                           <tr><td colSpan="4" style={{textAlign: 'center'}}>No inventory found.</td></tr>
                         ) : (
-                          inventoryList.map(item => (
-                            <tr key={item.id}>
-                              <td>
-                                <div style={{ fontWeight: 500 }}>{item.product_name}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', fontFamily: 'monospace' }}>{item.sku}</div>
-                              </td>
-                              <td>{item.batch_no}</td>
-                              <td style={{ fontWeight: 600 }}>{item.stock_level} units</td>
-                              <td>
-                                <span className={`admin-badge ${item.status === 'In Stock' ? 'badge-success' : item.status === 'Low Stock' ? 'badge-warning' : 'badge-error'}`}>
-                                  {item.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))
+                          inventoryList.map(item => {
+                            const stockLevel = item.quantity || 0;
+                            const status = stockLevel <= 0 ? 'Out of Stock' : (stockLevel < 10 ? 'Low Stock' : 'In Stock');
+                            return (
+                              <tr key={item.id}>
+                                <td>
+                                  <div style={{ fontWeight: 500 }}>{item.name}</div>
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', fontFamily: 'monospace' }}>{item.sku || 'N/A'}</div>
+                                </td>
+                                <td style={{ color: 'var(--admin-text-muted)' }}>{item.batch_no || '-'}</td>
+                                <td style={{ fontWeight: 600 }}>{stockLevel} units</td>
+                                <td>
+                                  <span className={`admin-badge ${status === 'In Stock' ? 'badge-success' : status === 'Low Stock' ? 'badge-warning' : 'badge-error'}`}>
+                                    {status}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })
                         )}
                       </tbody>
                     </table>
