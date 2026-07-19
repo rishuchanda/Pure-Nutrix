@@ -24,6 +24,7 @@ const AdminDashboard = ({ user }) => {
   // Real data state
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [orderFilter, setOrderFilter] = useState('pending');
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
@@ -502,8 +503,8 @@ const AdminDashboard = ({ user }) => {
                             <td style={{ color: 'var(--admin-text-muted)' }}>{new Date(order.created_at).toLocaleDateString('en-GB')}</td>
                             <td><span className="admin-badge badge-success">Paid</span></td>
                             <td>
-                              <span className={`admin-badge ${order.status?.toLowerCase() === 'delivered' ? 'badge-success' : order.status?.toLowerCase() === 'processing' ? 'badge-warning' : 'badge-info'}`}>
-                                {order.status || 'Processing'}
+                              <span className={`admin-badge ${(order.status || 'pending').toLowerCase() === 'delivered' ? 'badge-success' : (order.status || 'pending').toLowerCase() === 'pending' ? 'badge-error' : 'badge-info'}`}>
+                                {(order.status || 'pending').toUpperCase()}
                               </span>
                             </td>
                           </tr>
@@ -520,9 +521,23 @@ const AdminDashboard = ({ user }) => {
                   <div className="admin-page-header">
                     <div>
                       <h1>Order Fulfillment</h1>
-                      <p>Manage and track all customer orders.</p>
+                      <p>Manage and track all customer orders through the fulfillment pipeline.</p>
                     </div>
                   </div>
+
+                  <div className="order-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                    {['pending', 'packing', 'shipped', 'delivered'].map(status => (
+                      <button 
+                        key={status}
+                        onClick={() => setOrderFilter(status)}
+                        className={`admin-btn ${orderFilter === status ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
+                        style={{ textTransform: 'capitalize', padding: '8px 16px' }}
+                      >
+                        {status} ({orders.filter(o => (o.status || 'pending').toLowerCase() === status).length})
+                      </button>
+                    ))}
+                  </div>
+
                   <div className="admin-table-container">
                     <table className="admin-table">
                       <thead>
@@ -531,16 +546,16 @@ const AdminDashboard = ({ user }) => {
                           <th>Product Details</th>
                           <th>Customer</th>
                           <th>Date</th>
-                          <th>Status</th>
+                          <th>Status / Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {loadingOrders ? (
                           <tr><td colSpan="5" style={{textAlign: 'center'}}>Loading live orders...</td></tr>
-                        ) : orders.length === 0 ? (
-                          <tr><td colSpan="5" style={{textAlign: 'center'}}>No orders found.</td></tr>
+                        ) : orders.filter(o => (o.status || 'pending').toLowerCase() === orderFilter).length === 0 ? (
+                          <tr><td colSpan="5" style={{textAlign: 'center'}}>No {orderFilter} orders found.</td></tr>
                         ) : (
-                          orders.map(order => (
+                          orders.filter(o => (o.status || 'pending').toLowerCase() === orderFilter).map(order => (
                             <tr key={order.id}>
                               <td style={{fontFamily: 'monospace', color: 'var(--admin-text-muted)'}}>#{order.id.split('-')[0].toUpperCase()}</td>
                               <td>
@@ -558,18 +573,24 @@ const AdminDashboard = ({ user }) => {
                               </td>
                               <td style={{ color: 'var(--admin-text-muted)' }}>{new Date(order.created_at).toLocaleDateString('en-GB')}</td>
                               <td>
-                                <select 
-                                  className="admin-select"
-                                  value={order.status ? order.status.toLowerCase() : 'processing'}
-                                  onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                  disabled={adminRole === 'viewer'}
-                                  style={{ width: '150px' }}
-                                >
-                                  <option value="processing">Processing</option>
-                                  <option value="shipped">Shipped</option>
-                                  <option value="out_for_delivery">Out for Delivery</option>
-                                  <option value="delivered">Delivered</option>
-                                </select>
+                                {orderFilter === 'pending' && (
+                                  <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'packing')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
+                                    Accept Order
+                                  </button>
+                                )}
+                                {orderFilter === 'packing' && (
+                                  <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'shipped')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#3b82f6', borderColor: '#3b82f6' }}>
+                                    Mark as Shipped
+                                  </button>
+                                )}
+                                {orderFilter === 'shipped' && (
+                                  <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'delivered')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#10b981', borderColor: '#10b981' }}>
+                                    Mark as Delivered
+                                  </button>
+                                )}
+                                {orderFilter === 'delivered' && (
+                                  <span className="admin-badge badge-success">Completed</span>
+                                )}
                               </td>
                             </tr>
                           ))
