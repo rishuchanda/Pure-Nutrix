@@ -10,3 +10,19 @@
   mix-blend-mode: screen; /* Blend the drops onto the section */
   opacity: 1;
 }
+
+/* Hide iOS Safari giant play button if autoplay is blocked (e.g., Low Power Mode) */
+.rain-canvas::-webkit-media-controls {
+  display: none !important;
+}
+.rain-canvas::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+.rain-canvas::-webkit-media-controls-play-button {
+  display: none !important;
+}
+.rain-canvas::-webkit-media-controls-panel {
+  display: none !important;
+  -webkit-appearance: none;
+}
