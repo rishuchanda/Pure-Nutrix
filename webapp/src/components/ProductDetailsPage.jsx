@@ -78,10 +78,6 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
                     <td>{product.product_form || 'N/A'}</td>
                   </tr>
                   <tr>
-                    <th>Quantity</th>
-                    <td>{product.quantity || 'N/A'}</td>
-                  </tr>
-                  <tr>
                     <th>Product Type</th>
                     <td>{product.product_type || 'N/A'}</td>
                   </tr>
