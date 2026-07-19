@@ -27,6 +27,7 @@
 }
 
 .pdp-main-image-container {
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
   border-radius: 12px;
@@ -302,9 +303,16 @@
   gap: 30px;
 }
 
+.pdp-detail-section {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .pdp-detail-section p {
   color: var(--color-text-secondary);
   line-height: 1.6;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Customer Reviews */
