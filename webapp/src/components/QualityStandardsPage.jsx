@@ -258,14 +258,14 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
           
           <div className="pdf-preview-grid">
             {[
-              { id: 'fssai', name: 'FSSAI License', file: 'fssai.pdf' },
-              { id: 'haccp', name: 'HACCP Certificate', file: 'haccp.pdf' },
-              { id: 'fda', name: 'FDA Registration', file: 'fda.pdf' },
-              { id: 'kosher', name: 'KOSHER Certificate', file: 'kosher.pdf' },
-              { id: 'iso22000', name: 'ISO 22000:2018', file: 'iso22000.pdf' },
-              { id: 'iso9001', name: 'ISO 9001:2015', file: 'iso9001.pdf' },
-              { id: 'whogmp', name: 'WHO-GMP Certified', file: 'who-gmp.pdf' },
-              { id: 'organic', name: 'Organic Certified', file: 'organic.pdf' }
+              { id: 'fssai', name: 'FSSAI License', file: 'fssai.pdf', img: null },
+              { id: 'haccp', name: 'HACCP Certificate', file: 'haccp.pdf', img: 'haccp.png' },
+              { id: 'fda', name: 'FDA Registration', file: 'fda.pdf', img: 'fda.png' },
+              { id: 'kosher', name: 'KOSHER Certificate', file: 'kosher.pdf', img: 'kosher.png' },
+              { id: 'iso22000', name: 'ISO 22000:2018', file: 'iso22000.pdf', img: 'iso22000.png' },
+              { id: 'iso9001', name: 'ISO 9001:2015', file: 'iso9001.pdf', img: 'iso9001.png' },
+              { id: 'whogmp', name: 'WHO-GMP Certified', file: 'who-gmp.pdf', img: 'who-gmp.png' },
+              { id: 'organic', name: 'Organic Certified', file: 'organic.pdf', img: 'organic.png' }
             ].map((doc, idx) => (
               <motion.div 
                 key={doc.id}
@@ -276,12 +276,20 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
                 transition={{ delay: 0.3 + (idx * 0.1) }}
                 onClick={() => window.open(`/assets/certificates/${doc.file}`, '_blank')}
               >
-                <div className="pdf-icon">
-                  <FileText size={48} />
+                <div className="pdf-image-container">
+                  {doc.img ? (
+                    <img src={`/assets/certificates/${doc.img}`} alt={doc.name} className="pdf-preview-img" />
+                  ) : (
+                    <div className="pdf-icon-fallback">
+                      <FileText size={48} />
+                    </div>
+                  )}
+                  <div className="pdf-overlay">
+                    <span>Click to view PDF</span>
+                  </div>
                 </div>
                 <div className="pdf-info">
                   <h4>{doc.name}</h4>
-                  <span>Click to view PDF</span>
                 </div>
               </motion.div>
             ))}
