@@ -21,11 +21,11 @@
   aspect-ratio: 1;
   border-radius: 12px;
   overflow: hidden;
-  background: #111;
+  background: var(--glass-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   margin-bottom: 20px;
 }
 
@@ -36,7 +36,7 @@
 }
 
 .pdp-no-image {
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 1.2rem;
 }
 
@@ -71,7 +71,8 @@
 }
 
 .pdp-category {
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 600;
   letter-spacing: 2px;
   margin-bottom: 10px;
   text-transform: uppercase;
@@ -79,10 +80,9 @@
 
 .pdp-title {
   font-size: 2.5rem;
-  font-family: var(--font-secondary);
-  line-height: 1.2;
+  line-height: 1.1;
   margin-bottom: 20px;
-  color: var(--text-color);
+  color: var(--color-title-text);
 }
 
 .pdp-price-row {
@@ -95,17 +95,17 @@
 .pdp-price {
   font-size: 2rem;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .pdp-tax-inclusive {
   font-size: 0.9rem;
-  color: #888;
+  color: var(--color-text-secondary);
 }
 
 .pdp-short-desc {
   font-size: 1.1rem;
-  color: #ccc;
+  color: var(--color-text-secondary);
   line-height: 1.6;
   margin-bottom: 30px;
 }
@@ -124,8 +124,8 @@
 .pdp-trust-badges {
   display: flex;
   justify-content: space-between;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
   padding: 20px 0;
   margin-bottom: 40px;
 }
@@ -135,7 +135,7 @@
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
-  color: #bbb;
+  color: var(--color-text-secondary);
 }
 
 .pdp-section-title {
@@ -154,18 +154,18 @@
 
 .pdp-specs-table th, .pdp-specs-table td {
   padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--glass-border);
   text-align: left;
 }
 
 .pdp-specs-table th {
-  color: #888;
+  color: var(--color-text-secondary);
   width: 40%;
   font-weight: normal;
 }
 
 .pdp-specs-table td {
-  color: #fff;
+  color: var(--color-text-primary);
   font-weight: 500;
 }
 
@@ -176,6 +176,6 @@
 }
 
 .pdp-detail-section p {
-  color: #ccc;
+  color: var(--color-text-secondary);
   line-height: 1.6;
 }
