@@ -1,8 +1,9 @@
 .trust-section {
   padding: 80px 5%;
-  background-color: transparent; /* Changed to transparent so particles show through */
+  background-color: var(--color-bg-primary); /* MUST have a background for mix-blend-mode to work */
   text-align: center;
   position: relative;
+  overflow: hidden; /* Added to keep video inside bounds */
   z-index: 2;
   border-top: 1px solid #e4e4e7;
   border-bottom: 1px solid #e4e4e7;

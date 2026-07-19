@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Lato:wght@300;400;700&display=swap');
 
 :root {
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f9fafb;
+  --color-bg-primary: #d1d5db; /* Grayish background to match hero section */
+  --color-bg-secondary: #cbd5e1;
   --color-text-primary: #111111;
   --color-text-secondary: #52525b;
   --color-title-text: #5a5f66; /* Dark platinum for titles */

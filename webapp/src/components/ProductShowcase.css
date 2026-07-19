@@ -1,8 +1,8 @@
 .product-showcase {
   position: relative;
   z-index: 2;
-  /* Fully transparent background so it seamlessly floats over the fixed white canvas */
-  background-color: transparent;
+  overflow: hidden; /* Added to keep video inside bounds */
+  background-color: var(--color-bg-primary); /* MUST have a background for mix-blend-mode to work */
 }
 
 .section-header {

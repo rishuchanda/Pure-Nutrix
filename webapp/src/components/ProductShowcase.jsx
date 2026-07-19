@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import RainEffect from './RainEffect';
 import './ProductShowcase.css';
 
 const ProductIngredients = ({ ingredients }) => {
@@ -160,6 +161,7 @@ const ProductShowcase = ({ onOrder, onProductClick }) => {
 
   return (
     <section className="product-showcase section-padding" id="products">
+      <RainEffect />
       <div className="container">
         <motion.div 
           className="section-header"

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldCheck, Award, CheckCircle, Leaf, Microscope, Sprout } from 'lucide-react';
 import { motion } from 'framer-motion';
+import RainEffect from './RainEffect';
 import './TrustSection.css';
 
 const trustBadges = [
@@ -45,6 +46,7 @@ const trustBadges = [
 const TrustSection = () => {
   return (
     <section className="trust-section section-padding">
+      <RainEffect />
       <div className="container">
           <motion.div 
           className="trust-header"

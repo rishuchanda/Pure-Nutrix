@@ -15,6 +15,7 @@ import { supabase } from './supabaseClient';
 import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
+import RainEffect from './components/RainEffect';
 
 function App() {
   const { scrollYProgress } = useScroll();

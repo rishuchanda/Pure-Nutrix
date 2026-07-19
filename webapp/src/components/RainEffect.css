@@ -1,0 +1,12 @@
+.rain-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 9999; /* Changed to 9999 so drops appear OVER the text and products */
+  pointer-events: none; /* Crucial so it doesn't block clicks */
+  mix-blend-mode: screen; /* Blend the drops onto the section */
+  opacity: 1;
+}

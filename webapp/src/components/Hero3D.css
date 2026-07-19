@@ -1,26 +1,34 @@
 .hero-section-interactive {
   position: relative;
   min-height: 100vh;
-  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: transparent;
+  background-color: var(--color-bg-primary); /* Use global variable for seamless blending */
+  overflow: hidden;
 }
 
-.hero-canvas-interactive {
-  position: fixed;
+.hero-video-bg {
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
-  z-index: 0;
-  background-color: #ffffff; /* Pure white background */
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: screen; /* Composition Screen as requested */
+  opacity: 1;
+}
+
+.glass-pane {
+  display: none; /* Disabled */
 }
 
 .hero-content-interactive {
   position: relative;
-  z-index: 2;
+  z-index: 10;
+  /* Bring text to the very front */
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -44,9 +52,12 @@
   font-size: 6rem;
   line-height: 1.05;
   margin-bottom: 50px;
-  letter-spacing: -3px; /* Very tight spacing for the brutalist/antigravity look */
-  font-weight: 500;
-  color: var(--color-title-text);
+  letter-spacing: -3px;
+  /* Very tight spacing for the brutalist/antigravity look */
+  font-weight: 600;
+  color: #111111;
+  /* Dark text for light background */
+  text-shadow: none;
 }
 
 .interactive-actions {
@@ -65,7 +76,8 @@
   padding: 16px 32px;
   font-size: 1rem;
   font-weight: 500;
-  border-radius: 40px; /* Pill shape */
+  border-radius: 40px;
+  /* Pill shape */
   border: none;
   cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease;
@@ -93,6 +105,29 @@
   transform: scale(1.02);
 }
 
+.sale-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(240, 249, 255, 0.8);
+  color: #0369a1;
+  padding: 10px 20px;
+  border-radius: 40px;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  border: 1px solid rgba(186, 230, 253, 0.8);
+  box-shadow: 0 4px 20px rgba(186, 230, 253, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sale-icon {
+  font-size: 1.2rem;
+}
+
 @media (max-width: 992px) {
   .interactive-title {
     font-size: 4rem;
@@ -105,13 +140,20 @@
   .interactive-text-wrapper {
     padding: 20px;
   }
+
+  .sale-badge {
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    margin-bottom: 24px;
+  }
+
   .interactive-title {
     font-size: 2.8rem;
     letter-spacing: -0.5px;
     line-height: 1.2;
     margin-bottom: 30px;
   }
-  
+
   .interactive-actions {
     flex-direction: column;
     width: 100%;
@@ -123,6 +165,13 @@
   .interactive-text-wrapper {
     padding: 15px;
   }
+
+  .sale-badge {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    margin-bottom: 20px;
+  }
+
   .interactive-title {
     font-size: 2rem;
     letter-spacing: 0px;

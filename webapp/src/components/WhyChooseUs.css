@@ -1,7 +1,7 @@
 .why-choose-us {
   position: relative;
   padding: 100px 0;
-  background-color: transparent;
+  background-color: var(--color-bg-primary); /* MUST have a background for mix-blend-mode to work */
   overflow: hidden;
   z-index: 1;
 }
