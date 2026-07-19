@@ -861,8 +861,8 @@ const AdminDashboard = ({ user }) => {
                 <h3 className="form-section-title">Product Format</h3>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>Quantity (e.g. 30, 500g)</label>
-                    <input type="text" className="admin-input" value={newProduct.quantity} onChange={(e) => setNewProduct({...newProduct, quantity: e.target.value})} placeholder="30" />
+                    <label>Number of Capsules / Tablets / Pack Size</label>
+                    <input type="text" className="admin-input" value={newProduct.quantity} onChange={(e) => setNewProduct({...newProduct, quantity: e.target.value})} placeholder="e.g. 30, 60, 500g" />
                   </div>
                   <div className="form-group">
                     <label>Form (e.g. Capsules, Powder)</label>
