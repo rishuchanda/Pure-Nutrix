@@ -42,11 +42,17 @@ const Hero3D = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            <button className="btn-ag-primary">
+            <button 
+              className="btn-ag-primary" 
+              onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               <span className="btn-icon">✨</span>
               Shop The Collection
             </button>
-            <button className="btn-ag-secondary">
+            <button 
+              className="btn-ag-secondary"
+              onClick={() => document.getElementById('science')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               Discover Our Science
             </button>
           </motion.div>
