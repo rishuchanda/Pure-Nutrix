@@ -23,7 +23,7 @@ const Hero3D = () => {
             transition={{ duration: 0.6, delay: 0.1, type: 'spring' }}
           >
             <span className="sale-icon">🌧️</span>
-            Buy 2 Get 1 Free — Monsoon Sale
+            Buy 1 Get 1 Free — Monsoon Sale
           </motion.div>
 
           <motion.h1
