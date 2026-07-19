@@ -27,7 +27,12 @@ const OrderPage = ({ product, onBack }) => {
 
   const [authError, setAuthError] = useState(null);
 
-  const handlePayment = async (e) => {
+    const [quantity, setQuantity] = useState(1);
+    const basePrice = typeof product.price === 'number' ? product.price : Number(product.price.toString().replace(/[^0-9.-]+/g, ""));
+    const totalPrice = basePrice * quantity;
+    const hasFreeGift = quantity >= 2;
+
+    const handlePayment = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
     setAuthError(null);
@@ -44,6 +49,7 @@ const OrderPage = ({ product, onBack }) => {
 
       // Prepare order data
       const addressString = `${formData.flat}, ${formData.area}`;
+      const finalProductName = product.name + (hasFreeGift ? ' (+ 1x Free L-Glutathione)' : '');
       
       // Insert into Supabase
       const { error } = await supabase
@@ -57,9 +63,9 @@ const OrderPage = ({ product, onBack }) => {
             city: formData.city,
             state: formData.state,
             pincode: formData.pincode,
-            product_name: product.name,
-            price: typeof product.price === 'number' ? product.price : Number(product.price.toString().replace(/[^0-9.-]+/g, "")),
-            qty: 1, // Defaulting to 1 for now
+            product_name: finalProductName,
+            price: totalPrice,
+            qty: quantity,
             image: (product.image_urls || product.images || [])[0] || '',
             status: 'Processing'
           }
@@ -216,7 +222,7 @@ const OrderPage = ({ product, onBack }) => {
                       </div>
 
                       <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing}>
-                        {isProcessing ? 'Processing Securely...' : `Pay ${typeof product.price === 'number' ? '₹' + product.price : product.price}`}
+                        {isProcessing ? 'Processing Securely...' : `Pay ₹${totalPrice}`}
                       </button>
                       
                       <div className="secure-badge">
@@ -240,15 +246,33 @@ const OrderPage = ({ product, onBack }) => {
                     </div>
                     <div className="summary-details">
                       <h4>{product.name}</h4>
-                      <p>{product.quantity || product.qty}</p>
-                      <p className="summary-price">{typeof product.price === 'number' ? '₹' + product.price : product.price}</p>
+                      <div className="qty-selector" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '8px 0' }}>
+                        <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>-</button>
+                        <span>{quantity}</span>
+                        <button type="button" onClick={() => setQuantity(quantity + 1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent' }}>+</button>
+                      </div>
+                      <p className="summary-price">₹{basePrice}</p>
                     </div>
                   </div>
+
+                  {hasFreeGift && (
+                    <div className="summary-product free-item" style={{ marginTop: '15px', padding: '10px', background: 'rgba(255, 215, 0, 0.1)', borderRadius: '8px', border: '1px dashed var(--color-accent-gold)' }}>
+                      <div className="summary-image-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+                        <span style={{ fontSize: '24px' }}>✨</span>
+                      </div>
+                      <div className="summary-details">
+                        <h4 style={{ color: 'var(--color-accent-gold)' }}>L-Glutathione (Free Gift)</h4>
+                        <p>1</p>
+                        <p className="summary-price" style={{ textDecoration: 'line-through', color: '#888' }}>₹1999</p>
+                        <p className="summary-price" style={{ color: 'var(--color-accent-emerald)' }}>FREE</p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="summary-calculations">
                     <div className="calc-row">
                       <span>Subtotal</span>
-                      <span>{typeof product.price === 'number' ? '₹' + product.price : product.price}</span>
+                      <span>₹{totalPrice}</span>
                     </div>
                     <div className="calc-row">
                       <span>Shipping</span>
@@ -261,7 +285,7 @@ const OrderPage = ({ product, onBack }) => {
                     <div className="calc-divider" />
                     <div className="calc-row total-row">
                       <span>Total</span>
-                      <span>{typeof product.price === 'number' ? '₹' + product.price : product.price}</span>
+                      <span>₹{totalPrice}</span>
                     </div>
                   </div>
                 </div>
