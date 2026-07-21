@@ -247,24 +247,26 @@
 /* Cute Robot Overlay (Sitting on top of chat window) */
 .cute-robot-overlay {
   position: absolute;
-  top: -45px;
+  top: -125px;
   right: 20px;
-  width: 70px;
-  height: 70px;
+  width: 130px;
+  height: 130px;
   z-index: 1000;
   pointer-events: none;
-  animation: floatRobot 4s ease-in-out infinite;
+  animation: slideRobot 12s ease-in-out infinite;
 }
 
 .robot-svg {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
 }
 
-@keyframes floatRobot {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+@keyframes slideRobot {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(-150px) translateY(-5px); }
+  50% { transform: translateX(-150px) translateY(0); }
+  75% { transform: translateX(0) translateY(-5px); }
 }
 
 .antenna-bulb {
@@ -272,7 +274,7 @@
 }
 @keyframes glowBulb {
   from { fill: #FACC15; filter: drop-shadow(0 0 2px #FACC15); }
-  to { fill: #FF4500; filter: drop-shadow(0 0 8px #FF4500); }
+  to { fill: #FF4500; filter: drop-shadow(0 0 10px #FF4500); }
 }
 
 .robot-eye {
@@ -285,31 +287,60 @@
 }
 
 .robot-arm-left {
-  animation: waveLeft 2s ease-in-out infinite;
-  transform-origin: 25px 45px;
+  animation: waveLeft 3s ease-in-out infinite;
 }
 .robot-arm-right {
-  animation: waveRight 2s ease-in-out infinite;
-  transform-origin: 75px 45px;
+  animation: waveRight 3s ease-in-out infinite;
 }
 @keyframes waveLeft {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-20deg); }
+  50% { transform: rotate(-30deg); }
 }
 @keyframes waveRight {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(20deg); }
+  50% { transform: rotate(30deg); }
+}
+
+.robot-leg-left {
+  animation: swingLegLeft 2s ease-in-out infinite;
+}
+.robot-leg-right {
+  animation: swingLegRight 2.2s ease-in-out infinite;
+}
+@keyframes swingLegLeft {
+  0%, 100% { transform: rotate(15deg); }
+  50% { transform: rotate(-15deg); }
+}
+@keyframes swingLegRight {
+  0%, 100% { transform: rotate(-15deg); }
+  50% { transform: rotate(15deg); }
+}
+
+.heartbeat {
+  animation: pulseLine 2s linear infinite;
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+}
+@keyframes pulseLine {
+  to { stroke-dashoffset: 0; }
 }
 
 /* FAB Robot */
 .fab-robot-svg {
-  width: 35px;
-  height: 35px;
+  width: 45px;
+  height: 45px;
   animation: bounceFabRobot 3s infinite;
+}
+
+.fab-arm-left {
+  animation: waveLeft 1s ease-in-out infinite;
+}
+.fab-arm-right {
+  animation: waveRight 1s ease-in-out infinite;
 }
 
 @keyframes bounceFabRobot {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-3px) rotate(-5deg); }
-  75% { transform: translateY(-3px) rotate(5deg); }
+  25% { transform: translateY(-5px) rotate(-8deg); }
+  75% { transform: translateY(-5px) rotate(8deg); }
 }

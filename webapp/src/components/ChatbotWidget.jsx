@@ -94,26 +94,56 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
     <div className="chatbot-widget-container">
       {isOpen && (
         <div className="chatbot-window">
-          {/* Cute Robot Sitting on Top */}
+          {/* Cute Full Body Robot Sitting on Top */}
           <div className="cute-robot-overlay">
-            <svg viewBox="0 0 100 100" className="robot-svg">
-              <g className="robot-body-group">
+            <svg viewBox="0 0 200 200" className="robot-svg">
+              <g className="robot-hover-group">
                 {/* Antenna */}
-                <line x1="50" y1="25" x2="50" y2="10" stroke="#7367F0" strokeWidth="4" />
-                <circle cx="50" cy="8" r="6" fill="#FACC15" className="antenna-bulb" />
+                <path d="M100 40 L100 20" stroke="#7367F0" strokeWidth="4" />
+                <circle cx="100" cy="15" r="6" fill="#FACC15" className="antenna-bulb" />
+
                 {/* Head */}
-                <rect x="25" y="25" width="50" height="40" rx="10" fill="#fff" stroke="#7367F0" strokeWidth="4" />
+                <rect x="65" y="40" width="70" height="50" rx="12" fill="#fff" stroke="#7367F0" strokeWidth="4" />
+                
                 {/* Ears */}
-                <rect x="15" y="35" width="10" height="20" rx="4" fill="#7367F0" />
-                <rect x="75" y="35" width="10" height="20" rx="4" fill="#7367F0" />
+                <path d="M 65 60 L 55 60 L 55 70 L 65 70 Z" fill="#7367F0" />
+                <path d="M 135 60 L 145 60 L 145 70 L 135 70 Z" fill="#7367F0" />
+
                 {/* Eyes */}
-                <circle cx="38" cy="45" r="5" fill="#7367F0" className="robot-eye left-eye" />
-                <circle cx="62" cy="45" r="5" fill="#7367F0" className="robot-eye right-eye" />
-                {/* Smile */}
-                <path d="M 40 55 Q 50 62 60 55" stroke="#7367F0" strokeWidth="3" fill="none" strokeLinecap="round" />
-                {/* Arms waving */}
-                <path d="M 25 45 Q 10 40 5 25" stroke="#7367F0" strokeWidth="5" fill="none" strokeLinecap="round" className="robot-arm-left" />
-                <path d="M 75 45 Q 90 40 95 25" stroke="#7367F0" strokeWidth="5" fill="none" strokeLinecap="round" className="robot-arm-right" />
+                <circle cx="85" cy="65" r="6" fill="#7367F0" className="robot-eye" />
+                <circle cx="115" cy="65" r="6" fill="#7367F0" className="robot-eye" />
+
+                {/* Cheeks */}
+                <circle cx="75" cy="75" r="4" fill="#ff9999" opacity="0.8" />
+                <circle cx="125" cy="75" r="4" fill="#ff9999" opacity="0.8" />
+
+                {/* Neck */}
+                <rect x="92" y="90" width="16" height="10" fill="#7367F0" />
+
+                {/* Body */}
+                <rect x="60" y="100" width="80" height="60" rx="15" fill="#fff" stroke="#7367F0" strokeWidth="4" />
+                
+                {/* Screen on body */}
+                <rect x="75" y="110" width="50" height="30" rx="5" fill="#f8f9fa" stroke="#7367F0" strokeWidth="2" />
+                <path d="M 85 125 L 95 115 L 105 130 L 115 120" stroke="#28c76f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" className="heartbeat" />
+
+                {/* Arms */}
+                <g className="robot-arm-left" style={{ transformOrigin: '60px 110px' }}>
+                  <path d="M 60 110 Q 30 100 40 140" stroke="#7367F0" strokeWidth="12" fill="none" strokeLinecap="round" />
+                </g>
+                <g className="robot-arm-right" style={{ transformOrigin: '140px 110px' }}>
+                  <path d="M 140 110 Q 170 100 160 140" stroke="#7367F0" strokeWidth="12" fill="none" strokeLinecap="round" />
+                </g>
+
+                {/* Legs dangling below the body */}
+                <g className="robot-leg-left" style={{ transformOrigin: '80px 160px' }}>
+                  <path d="M 80 160 L 80 190" stroke="#7367F0" strokeWidth="10" strokeLinecap="round" />
+                  <rect x="70" y="190" width="20" height="12" rx="6" fill="#7367F0" />
+                </g>
+                <g className="robot-leg-right" style={{ transformOrigin: '120px 160px' }}>
+                  <path d="M 120 160 L 120 190" stroke="#7367F0" strokeWidth="10" strokeLinecap="round" />
+                  <rect x="110" y="190" width="20" height="12" rx="6" fill="#7367F0" />
+                </g>
               </g>
             </svg>
           </div>
@@ -187,16 +217,22 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
           onClick={() => setIsOpen(true)}
           aria-label="Open Help Assistant"
         >
-          <svg viewBox="0 0 100 100" className="fab-robot-svg">
+          <svg viewBox="0 0 200 200" className="fab-robot-svg">
             <g className="fab-robot-body">
-              <line x1="50" y1="20" x2="50" y2="5" stroke="#fff" strokeWidth="4" />
-              <circle cx="50" cy="5" r="5" fill="#FACC15" className="antenna-bulb" />
-              <rect x="25" y="20" width="50" height="40" rx="10" fill="#fff" />
-              <rect x="15" y="30" width="10" height="20" rx="4" fill="#fff" />
-              <rect x="75" y="30" width="10" height="20" rx="4" fill="#fff" />
-              <circle cx="38" cy="40" r="5" fill="#28c76f" className="robot-eye" />
-              <circle cx="62" cy="40" r="5" fill="#28c76f" className="robot-eye" />
-              <path d="M 40 50 Q 50 55 60 50" stroke="#28c76f" strokeWidth="3" fill="none" strokeLinecap="round" />
+              <path d="M100 50 L100 30" stroke="#fff" strokeWidth="6" />
+              <circle cx="100" cy="25" r="8" fill="#FACC15" className="antenna-bulb" />
+              <rect x="60" y="50" width="80" height="60" rx="15" fill="#fff" />
+              <rect x="50" y="70" width="10" height="20" rx="5" fill="#fff" />
+              <rect x="140" y="70" width="10" height="20" rx="5" fill="#fff" />
+              <circle cx="80" cy="80" r="8" fill="#28c76f" className="robot-eye" />
+              <circle cx="120" cy="80" r="8" fill="#28c76f" className="robot-eye" />
+              <rect x="70" y="120" width="60" height="50" rx="15" fill="#fff" />
+              <g className="fab-arm-left" style={{ transformOrigin: '70px 130px' }}>
+                <path d="M 70 130 Q 40 120 50 160" stroke="#fff" strokeWidth="12" fill="none" strokeLinecap="round" />
+              </g>
+              <g className="fab-arm-right" style={{ transformOrigin: '130px 130px' }}>
+                <path d="M 130 130 Q 160 120 150 160" stroke="#fff" strokeWidth="12" fill="none" strokeLinecap="round" />
+              </g>
             </g>
           </svg>
         </button>
