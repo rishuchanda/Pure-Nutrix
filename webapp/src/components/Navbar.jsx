@@ -28,7 +28,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
         </div>
         
         <div className="navbar-links">
-          <a href="#home" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); }}>Home</a>
+          <a href="/" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); }}>Home</a>
           <a href="#products" className="nav-link" onClick={(e) => { e.preventDefault(); onOpenProducts(); }}>Products</a>
           <a href="#quality" className="nav-link" onClick={(e) => { e.preventDefault(); onOpenQuality(); }}>Quality</a>
           <a href="#about" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); setTimeout(() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Our Science</a>
@@ -87,7 +87,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
           animate={{ opacity: 1, height: 'auto' }}
           className="mobile-menu glass"
         >
-          <a href="#home" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); }}>Home</a>
+          <a href="/" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); }}>Home</a>
           <a href="#products" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenProducts(); }}>Products</a>
           <a href="#quality" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenQuality(); }}>Quality</a>
           <a href="#about" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); setTimeout(() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Our Science</a>

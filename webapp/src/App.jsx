@@ -57,11 +57,12 @@ function App() {
     
     if (isPathAdmin) {
       // Do nothing to the hash if we are on the admin page
-    } else if (validViews.includes(initialHash)) {
+    } else if (validViews.includes(initialHash) && initialHash !== 'home') {
       setCurrentView(initialHash);
       window.history.replaceState({ view: initialHash }, '', '#' + initialHash);
     } else {
-      window.history.replaceState({ view: 'home' }, '', '#home');
+      setCurrentView('home');
+      window.history.replaceState({ view: 'home' }, '', window.location.pathname);
     }
 
     return () => window.removeEventListener('popstate', handlePopState);
@@ -140,7 +141,7 @@ function App() {
   const handleBackToHome = () => {
     setCurrentView('home');
     setSelectedProduct(null);
-    window.history.pushState({ view: 'home' }, '', '#home');
+    window.history.pushState({ view: 'home' }, '', window.location.pathname);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
