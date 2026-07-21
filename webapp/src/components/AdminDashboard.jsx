@@ -351,8 +351,16 @@ const AdminDashboard = ({ user }) => {
   
   return (
     <div className={`admin-dashboard-wrapper admin-theme-${theme}`}>
-      {/* Sidebar */}
-      <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
+      {/* Standalone Fullscreen CRM Tab */}
+      {activeTab === 'crm' && (
+        <CRMTab onBack={() => setActiveTab('dashboard')} />
+      )}
+
+      {/* Standard Admin Layout */}
+      {activeTab !== 'crm' && (
+        <>
+          {/* Sidebar */}
+          <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="admin-brand">
           <h2>PURE <span className="gold-text">NUTRIX</span></h2>
           <button className="header-icon-btn hide-on-desktop" onClick={() => setMobileMenuOpen(false)} style={{ marginLeft: 'auto', display: 'flex' }}>
@@ -731,10 +739,7 @@ const AdminDashboard = ({ user }) => {
                 </div>
               )}
 
-              {/* === CRM TAB === */}
-              {activeTab === 'crm' && (
-                <CRMTab />
-              )}
+              {/* === CRM TAB MOVED TO FULLSCREEN === */}
 
               {/* === USERS / CUSTOMERS TAB === */}
               {activeTab === 'users' && (
@@ -959,7 +964,8 @@ const AdminDashboard = ({ user }) => {
           </div>
         )}
       </AnimatePresence>
-
+        </>
+      )}
     </div>
   );
 };

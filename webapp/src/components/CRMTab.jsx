@@ -16,7 +16,8 @@ const DEFAULT_AUTO_REPLIES = [
 ];
 
 // ─── Main CRM Component ───────────────────────────────────────────────────────
-const CRMTab = () => {
+const CRMTab = ({ onBack }) => {
+  const [showSplash, setShowSplash] = useState(true);
   const [activeSection, setActiveSection] = useState('inbox'); // inbox | contacts | autoreply | campaigns
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +53,9 @@ const CRMTab = () => {
 
   // ─── Realtime Subscription & Settings Fetch ──────────────────────────────────────────
   useEffect(() => {
+    // Splash screen timer
+    const timer = setTimeout(() => setShowSplash(false), 2000);
+
     fetchContacts();
     
     // Fetch Settings
@@ -88,7 +92,10 @@ const CRMTab = () => {
         );
       })
       .subscribe();
-    return () => supabase.removeChannel(subscription);
+    return () => {
+       clearTimeout(timer);
+       supabase.removeChannel(subscription);
+    }
   }, [selectedContact]);
 
   useEffect(() => {
@@ -315,8 +322,35 @@ const CRMTab = () => {
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
+  if (showSplash) {
+    return (
+      <div className="crm-splash-screen">
+        <div className="crm-splash-content">
+          <div className="crm-splash-logo">
+            <MessageSquare size={48} color="#D4AF37" />
+          </div>
+          <h1>Welcome to Pure-Nutrix CRM</h1>
+          <p>Loading your secure workspace...</p>
+          <div className="crm-splash-loader"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="crm-container">
+    <div className="crm-fullscreen-container">
+      {/* ── Top Floating Nav ── */}
+      <div className="crm-floating-header">
+        <button className="crm-back-btn" onClick={onBack}>
+          <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} />
+          <span>Back to Panel</span>
+        </button>
+        <div className="crm-brand-title">
+          CRM <span className="gold-text">WORKSPACE</span>
+        </div>
+      </div>
+
+      <div className="crm-container">
 
       {/* ── Top Stats Bar ── */}
       <div className="crm-analytics-banner">
@@ -807,6 +841,7 @@ const CRMTab = () => {
         </div>
       )}
 
+    </div>
     </div>
   );
 };
