@@ -30,16 +30,21 @@ const CuteRobot = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Determine Eye Paths based on mood (Digital Neon Eyes)
+  // Determine Eye and Mouth Paths based on mood (Digital Neon)
   let eyePathLeft = "M 65 75 Q 80 55 95 75 Z"; // Idle happy eyes
   let eyePathRight = "M 105 75 Q 120 55 135 75 Z";
+  let mouthPath = "M 90 90 Q 100 100 110 90"; // Small smile
 
   if (mood === 'sad') {
     eyePathLeft = "M 65 65 Q 80 85 95 65 Z";
     eyePathRight = "M 105 65 Q 120 85 135 65 Z";
+    mouthPath = "M 85 95 Q 100 85 115 95"; // Frown
   } else if (mood === 'blink') {
     eyePathLeft = "M 65 75 Q 80 74 95 75 Z";
     eyePathRight = "M 105 75 Q 120 74 135 75 Z";
+    mouthPath = "M 90 90 Q 100 100 110 90"; // Keep small smile
+  } else if (mood === 'happy') {
+    mouthPath = "M 80 85 Q 100 110 120 85"; // Big wide smile
   }
 
   // Determine eye transform for blink scale down
@@ -116,6 +121,9 @@ const CuteRobot = () => {
           {/* Neon Digital Eyes */}
           <path d={eyePathLeft} fill="#00ffff" filter="url(#neonGlow)" style={{ transition: 'd 0.1s', transformOrigin: '80px 75px', transform: eyeTransform }} />
           <path d={eyePathRight} fill="#00ffff" filter="url(#neonGlow)" style={{ transition: 'd 0.1s', transformOrigin: '120px 75px', transform: eyeTransform }} />
+          
+          {/* Neon Digital Lips/Mouth */}
+          <path d={mouthPath} fill="none" stroke="#00ffff" strokeWidth="4" strokeLinecap="round" filter="url(#neonGlow)" style={{ transition: 'd 0.2s' }} />
         </g>
       </g>
     </svg>
