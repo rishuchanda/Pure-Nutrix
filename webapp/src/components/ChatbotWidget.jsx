@@ -164,30 +164,17 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
       )}
 
       {!isOpen && (
-        <button 
-          className="chatbot-fab"
+        <div 
+          className="chatbot-closed-state"
           onClick={() => setIsOpen(true)}
-          aria-label="Open Help Assistant"
+          role="button"
+          tabIndex={0}
         >
-          <svg viewBox="0 0 200 200" className="fab-robot-svg">
-            <g className="fab-robot-body">
-              <path d="M100 50 L100 30" stroke="#fff" strokeWidth="6" />
-              <circle cx="100" cy="25" r="8" fill="#FACC15" className="antenna-bulb" />
-              <rect x="60" y="50" width="80" height="60" rx="15" fill="#fff" />
-              <rect x="50" y="70" width="10" height="20" rx="5" fill="#fff" />
-              <rect x="140" y="70" width="10" height="20" rx="5" fill="#fff" />
-              <circle cx="80" cy="80" r="8" fill="#28c76f" className="robot-eye" />
-              <circle cx="120" cy="80" r="8" fill="#28c76f" className="robot-eye" />
-              <rect x="70" y="120" width="60" height="50" rx="15" fill="#fff" />
-              <g className="fab-arm-left" style={{ transformOrigin: '70px 130px' }}>
-                <path d="M 70 130 Q 40 120 50 160" stroke="#fff" strokeWidth="12" fill="none" strokeLinecap="round" />
-              </g>
-              <g className="fab-arm-right" style={{ transformOrigin: '130px 130px' }}>
-                <path d="M 130 130 Q 160 120 150 160" stroke="#fff" strokeWidth="12" fill="none" strokeLinecap="round" />
-              </g>
-            </g>
-          </svg>
-        </button>
+          <div className="chatbot-tooltip">Need help? Ask NutriBot!</div>
+          <div className="chatbot-fab-robot">
+            <CuteRobot />
+          </div>
+        </div>
       )}
     </div>
   );
