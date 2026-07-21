@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot } from 'lucide-react';
 import { getChatbotResponse } from '../utils/chatbotLogic';
+import CuteRobot from './CuteRobot';
 import { supabase } from '../supabaseClient';
 import './ChatbotWidget.css';
 
@@ -96,56 +97,7 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
         <div className="chatbot-window">
           {/* Cute Full Body Robot Sitting on Top */}
           <div className="cute-robot-overlay">
-            <svg viewBox="0 0 200 200" className="robot-svg">
-              <g className="robot-hover-group">
-                {/* Antenna */}
-                <path d="M100 40 L100 20" stroke="#7367F0" strokeWidth="4" />
-                <circle cx="100" cy="15" r="6" fill="#FACC15" className="antenna-bulb" />
-
-                {/* Head */}
-                <rect x="65" y="40" width="70" height="50" rx="12" fill="#fff" stroke="#7367F0" strokeWidth="4" />
-                
-                {/* Ears */}
-                <path d="M 65 60 L 55 60 L 55 70 L 65 70 Z" fill="#7367F0" />
-                <path d="M 135 60 L 145 60 L 145 70 L 135 70 Z" fill="#7367F0" />
-
-                {/* Eyes */}
-                <circle cx="85" cy="65" r="6" fill="#7367F0" className="robot-eye" />
-                <circle cx="115" cy="65" r="6" fill="#7367F0" className="robot-eye" />
-
-                {/* Cheeks */}
-                <circle cx="75" cy="75" r="4" fill="#ff9999" opacity="0.8" />
-                <circle cx="125" cy="75" r="4" fill="#ff9999" opacity="0.8" />
-
-                {/* Neck */}
-                <rect x="92" y="90" width="16" height="10" fill="#7367F0" />
-
-                {/* Body */}
-                <rect x="60" y="100" width="80" height="60" rx="15" fill="#fff" stroke="#7367F0" strokeWidth="4" />
-                
-                {/* Screen on body */}
-                <rect x="75" y="110" width="50" height="30" rx="5" fill="#f8f9fa" stroke="#7367F0" strokeWidth="2" />
-                <path d="M 85 125 L 95 115 L 105 130 L 115 120" stroke="#28c76f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" className="heartbeat" />
-
-                {/* Arms */}
-                <g className="robot-arm-left" style={{ transformOrigin: '60px 110px' }}>
-                  <path d="M 60 110 Q 30 100 40 140" stroke="#7367F0" strokeWidth="12" fill="none" strokeLinecap="round" />
-                </g>
-                <g className="robot-arm-right" style={{ transformOrigin: '140px 110px' }}>
-                  <path d="M 140 110 Q 170 100 160 140" stroke="#7367F0" strokeWidth="12" fill="none" strokeLinecap="round" />
-                </g>
-
-                {/* Legs dangling below the body */}
-                <g className="robot-leg-left" style={{ transformOrigin: '80px 160px' }}>
-                  <path d="M 80 160 L 80 190" stroke="#7367F0" strokeWidth="10" strokeLinecap="round" />
-                  <rect x="70" y="190" width="20" height="12" rx="6" fill="#7367F0" />
-                </g>
-                <g className="robot-leg-right" style={{ transformOrigin: '120px 160px' }}>
-                  <path d="M 120 160 L 120 190" stroke="#7367F0" strokeWidth="10" strokeLinecap="round" />
-                  <rect x="110" y="190" width="20" height="12" rx="6" fill="#7367F0" />
-                </g>
-              </g>
-            </svg>
+            <CuteRobot />
           </div>
 
           <div className="chatbot-header">

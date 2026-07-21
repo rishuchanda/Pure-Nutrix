@@ -247,26 +247,26 @@
 /* Cute Robot Overlay (Sitting on top of chat window) */
 .cute-robot-overlay {
   position: absolute;
-  top: -125px;
+  top: -150px;
   right: 20px;
-  width: 130px;
-  height: 130px;
+  width: 160px;
+  height: 160px;
   z-index: 1000;
   pointer-events: none;
-  animation: slideRobot 12s ease-in-out infinite;
+  animation: slideRobot 15s ease-in-out infinite;
 }
 
 .robot-svg {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+  filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
 }
 
 @keyframes slideRobot {
   0%, 100% { transform: translateX(0) translateY(0); }
-  25% { transform: translateX(-150px) translateY(-5px); }
-  50% { transform: translateX(-150px) translateY(0); }
-  75% { transform: translateX(0) translateY(-5px); }
+  25% { transform: translateX(-180px) translateY(-10px); }
+  50% { transform: translateX(-180px) translateY(0); }
+  75% { transform: translateX(0) translateY(-10px); }
 }
 
 .antenna-bulb {
@@ -277,52 +277,22 @@
   to { fill: #FF4500; filter: drop-shadow(0 0 10px #FF4500); }
 }
 
-.robot-eye {
-  animation: blinkEye 4s infinite;
-  transform-origin: center;
+/* Base arm floating idle */
+.arm-idle {
+  animation: waveIdle 3s ease-in-out infinite;
 }
-@keyframes blinkEye {
-  0%, 96%, 98%, 100% { transform: scaleY(1); }
-  97%, 99% { transform: scaleY(0.1); }
-}
-
-.robot-arm-left {
-  animation: waveLeft 3s ease-in-out infinite;
-}
-.robot-arm-right {
-  animation: waveRight 3s ease-in-out infinite;
-}
-@keyframes waveLeft {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-30deg); }
-}
-@keyframes waveRight {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(30deg); }
+@keyframes waveIdle {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  50% { transform: rotate(-5deg) translateY(-5px); }
 }
 
-.robot-leg-left {
-  animation: swingLegLeft 2s ease-in-out infinite;
+/* Excited fast waving */
+.arm-excited {
+  animation: waveExcited 0.3s ease-in-out infinite alternate;
 }
-.robot-leg-right {
-  animation: swingLegRight 2.2s ease-in-out infinite;
-}
-@keyframes swingLegLeft {
-  0%, 100% { transform: rotate(15deg); }
-  50% { transform: rotate(-15deg); }
-}
-@keyframes swingLegRight {
-  0%, 100% { transform: rotate(-15deg); }
-  50% { transform: rotate(15deg); }
-}
-
-.heartbeat {
-  animation: pulseLine 2s linear infinite;
-  stroke-dasharray: 50;
-  stroke-dashoffset: 50;
-}
-@keyframes pulseLine {
-  to { stroke-dashoffset: 0; }
+@keyframes waveExcited {
+  from { transform: rotate(-20deg) translateY(-10px); }
+  to { transform: rotate(20deg) translateY(-15px); }
 }
 
 /* FAB Robot */
@@ -333,10 +303,10 @@
 }
 
 .fab-arm-left {
-  animation: waveLeft 1s ease-in-out infinite;
+  animation: waveIdle 1s ease-in-out infinite;
 }
 .fab-arm-right {
-  animation: waveRight 1s ease-in-out infinite;
+  animation: waveIdle 1s ease-in-out infinite;
 }
 
 @keyframes bounceFabRobot {
