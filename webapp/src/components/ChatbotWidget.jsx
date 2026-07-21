@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot } from 'lucide-react';
 import { getChatbotResponse } from '../utils/chatbotLogic';
+import { supabase } from '../supabaseClient';
 import './ChatbotWidget.css';
 
 const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
@@ -15,7 +16,17 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
     }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [dbProducts, setDbProducts] = useState([]);
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    // Fetch products from database to make bot aware of real inventory
+    const fetchProducts = async () => {
+      const { data } = await supabase.from('products').select('name, price, category, description, short_description');
+      if (data) setDbProducts(data);
+    };
+    fetchProducts();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,7 +59,7 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
 
     // Simulate bot thinking delay
     setTimeout(() => {
-      const response = getChatbotResponse(msgText);
+      const response = getChatbotResponse(msgText, dbProducts);
       
       if (response.action === 'open_whatsapp') {
         // Automatically append bot response and open whatsapp

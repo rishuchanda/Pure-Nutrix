@@ -1,4 +1,4 @@
-export const getChatbotResponse = (message) => {
+export const getChatbotResponse = (message, dbProducts = []) => {
   const msg = message.toLowerCase();
 
   // Helper function for safe word matching
@@ -11,14 +11,14 @@ export const getChatbotResponse = (message) => {
   if (hasWord(['hi', 'hello', 'hey', 'namaste', 'helo', 'hlo'])) {
     return {
       text: "Hello! 👋 Welcome to Pure-Nutrix. How can I help you today? You can ask me about our products, pricing, offers, or orders.",
-      options: ["Product Info", "Current Offers", "Track Order"]
+      options: ["Products", "Current Offers", "Track Order"]
     };
   }
 
   // Offers / Discounts / Sale
   if (hasWord(['offer', 'offers', 'discount', 'discounts', 'sale', 'promo', 'coupon'])) {
     return {
-      text: "🎉 We currently have our Monsoon Mega Sale! Get up to 50% OFF on all products + an extra 10% OFF on prepaid orders. No coupon code required!",
+      text: "🎉 We currently have our Mega Sale! Get amazing discounts on all products + extra OFF on prepaid orders. No coupon code required!",
       options: ["Products", "Chat with Human"]
     };
   }
@@ -26,7 +26,7 @@ export const getChatbotResponse = (message) => {
   // Returns / Refunds / Cancellations
   if (hasWord(['return', 'returns', 'refund', 'refunds', 'cancel', 'cancellation'])) {
     return {
-      text: "We have a 7-day hassle-free return policy for unopened/sealed products. If your product is damaged, we will replace it immediately. Would you like to process a return?",
+      text: "We have a 7-day hassle-free return policy for unopened/sealed products. If your product is damaged, we will replace it immediately.",
       options: ["Chat with Human", "Support"]
     };
   }
@@ -34,7 +34,7 @@ export const getChatbotResponse = (message) => {
   // Quality / Purity / Lab Tests
   if (hasWord(['quality', 'pure', 'purity', 'lab', 'test', 'tested', 'certificate', 'fake', 'original', 'real'])) {
     return {
-      text: "Our products are 100% natural, ethically sourced, and undergo rigorous third-party lab testing for purity and safety. We guarantee 0% fillers or artificial additives.",
+      text: "Our products are 100% natural, ethically sourced, and undergo rigorous third-party lab testing for purity and safety.",
       options: ["Products", "Chat with Human"]
     };
   }
@@ -42,56 +42,8 @@ export const getChatbotResponse = (message) => {
   // Payments / COD
   if (hasWord(['pay', 'payment', 'cod', 'cash on delivery', 'upi', 'card'])) {
     return {
-      text: "We accept all major secure payment methods including UPI, Credit/Debit Cards, and Net Banking. We also offer Cash on Delivery (COD) for most pincodes in India! 🚚",
+      text: "We accept all major secure payment methods including UPI, Credit/Debit Cards, and Net Banking. We also offer Cash on Delivery (COD)! 🚚",
       options: ["Track Order", "Products"]
-    };
-  }
-
-  // How to use / Dosage
-  if (hasWord(['use', 'usage', 'dosage', 'how to take', 'consume'])) {
-    return {
-      text: "Usage depends on the product! Shilajit: A pea-sized amount in warm water/milk. Ashwagandha: 1 capsule daily. Creatine: 1 scoop (3g-5g) post-workout. Sea Moss: 1-2 tablespoons daily.",
-      options: ["Shilajit", "Creatine", "Ashwagandha"]
-    };
-  }
-
-  // Shilajit
-  if (hasWord(['shilajit', 'silajit'])) {
-    return {
-      text: "Our Himalayan Shilajit Resin is pure, lab-tested, and rich in Fulvic Acid. It boosts energy, stamina, and overall vitality. Prices start at ₹1,499.",
-      options: ["Shilajit Price", "Buy Shilajit"]
-    };
-  }
-
-  // Ashwagandha
-  if (hasWord(['ashwagandha', 'aswagandha'])) {
-    return {
-      text: "Pure-Nutrix Ashwagandha KSM-66 helps reduce stress, improve sleep, and boost immunity. It's 100% natural and highly potent.",
-      options: ["Buy Ashwagandha", "Offers"]
-    };
-  }
-
-  // Sea Moss
-  if (hasWord(['moss', 'sea moss', 'seamoss'])) {
-    return {
-      text: "Our Irish Sea Moss is packed with 92 of the 102 minerals your body needs! It's great for thyroid support, digestion, and glowing skin.",
-      options: ["Buy Sea Moss"]
-    };
-  }
-
-  // Creatine
-  if (hasWord(['creatine', 'protein', 'gym'])) {
-    return {
-      text: "Our Creatine Monohydrate is micronized for rapid absorption, helping you build muscle, increase strength, and improve workout performance.",
-      options: ["Buy Creatine"]
-    };
-  }
-
-  // Price / Cost / Products
-  if (hasWord(['price', 'cost', 'how much', 'rate', 'product', 'products', 'buy', 'item', 'items', 'info', 'details'])) {
-    return {
-      text: "We offer premium Himalayan Shilajit, Ashwagandha KSM-66, Irish Sea Moss, and Creatine. Prices range from ₹499 to ₹1,499. Please check the 'Products' page on our website for exact details!",
-      options: ["Offers", "Track Order", "Chat with Human"]
     };
   }
 
@@ -109,6 +61,48 @@ export const getChatbotResponse = (message) => {
       text: "Sure! I can connect you to our real human support team on WhatsApp right now.",
       action: "open_whatsapp"
     };
+  }
+
+  // Dynamic Product Search (Matches any keyword against real DB products)
+  if (dbProducts && dbProducts.length > 0) {
+    // Check if user is asking for general products/pricing
+    if (hasWord(['price', 'cost', 'how much', 'rate', 'product', 'products', 'buy', 'item', 'items', 'info', 'details', 'catalog', 'menu'])) {
+      const topProducts = dbProducts.slice(0, 3).map(p => p.name).join(', ');
+      return {
+        text: `We offer a premium range of nutrition products including ${topProducts} and more! Please check the 'Products' page on our website for exact prices and details.`,
+        options: ["Current Offers", "Chat with Human"]
+      };
+    }
+
+    // Check if user's message matches any specific product name, category, or description (like "skin", "hair", "muscle")
+    const words = msg.replace(/[^\w\s]/gi, '').split(/\s+/).filter(w => w.length > 2); // get meaningful words
+    
+    let matchedProducts = [];
+    for (const product of dbProducts) {
+      const pName = (product.name || '').toLowerCase();
+      const pCat = (product.category || '').toLowerCase();
+      const pDesc = (product.description || '').toLowerCase() + ' ' + (product.short_description || '').toLowerCase();
+      
+      // Look for exact word matches in product data
+      const isMatch = words.some(word => 
+        pName.includes(word) || 
+        pCat.includes(word) || 
+        pDesc.includes(word)
+      );
+
+      if (isMatch) {
+        matchedProducts.push(product);
+      }
+    }
+
+    if (matchedProducts.length > 0) {
+      // Return the top matched product
+      const topMatch = matchedProducts[0];
+      return {
+        text: `Yes, we have products for that! For example: ${topMatch.name}. ${topMatch.short_description || ''} It is priced at ₹${topMatch.price}. Visit our Products page to buy!`,
+        options: ["Products", "Chat with Human"]
+      };
+    }
   }
 
   // Fallback for unrecognized questions
