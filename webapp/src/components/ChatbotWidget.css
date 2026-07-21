@@ -120,6 +120,8 @@
   flex: 1;
   padding: 1rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 1rem;
