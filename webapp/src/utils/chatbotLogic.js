@@ -1,8 +1,14 @@
 export const getChatbotResponse = (message) => {
   const msg = message.toLowerCase();
 
+  // Helper function for safe word matching
+  const hasWord = (words) => {
+    const pattern = new RegExp(`(^|\\s|\\W)(${words.join('|')})($|\\s|\\W)`);
+    return pattern.test(msg);
+  };
+
   // Greeting
-  if (msg.includes('hi') || msg.includes('hello') || msg.includes('hey') || msg.includes('namaste')) {
+  if (hasWord(['hi', 'hello', 'hey', 'namaste', 'helo', 'hlo'])) {
     return {
       text: "Hello! 👋 Welcome to Pure-Nutrix. How can I help you today? You can ask me about our products, pricing, or orders.",
       options: ["Product Info", "Track Order", "Chat with Human"]
@@ -42,7 +48,7 @@ export const getChatbotResponse = (message) => {
   }
 
   // Price / Cost / Products
-  if (msg.includes('price') || msg.includes('cost') || msg.includes('how much') || msg.includes('rate') || msg.includes('product') || msg.includes('buy') || msg.includes('item')) {
+  if (hasWord(['price', 'cost', 'how much', 'rate', 'product', 'products', 'buy', 'item', 'items', 'info'])) {
     return {
       text: "We offer premium Himalayan Shilajit, Ashwagandha KSM-66, Irish Sea Moss, and Creatine Monohydrate. Prices range from ₹499 to ₹1,499. You can check our 'Products' page for exact pricing!",
       options: ["Shilajit", "Ashwagandha", "Chat with Human"]
@@ -50,7 +56,7 @@ export const getChatbotResponse = (message) => {
   }
 
   // Order / Tracking
-  if (msg.includes('order') || msg.includes('track') || msg.includes('shipping') || msg.includes('delivery') || msg.includes('where is')) {
+  if (hasWord(['order', 'track', 'shipping', 'delivery', 'where is'])) {
     return {
       text: "Orders typically take 3-5 business days to arrive. To track your order, please visit the 'My Account' section or share your Order ID with our human support team.",
       options: ["Chat with Human"]
@@ -58,7 +64,7 @@ export const getChatbotResponse = (message) => {
   }
 
   // Human / Agent / WhatsApp
-  if (msg.includes('human') || msg.includes('agent') || msg.includes('person') || msg.includes('whatsapp') || msg.includes('call') || msg.includes('talk') || msg.includes('support') || msg.includes('help')) {
+  if (hasWord(['human', 'agent', 'person', 'whatsapp', 'call', 'talk', 'support', 'help', 'contact'])) {
     return {
       text: "Sure! I can connect you to our support team on WhatsApp.",
       action: "open_whatsapp"
