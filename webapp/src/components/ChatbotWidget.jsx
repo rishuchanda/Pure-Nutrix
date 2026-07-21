@@ -94,7 +94,11 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
   return (
     <div className="chatbot-widget-container">
       {isOpen && (
-        <div className="chatbot-window">
+        <div 
+          className="chatbot-window"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           {/* Cute Robot Overlay (Sitting on top of chat window) */}
           <div className="cute-robot-overlay">
             <CuteRobot />
