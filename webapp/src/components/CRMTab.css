@@ -194,9 +194,11 @@
 .crm-contact-list {
   grid-column: 2 / 3;
   grid-row: 2 / 3;
-  overflow-y: auto; display: flex; flex-direction: column; gap: 0.2rem;
+  overflow-y: scroll; display: flex; flex-direction: column; gap: 0.2rem;
   padding: 0 1rem 1rem 1rem;
   min-height: 0;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .crm-contact-list::-webkit-scrollbar { display: none; }
 
@@ -256,7 +258,9 @@
 .chat-phone { margin: 0; color: #888; font-size: 0.85rem; font-weight: 400; }
 
 .chat-messages {
-  flex: 1; padding: 2rem 3rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; min-height: 0;
+  flex: 1; padding: 2rem 3rem; overflow-y: scroll; display: flex; flex-direction: column; gap: 1.5rem; min-height: 0;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .chat-messages::-webkit-scrollbar { display: none; }
 
@@ -343,7 +347,9 @@
 
 /* ─── Generic Sections (Settings, AutoReply, Campaigns) ─────────────── */
 .crm-section-content {
-  flex: 1; padding: 3rem; overflow-y: auto; color: #333; background-color: #ffffff; border-radius: 24px; height: 100%;
+  flex: 1; padding: 3rem; overflow-y: scroll; color: #333; background-color: #ffffff; border-radius: 24px; height: 100%;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .crm-section-content::-webkit-scrollbar { display: none; }
 .crm-section-header { margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
