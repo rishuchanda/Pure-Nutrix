@@ -87,6 +87,7 @@
   border-radius: 20px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.2);
   overflow: hidden;
+  min-height: 0;
 }
 
 .crm-analytics-banner { display: none; } /* Hide stats */
@@ -195,6 +196,7 @@
   grid-row: 2 / 3;
   overflow-y: auto; display: flex; flex-direction: column; gap: 0.2rem;
   padding: 0 1rem 1rem 1rem;
+  min-height: 0;
 }
 .crm-contact-list::-webkit-scrollbar { display: none; }
 
@@ -254,7 +256,7 @@
 .chat-phone { margin: 0; color: #888; font-size: 0.85rem; font-weight: 400; }
 
 .chat-messages {
-  flex: 1; padding: 2rem 3rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem;
+  flex: 1; padding: 2rem 3rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; min-height: 0;
 }
 .chat-messages::-webkit-scrollbar { display: none; }
 
