@@ -93,6 +93,19 @@ const OrderPage = ({ product, cartItems, onBack }) => {
 
       if (error) throw error;
 
+      // Try sending WhatsApp order confirmation asynchronously
+      try {
+        await supabase.functions.invoke('send-whatsapp', {
+          body: {
+            phone_number: '91' + formData.mobile.replace(/[^0-9]/g, ''), // Assuming India country code +91
+            message: `Hi ${formData.name},\n\nYour order for ${finalProductName} has been confirmed! Total: ₹${finalTotal}.\n\nThank you for choosing Pure-Nutrix.`,
+            type: 'text'
+          }
+        });
+      } catch (waError) {
+        console.error('Failed to send WhatsApp message (Edge Function might not be deployed yet):', waError);
+      }
+
       // Artificial delay for premium checkout feel
       setTimeout(() => {
         setIsProcessing(false);

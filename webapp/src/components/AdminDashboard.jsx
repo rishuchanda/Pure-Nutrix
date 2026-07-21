@@ -4,10 +4,11 @@ import {
   Users, Package, Truck, BarChart2, ShieldCheck, Lock,
   Moon, Sun, LogOut, Search, ChevronRight, ShoppingBag, 
   Upload, Trash2, Image as ImageIcon, Bell, Settings, Edit,
-  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus, Save, Menu, X
+  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus, Save, Menu, X, MessageCircle
 } from 'lucide-react';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../supabaseClient';
 import { createClient } from '@supabase/supabase-js';
+import CRMTab from './CRMTab';
 import './AdminDashboard.css';
 
 const AdminDashboard = ({ user }) => {
@@ -180,6 +181,24 @@ const AdminDashboard = ({ user }) => {
       const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
       if (error) throw error;
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+
+      // Send WhatsApp Notification for Shipped or Delivered statuses
+      if (newStatus === 'shipped' || newStatus === 'delivered') {
+        const order = orders.find(o => o.id === orderId);
+        if (order && order.customer_mobile) {
+          try {
+            await supabase.functions.invoke('send-whatsapp', {
+              body: {
+                phone_number: '91' + order.customer_mobile.replace(/[^0-9]/g, ''),
+                message: `Hi ${order.customer_name},\n\nYour order #${order.id ? String(order.id).substring(0,6) : ''} status has been updated to: ${newStatus.toUpperCase()}.\n\nThank you for shopping with Pure-Nutrix.`,
+                type: 'text'
+              }
+            });
+          } catch (waError) {
+            console.error('Failed to send WhatsApp status update:', waError);
+          }
+        }
+      }
     } catch (error) {
       alert('Failed to update status');
     }
@@ -318,7 +337,8 @@ const AdminDashboard = ({ user }) => {
     { id: 'catalog', label: 'Catalog / Listings', icon: ShoppingBag },
     { id: 'orders', label: 'Orders', icon: Truck },
     { id: 'inventory', label: 'Inventory', icon: Package },
-    { id: 'users', label: 'Customers', icon: Users },
+    { id: 'users', label: 'Registered Users', icon: Users },
+    { id: 'crm', label: 'WhatsApp CRM', icon: MessageCircle },
   ];
 
   if (adminRole === 'super_admin') {
@@ -709,6 +729,11 @@ const AdminDashboard = ({ user }) => {
                     </table>
                   </div>
                 </div>
+              )}
+
+              {/* === CRM TAB === */}
+              {activeTab === 'crm' && (
+                <CRMTab />
               )}
 
               {/* === USERS / CUSTOMERS TAB === */}

@@ -21,6 +21,7 @@ import Lenis from 'lenis';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import RainEffect from './components/RainEffect';
 import MonsoonSalePopup from './components/MonsoonSalePopup';
+import WhatsAppWidget from './components/WhatsAppWidget';
 
 function App() {
   const { scrollYProgress } = useScroll();
@@ -38,7 +39,7 @@ function App() {
         if (state.product) setSelectedProduct(state.product);
       } else {
         const hash = window.location.hash.replace('#', '');
-        const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support'];
+        const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
         if (validViews.includes(hash)) {
           setCurrentView(hash);
         } else {
@@ -51,7 +52,7 @@ function App() {
     
     // Initial load
     const initialHash = window.location.hash.replace('#', '');
-    const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support'];
+    const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
     if (validViews.includes(initialHash)) {
       setCurrentView(initialHash);
       window.history.replaceState({ view: initialHash }, '', '#' + initialHash);
@@ -163,6 +164,28 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // WhatsApp QR Code Redirection Logic
+  useEffect(() => {
+    if (currentView === 'whatsapp') {
+      const fetchAndRedirect = async () => {
+        try {
+          const { data, error } = await supabase.from('whatsapp_settings').select('business_phone_number').eq('id', 1).single();
+          if (error) throw error;
+          const phone = data?.business_phone_number;
+          if (phone) {
+            window.location.href = `https://wa.me/${phone}?text=Hi`;
+          } else {
+            setCurrentView('home');
+          }
+        } catch (err) {
+          console.error('Redirect failed', err);
+          setCurrentView('home');
+        }
+      };
+      fetchAndRedirect();
+    }
+  }, [currentView]);
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -319,12 +342,26 @@ function App() {
           >
             <SupportPage onBack={handleBackToHome} />
           </motion.div>
+        ) : currentView === 'whatsapp' ? (
+          <motion.div 
+            key="whatsapp"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a', color: '#fff', flexDirection: 'column' }}
+          >
+            <div className="spinning" style={{ width: '40px', height: '40px', border: '4px solid #D4AF37', borderTopColor: 'transparent', borderRadius: '50%', marginBottom: '1rem' }}></div>
+            <h2>Connecting to WhatsApp...</h2>
+            <p style={{ color: '#9ca3af' }}>Please wait while we redirect you to Pure-Nutrix support.</p>
+          </motion.div>
         ) : null}
       </AnimatePresence>
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
       />
+      {currentView !== 'admin' && <WhatsAppWidget />}
     </>
   );
 }
