@@ -200,7 +200,6 @@
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
-.crm-contact-list::-webkit-scrollbar { display: none; }
 
 .crm-contact-item {
   display: flex; align-items: center; gap: 1rem;
@@ -262,7 +261,6 @@
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
-.chat-messages::-webkit-scrollbar { display: none; }
 
 /* Chat Bubbles (Fixed classes) */
 .msg-wrapper { max-width: 60%; display: flex; flex-direction: column; margin-bottom: 1.5rem; }
@@ -351,7 +349,6 @@
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
-.crm-section-content::-webkit-scrollbar { display: none; }
 .crm-section-header { margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
 .crm-section-header h2 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
 .crm-section-header p { color: #888; font-size: 1rem; font-weight: 400; margin: 0; }
