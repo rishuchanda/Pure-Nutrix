@@ -21,7 +21,7 @@ import Lenis from 'lenis';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import RainEffect from './components/RainEffect';
 import MonsoonSalePopup from './components/MonsoonSalePopup';
-import WhatsAppWidget from './components/WhatsAppWidget';
+import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
   const { scrollYProgress } = useScroll();
@@ -360,7 +360,7 @@ function App() {
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
       />
-      {currentView !== 'admin' && <WhatsAppWidget />}
+      {currentView !== 'admin' && <ChatbotWidget phoneNumber="919057607030" defaultMessage="Hi, I need help with Pure Nutrix products." />}
     </>
   );
 }
