@@ -247,10 +247,10 @@
 /* Cute Robot Overlay (Sitting on top of chat window) */
 .cute-robot-overlay {
   position: absolute;
-  top: -150px;
+  top: -120px;
   right: 20px;
-  width: 160px;
-  height: 160px;
+  width: 130px;
+  height: 130px;
   z-index: 1000;
   pointer-events: none;
   animation: slideRobot 15s ease-in-out infinite;
@@ -263,10 +263,31 @@
 }
 
 @keyframes slideRobot {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  25% { transform: translateX(-180px) translateY(-10px); }
-  50% { transform: translateX(-180px) translateY(0); }
-  75% { transform: translateX(0) translateY(-10px); }
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+  25% { transform: translateX(-180px) translateY(-10px) rotate(-3deg); }
+  50% { transform: translateX(-180px) translateY(0) rotate(0deg); }
+  75% { transform: translateX(0) translateY(-10px) rotate(3deg); }
+}
+
+/* Face looking around animation */
+.robot-face {
+  animation: lookAround 8s ease-in-out infinite;
+}
+@keyframes lookAround {
+  0%, 20%, 80%, 100% { transform: translateX(0); }
+  30%, 45% { transform: translateX(-5px); }
+  55%, 70% { transform: translateX(5px); }
+}
+
+/* Ear Twitching */
+.robot-ear {
+  animation: twitchEar 5s infinite;
+  transform-origin: center;
+}
+@keyframes twitchEar {
+  0%, 90%, 100% { transform: scale(1); }
+  92%, 96% { transform: scale(1.1, 0.9); }
+  94%, 98% { transform: scale(0.9, 1.1); }
 }
 
 .antenna-bulb {

@@ -71,37 +71,38 @@ const CuteRobot = () => {
         <circle cx="100" cy="55" r="3" fill="#e0e0e0" />
 
         {/* Side Ear Flaps */}
-        <ellipse cx="25" cy="110" rx="10" ry="20" fill="#ffc2d1" stroke="#fff" strokeWidth="2" />
-        <ellipse cx="175" cy="110" rx="10" ry="20" fill="#ffc2d1" stroke="#fff" strokeWidth="2" />
+        <ellipse cx="25" cy="110" rx="10" ry="20" fill="#ffc2d1" stroke="#fff" strokeWidth="2" className="robot-ear" />
+        <ellipse cx="175" cy="110" rx="10" ry="20" fill="#ffc2d1" stroke="#fff" strokeWidth="2" className="robot-ear" />
 
-        {/* Cute Big Eyes */}
-        <g style={{ transformOrigin: '70px 95px', transition: 'transform 0.2s', transform: eyeTransform }}>
-          <circle cx="70" cy="95" r="18" fill="url(#eyeGrad)" stroke="#ff9900" strokeWidth="2" />
-          {/* Eye reflections */}
-          <circle cx="75" cy="90" r="5" fill="#fff" opacity="0.8" />
-          <circle cx="65" cy="100" r="2" fill="#FACC15" opacity="0.9" />
+        {/* Face Group (Eyes, Cheeks, Mouth) for Look Around Animation */}
+        <g className="robot-face">
+          {/* Cute Big Eyes */}
+          <g style={{ transformOrigin: '70px 95px', transition: 'transform 0.2s', transform: eyeTransform }}>
+            <circle cx="70" cy="95" r="18" fill="url(#eyeGrad)" stroke="#ff9900" strokeWidth="2.5" />
+            <circle cx="75" cy="90" r="5" fill="#fff" opacity="0.9" />
+            <circle cx="65" cy="100" r="2" fill="#FACC15" opacity="0.9" />
+          </g>
+          
+          <g style={{ transformOrigin: '130px 95px', transition: 'transform 0.2s', transform: eyeTransform }}>
+            <circle cx="130" cy="95" r="18" fill="url(#eyeGrad)" stroke="#ff9900" strokeWidth="2.5" />
+            <circle cx="125" cy="90" r="5" fill="#fff" opacity="0.9" />
+            <circle cx="135" cy="100" r="2" fill="#FACC15" opacity="0.9" />
+          </g>
+
+          {/* Small Cheeks */}
+          <circle cx="45" cy="110" r="8" fill="#ff9999" opacity={mood === 'happy' ? 0.9 : 0.5} style={{ transition: 'opacity 0.3s' }} className="robot-cheek" />
+          <circle cx="155" cy="110" r="8" fill="#ff9999" opacity={mood === 'happy' ? 0.9 : 0.5} style={{ transition: 'opacity 0.3s' }} className="robot-cheek" />
+
+          {/* Mouth */}
+          <path 
+            d={mouthPath} 
+            stroke="#1a1a1a" 
+            strokeWidth="4" 
+            fill={mood === 'happy' ? "#ffb3c6" : "none"}
+            strokeLinecap="round" 
+            style={{ transition: 'd 0.3s, fill 0.3s' }}
+          />
         </g>
-        
-        <g style={{ transformOrigin: '130px 95px', transition: 'transform 0.2s', transform: eyeTransform }}>
-          <circle cx="130" cy="95" r="18" fill="url(#eyeGrad)" stroke="#ff9900" strokeWidth="2" />
-          {/* Eye reflections */}
-          <circle cx="125" cy="90" r="5" fill="#fff" opacity="0.8" />
-          <circle cx="135" cy="100" r="2" fill="#FACC15" opacity="0.9" />
-        </g>
-
-        {/* Small Cheeks */}
-        <circle cx="50" cy="110" r="6" fill="#ff9999" opacity={mood === 'happy' ? 0.9 : 0.4} style={{ transition: 'opacity 0.3s' }} />
-        <circle cx="150" cy="110" r="6" fill="#ff9999" opacity={mood === 'happy' ? 0.9 : 0.4} style={{ transition: 'opacity 0.3s' }} />
-
-        {/* Mouth */}
-        <path 
-          d={mouthPath} 
-          stroke="#1a1a1a" 
-          strokeWidth="4" 
-          fill={mood === 'happy' ? "#ffb3c6" : "none"}
-          strokeLinecap="round" 
-          style={{ transition: 'd 0.3s, fill 0.3s' }}
-        />
 
         {/* Arms Floating */}
         <ellipse cx="40" cy="150" rx="15" ry="20" fill="#ffb3c6" stroke="#fff" strokeWidth="2" className={mood === 'happy' ? 'arm-excited' : 'arm-idle'} style={{ transformOrigin: '40px 150px' }} />
