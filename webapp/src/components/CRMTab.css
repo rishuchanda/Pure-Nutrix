@@ -99,7 +99,6 @@
   height: 100%;
   background: #ffffff;
   border-radius: 20px;
-  overflow: hidden;
   min-height: 0;
 }
 
@@ -197,6 +196,7 @@
   overflow-y: scroll; display: flex; flex-direction: column; gap: 0.2rem;
   padding: 0 1rem 1rem 1rem;
   min-height: 0;
+  transform: translateZ(0);
 }
 
 .crm-contact-item {
@@ -235,7 +235,6 @@
   flex-direction: column;
   background-color: #ffffff;
   position: relative;
-  overflow: hidden;
   height: 100%;
   min-height: 0;
 }
@@ -255,7 +254,8 @@
 .chat-phone { margin: 0; color: #888; font-size: 0.85rem; font-weight: 400; }
 
 .chat-messages {
-  flex: 1; padding: 2rem 3rem; overflow-y: scroll; display: block; min-height: 0;
+  flex: 1 1 0; height: 0; padding: 2rem 3rem; overflow-y: scroll; display: block; min-height: 0;
+  transform: translateZ(0);
 }
 
 /* Chat Bubbles (Fixed classes) */
@@ -341,7 +341,8 @@
 
 /* ─── Generic Sections (Settings, AutoReply, Campaigns) ─────────────── */
 .crm-section-content {
-  flex: 1; padding: 3rem; overflow-y: scroll; color: #333; background-color: #ffffff; border-radius: 24px; height: 100%;
+  flex: 1 1 0; height: 0; padding: 3rem; overflow-y: scroll; color: #333; background-color: #ffffff; border-radius: 24px;
+  transform: translateZ(0);
 }
 .crm-section-header { margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
 .crm-section-header h2 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
