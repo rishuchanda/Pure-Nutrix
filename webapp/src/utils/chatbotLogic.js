@@ -2,7 +2,7 @@ export const getChatbotResponse = (message) => {
   const msg = message.toLowerCase();
 
   // Greeting
-  if (msg.match(/\b(hi|hello|hey|namaste)\b/)) {
+  if (msg.includes('hi') || msg.includes('hello') || msg.includes('hey') || msg.includes('namaste')) {
     return {
       text: "Hello! 👋 Welcome to Pure-Nutrix. How can I help you today? You can ask me about our products, pricing, or orders.",
       options: ["Product Info", "Track Order", "Chat with Human"]
@@ -42,7 +42,7 @@ export const getChatbotResponse = (message) => {
   }
 
   // Price / Cost / Products
-  if (msg.match(/\b(price|cost|how much|rate|product|products|buy|item|items)\b/)) {
+  if (msg.includes('price') || msg.includes('cost') || msg.includes('how much') || msg.includes('rate') || msg.includes('product') || msg.includes('buy') || msg.includes('item')) {
     return {
       text: "We offer premium Himalayan Shilajit, Ashwagandha KSM-66, Irish Sea Moss, and Creatine Monohydrate. Prices range from ₹499 to ₹1,499. You can check our 'Products' page for exact pricing!",
       options: ["Shilajit", "Ashwagandha", "Chat with Human"]
@@ -50,7 +50,7 @@ export const getChatbotResponse = (message) => {
   }
 
   // Order / Tracking
-  if (msg.match(/\b(order|track|shipping|delivery|where is)\b/)) {
+  if (msg.includes('order') || msg.includes('track') || msg.includes('shipping') || msg.includes('delivery') || msg.includes('where is')) {
     return {
       text: "Orders typically take 3-5 business days to arrive. To track your order, please visit the 'My Account' section or share your Order ID with our human support team.",
       options: ["Chat with Human"]
@@ -58,7 +58,7 @@ export const getChatbotResponse = (message) => {
   }
 
   // Human / Agent / WhatsApp
-  if (msg.match(/\b(human|agent|person|whatsapp|call|talk|support|help)\b/)) {
+  if (msg.includes('human') || msg.includes('agent') || msg.includes('person') || msg.includes('whatsapp') || msg.includes('call') || msg.includes('talk') || msg.includes('support') || msg.includes('help')) {
     return {
       text: "Sure! I can connect you to our support team on WhatsApp.",
       action: "open_whatsapp"
