@@ -94,14 +94,38 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
     <div className="chatbot-widget-container">
       {isOpen && (
         <div className="chatbot-window">
+          {/* Cute Robot Sitting on Top */}
+          <div className="cute-robot-overlay">
+            <svg viewBox="0 0 100 100" className="robot-svg">
+              <g className="robot-body-group">
+                {/* Antenna */}
+                <line x1="50" y1="25" x2="50" y2="10" stroke="#7367F0" strokeWidth="4" />
+                <circle cx="50" cy="8" r="6" fill="#FACC15" className="antenna-bulb" />
+                {/* Head */}
+                <rect x="25" y="25" width="50" height="40" rx="10" fill="#fff" stroke="#7367F0" strokeWidth="4" />
+                {/* Ears */}
+                <rect x="15" y="35" width="10" height="20" rx="4" fill="#7367F0" />
+                <rect x="75" y="35" width="10" height="20" rx="4" fill="#7367F0" />
+                {/* Eyes */}
+                <circle cx="38" cy="45" r="5" fill="#7367F0" className="robot-eye left-eye" />
+                <circle cx="62" cy="45" r="5" fill="#7367F0" className="robot-eye right-eye" />
+                {/* Smile */}
+                <path d="M 40 55 Q 50 62 60 55" stroke="#7367F0" strokeWidth="3" fill="none" strokeLinecap="round" />
+                {/* Arms waving */}
+                <path d="M 25 45 Q 10 40 5 25" stroke="#7367F0" strokeWidth="5" fill="none" strokeLinecap="round" className="robot-arm-left" />
+                <path d="M 75 45 Q 90 40 95 25" stroke="#7367F0" strokeWidth="5" fill="none" strokeLinecap="round" className="robot-arm-right" />
+              </g>
+            </svg>
+          </div>
+
           <div className="chatbot-header">
             <div className="chatbot-header-info">
               <div className="chatbot-avatar">
-                <Bot size={20} color="white" />
+                <span style={{ fontSize: '1.2rem' }}>🤖</span>
               </div>
               <div>
-                <h3 className="chatbot-title">Pure-Nutrix Assistant</h3>
-                <p className="chatbot-status">Online</p>
+                <h3 className="chatbot-title">NutriBot</h3>
+                <p className="chatbot-status">Online & Ready to Help!</p>
               </div>
             </div>
             <button className="chatbot-close" onClick={() => setIsOpen(false)}>
@@ -163,7 +187,18 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
           onClick={() => setIsOpen(true)}
           aria-label="Open Help Assistant"
         >
-          <MessageSquare size={28} />
+          <svg viewBox="0 0 100 100" className="fab-robot-svg">
+            <g className="fab-robot-body">
+              <line x1="50" y1="20" x2="50" y2="5" stroke="#fff" strokeWidth="4" />
+              <circle cx="50" cy="5" r="5" fill="#FACC15" className="antenna-bulb" />
+              <rect x="25" y="20" width="50" height="40" rx="10" fill="#fff" />
+              <rect x="15" y="30" width="10" height="20" rx="4" fill="#fff" />
+              <rect x="75" y="30" width="10" height="20" rx="4" fill="#fff" />
+              <circle cx="38" cy="40" r="5" fill="#28c76f" className="robot-eye" />
+              <circle cx="62" cy="40" r="5" fill="#28c76f" className="robot-eye" />
+              <path d="M 40 50 Q 50 55 60 50" stroke="#28c76f" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </g>
+          </svg>
         </button>
       )}
     </div>

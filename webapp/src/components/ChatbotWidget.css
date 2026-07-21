@@ -243,3 +243,73 @@
     position: fixed;
   }
 }
+
+/* Cute Robot Overlay (Sitting on top of chat window) */
+.cute-robot-overlay {
+  position: absolute;
+  top: -45px;
+  right: 20px;
+  width: 70px;
+  height: 70px;
+  z-index: 1000;
+  pointer-events: none;
+  animation: floatRobot 4s ease-in-out infinite;
+}
+
+.robot-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+@keyframes floatRobot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.antenna-bulb {
+  animation: glowBulb 1.5s ease-in-out infinite alternate;
+}
+@keyframes glowBulb {
+  from { fill: #FACC15; filter: drop-shadow(0 0 2px #FACC15); }
+  to { fill: #FF4500; filter: drop-shadow(0 0 8px #FF4500); }
+}
+
+.robot-eye {
+  animation: blinkEye 4s infinite;
+  transform-origin: center;
+}
+@keyframes blinkEye {
+  0%, 96%, 98%, 100% { transform: scaleY(1); }
+  97%, 99% { transform: scaleY(0.1); }
+}
+
+.robot-arm-left {
+  animation: waveLeft 2s ease-in-out infinite;
+  transform-origin: 25px 45px;
+}
+.robot-arm-right {
+  animation: waveRight 2s ease-in-out infinite;
+  transform-origin: 75px 45px;
+}
+@keyframes waveLeft {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-20deg); }
+}
+@keyframes waveRight {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(20deg); }
+}
+
+/* FAB Robot */
+.fab-robot-svg {
+  width: 35px;
+  height: 35px;
+  animation: bounceFabRobot 3s infinite;
+}
+
+@keyframes bounceFabRobot {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(-5deg); }
+  75% { transform: translateY(-3px) rotate(5deg); }
+}
