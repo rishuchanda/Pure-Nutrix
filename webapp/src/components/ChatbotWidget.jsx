@@ -20,6 +20,18 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
   const [dbProducts, setDbProducts] = useState([]);
   const messagesEndRef = useRef(null);
 
+  // Lock background scrolling when chatbot is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     // Fetch products from database to make bot aware of real inventory
     const fetchProducts = async () => {
