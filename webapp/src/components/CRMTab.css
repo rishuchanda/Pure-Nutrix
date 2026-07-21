@@ -258,16 +258,16 @@
 .chat-phone { margin: 0; color: #888; font-size: 0.85rem; font-weight: 400; }
 
 .chat-messages {
-  flex: 1; padding: 2rem 3rem; overflow-y: scroll; display: flex; flex-direction: column; gap: 1.5rem; min-height: 0;
+  flex: 1; padding: 2rem 3rem; overflow-y: scroll; display: block; min-height: 0;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
 .chat-messages::-webkit-scrollbar { display: none; }
 
 /* Chat Bubbles (Fixed classes) */
-.msg-wrapper { max-width: 60%; display: flex; flex-direction: column; }
-.msg-wrapper.inbound { align-self: flex-start; }
-.msg-wrapper.outbound { align-self: flex-end; }
+.msg-wrapper { max-width: 60%; display: flex; flex-direction: column; margin-bottom: 1.5rem; }
+.msg-wrapper.inbound { margin-right: auto; margin-left: 0; }
+.msg-wrapper.outbound { margin-left: auto; margin-right: 0; }
 
 .msg-bubble {
   padding: 1rem 1.25rem; font-size: 0.95rem; line-height: 1.5; font-weight: 400;
