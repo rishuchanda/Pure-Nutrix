@@ -729,38 +729,38 @@ const CRMTab = ({ onBack }) => {
           )}
             {/* ── Settings View ── */}
             {activeSection === 'settings' && (
-              <div className="crm-campaign-section" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', overflowY: 'auto', height: '100%', paddingBottom: '100px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff', marginBottom: '0.5rem' }}>WhatsApp API Settings</h2>
-                <p style={{ color: '#9ca3af', marginBottom: '2rem' }}>Configure your Meta WhatsApp Business API credentials here. These details power the CRM.</p>
+              <div className="crm-section-content" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', overflowY: 'auto', height: '100%', paddingBottom: '100px' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', marginBottom: '0.5rem', fontFamily: 'Outfit, sans-serif' }}>WhatsApp API Settings</h2>
+                <p style={{ color: '#666', marginBottom: '2rem' }}>Configure your Meta WhatsApp Business API credentials here. These details power the CRM.</p>
                 <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#e5e7eb', fontSize: '0.9rem' }}>Business Phone Number (Without +)</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#555', fontSize: '0.9rem' }}>Business Phone Number (Without +)</label>
                     <input 
                       type="text" 
                       value={waSettings.business_phone_number || ''} 
                       onChange={e => setWaSettings({...waSettings, business_phone_number: e.target.value})} 
                       required 
-                      style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+                      className="admin-input"
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#e5e7eb', fontSize: '0.9rem' }}>Phone Number ID</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#555', fontSize: '0.9rem' }}>Phone Number ID</label>
                     <input 
                       type="text" 
                       value={waSettings.phone_number_id || ''} 
                       onChange={e => setWaSettings({...waSettings, phone_number_id: e.target.value})} 
                       required 
-                      style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+                      className="admin-input"
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#e5e7eb', fontSize: '0.9rem' }}>Access Token (Permanent or Temporary)</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#555', fontSize: '0.9rem' }}>Access Token (Permanent or Temporary)</label>
                     <input 
                       type="password" 
                       value={waSettings.access_token || ''} 
                       onChange={e => setWaSettings({...waSettings, access_token: e.target.value})} 
                       required 
-                      style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+                      className="admin-input"
                     />
                   </div>
                   <button type="submit" className="admin-btn admin-btn-primary" disabled={isSavingSettings} style={{ alignSelf: 'flex-start', marginTop: '1rem', padding: '0.75rem 2rem' }}>
@@ -768,10 +768,10 @@ const CRMTab = ({ onBack }) => {
                   </button>
                 </form>
 
-                <hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+                <hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid #eee' }} />
                 
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff', marginBottom: '0.5rem' }}>Lifetime Dynamic QR Code</h2>
-                <p style={{ color: '#9ca3af', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', marginBottom: '0.5rem', fontFamily: 'Outfit, sans-serif' }}>Lifetime Dynamic QR Code</h2>
+                <p style={{ color: '#666', marginBottom: '1.5rem', lineHeight: '1.5' }}>
                   Scan this QR code to automatically start a WhatsApp chat. <br/>
                   If you update the phone number above in the future, the QR code will automatically redirect to the new number without needing to be reprinted.
                 </p>

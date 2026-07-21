@@ -364,3 +364,53 @@
 .crm-section-header { margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
 .crm-section-header h2 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
 .crm-section-header p { color: #888; font-size: 1rem; font-weight: 400; margin: 0; }
+
+/* ─── Glass Cards & Shared Components ───────────────────────── */
+.glass-card {
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  margin-bottom: 1.5rem;
+}
+
+/* ─── Auto-Reply Styles ─────────────────────────────────────── */
+.toggle-wrapper { display: flex; align-items: center; gap: 1rem; font-size: 0.9rem; font-weight: 600; color: #555; }
+.toggle { width: 44px; height: 24px; background: #e0e0e0; border-radius: 24px; position: relative; cursor: pointer; transition: all 0.3s; }
+.toggle.on { background: #28c76f; }
+.toggle-knob { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.toggle.on .toggle-knob { left: 22px; }
+
+.autoreply-add-form h4 { display: flex; align-items: center; gap: 0.5rem; color: #7367F0; margin-bottom: 1rem; font-size: 1.1rem; }
+.autoreply-form-row { display: flex; gap: 1rem; align-items: flex-start; }
+.input-group-inline { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.input-group-inline label { font-size: 0.85rem; color: #555; font-weight: 600; }
+
+.autoreply-rules-list { display: flex; flex-direction: column; gap: 1rem; }
+.autoreply-rule-card { padding: 1rem 1.5rem; margin-bottom: 0; display: flex; flex-direction: column; justify-content: center; }
+.rule-display { display: flex; align-items: center; gap: 1rem; }
+.rule-keyword { font-weight: 600; color: #333; min-width: 120px; font-size: 1rem; background: #f4f3fe; color: #7367F0; padding: 0.4rem 0.8rem; border-radius: 8px; text-align: center; }
+.rule-reply { flex: 1; color: #555; font-size: 0.95rem; line-height: 1.5; }
+.rule-actions { display: flex; gap: 0.5rem; }
+.icon-btn { background: transparent; border: none; color: #888; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: all 0.2s; }
+.icon-btn:hover { background: #f0f0f0; color: #333; }
+.icon-btn.danger:hover { background: #ffebee; color: #d32f2f; }
+
+/* ─── Campaigns Styles ──────────────────────────────────────── */
+.campaign-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: flex-start; }
+.campaign-form h3, .campaign-audience h3 { margin-bottom: 0.5rem; color: #333; font-size: 1.2rem; }
+.campaign-tip { font-size: 0.85rem; color: #888; margin-bottom: 1.5rem; }
+.campaign-tip code { background: #f4f3fe; color: #7367F0; padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: 600; }
+.campaign-textarea { width: 100%; resize: vertical; padding: 1rem; font-size: 0.95rem; border-radius: 12px; line-height: 1.5; margin-bottom: 1.5rem; }
+.blast-result { padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600; text-align: center; color: #333; }
+.campaign-send-btn { width: 100%; padding: 1rem; font-size: 1.1rem; display: flex; justify-content: center; gap: 0.5rem; }
+
+.campaign-search { display: flex; align-items: center; gap: 0.5rem; background: #f8f9fa; padding: 0.6rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+.campaign-search input { border: none; background: transparent; outline: none; flex: 1; color: #333; }
+.audience-list { display: flex; flex-direction: column; gap: 0.8rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem; }
+.audience-list::-webkit-scrollbar { width: 4px; }
+.audience-list::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+.audience-item { display: flex; align-items: center; gap: 1rem; padding: 0.8rem; background: #fcfcfc; border: 1px solid #f0f0f0; border-radius: 12px; }
+.audience-ltv { margin-left: auto; font-weight: 600; color: #28c76f; font-size: 0.9rem; }
+.contact-avatar.small { width: 32px; height: 32px; font-size: 0.9rem; }
