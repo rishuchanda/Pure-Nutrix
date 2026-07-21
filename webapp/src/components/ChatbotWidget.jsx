@@ -174,7 +174,7 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
           role="button"
           tabIndex={0}
         >
-          <div className="chatbot-tooltip">Need help? Ask NutriBot!</div>
+          <span className="chatbot-tooltip">Need help?</span>
           <div className="chatbot-fab-robot">
             <CuteRobot />
           </div>
