@@ -287,7 +287,10 @@
   .chatbot-window {
     width: calc(100vw - 40px);
     right: 20px;
-    bottom: 90px;
+    bottom: 20px;
+    top: 120px; /* Leave space for the cute robot overlay */
+    height: auto;
+    max-height: none;
     position: fixed;
   }
 }
