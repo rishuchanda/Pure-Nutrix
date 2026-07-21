@@ -350,7 +350,11 @@ const AdminDashboard = ({ user }) => {
   const activeOrders = orders.filter(o => o.status && o.status.toLowerCase() !== 'delivered').length;
   
   return (
-    <div className={`admin-dashboard-wrapper admin-theme-${theme}`}>
+    <div 
+      className={`admin-dashboard-wrapper admin-theme-${theme}`}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+    >
       {/* Standalone Fullscreen CRM Tab */}
       {activeTab === 'crm' && (
         <CRMTab onBack={() => setActiveTab('dashboard')} />
