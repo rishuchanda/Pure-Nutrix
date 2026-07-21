@@ -30,86 +30,93 @@ const CuteRobot = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Determine mouth path based on mood
-  let mouthPath = "M 85 125 L 95 115 L 105 130 L 115 120"; // Heartbeat/idle
-  if (mood === 'happy') mouthPath = "M 80 120 Q 100 145 120 120";
-  else if (mood === 'sad') mouthPath = "M 80 130 Q 100 110 120 130";
-  else if (mood === 'idle') mouthPath = "M 85 125 Q 100 135 115 125";
+  // Determine Eye Paths based on mood (Digital Neon Eyes)
+  let eyePathLeft = "M 65 75 Q 80 55 95 75 Z"; // Idle happy eyes
+  let eyePathRight = "M 105 75 Q 120 55 135 75 Z";
 
-  // Determine eye transform
-  const eyeTransform = mood === 'blink' || mood === 'happy' ? "scale(1, 0.1)" : "scale(1, 1)";
-  const eyeY = mood === 'blink' || mood === 'happy' ? 700 : 0; // adjust scaling center manually in SVG string via CSS below
+  if (mood === 'sad') {
+    eyePathLeft = "M 65 65 Q 80 85 95 65 Z";
+    eyePathRight = "M 105 65 Q 120 85 135 65 Z";
+  } else if (mood === 'blink') {
+    eyePathLeft = "M 65 75 Q 80 74 95 75 Z";
+    eyePathRight = "M 105 75 Q 120 74 135 75 Z";
+  }
+
+  // Determine eye transform for blink scale down
+  const eyeTransform = mood === 'blink' ? "scale(1, 0.1)" : "scale(1, 1)";
 
   return (
-    <svg viewBox="0 0 200 200" className={`robot-svg robot-mood-${mood}`}>
+    <svg viewBox="0 0 200 250" className={`robot-svg robot-mood-${mood}`}>
       <defs>
+        {/* 3D Gradients */}
         <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="50%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#ffb3c6" />
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="80%" stopColor="#e2e8f0" />
+          <stop offset="100%" stopColor="#cbd5e1" />
         </linearGradient>
-        <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#1a1a1a" />
-          <stop offset="100%" stopColor="#000000" />
+        <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#5eead4" />
+          <stop offset="100%" stopColor="#14b8a6" />
         </linearGradient>
+        <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#1e293b" />
+          <stop offset="100%" stopColor="#020617" />
+        </linearGradient>
+        
+        {/* Neon Glow Filter for Eyes */}
+        <filter id="neonGlow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
       </defs>
 
       <g className="robot-hover-group">
-        {/* Antennas */}
-        <g className="antennas">
-          <line x1="65" y1="40" x2="40" y2="15" stroke="#ffb3c6" strokeWidth="4" strokeLinecap="round" />
-          <circle cx="40" cy="15" r="5" fill="#fff" stroke="#ffb3c6" strokeWidth="2" className="antenna-bulb" />
-          
-          <line x1="135" y1="40" x2="160" y2="15" stroke="#ffb3c6" strokeWidth="4" strokeLinecap="round" />
-          <circle cx="160" cy="15" r="5" fill="#fff" stroke="#ffb3c6" strokeWidth="2" className="antenna-bulb" />
+        
+        {/* Base */}
+        <ellipse cx="100" cy="235" rx="65" ry="12" fill="#cbd5e1" />
+        <ellipse cx="100" cy="230" rx="65" ry="12" fill="#f8fafc" />
+
+        {/* Body Egg Shape */}
+        <ellipse cx="100" cy="155" rx="60" ry="70" fill="url(#bodyGrad)" />
+        
+        {/* Text 'NutriBot' */}
+        <text x="100" y="160" fontFamily="Outfit, sans-serif" fontSize="18" fill="#475569" fontWeight="600" textAnchor="middle" letterSpacing="0.5">NutriBot</text>
+        <circle cx="100" cy="180" r="2" fill="#94a3b8" /> {/* Little belly button */}
+
+        {/* Arms */}
+        {/* Left Arm */}
+        <g className={mood === 'happy' ? 'arm-excited' : 'arm-idle'} style={{ transformOrigin: '50px 130px' }}>
+          <path d="M 50 130 Q 15 120 20 180 Q 25 205 35 190 Q 45 170 50 130" fill="url(#bodyGrad)" stroke="url(#tealGrad)" strokeWidth="4" />
+        </g>
+        {/* Right Arm */}
+        <g className={mood === 'happy' ? 'arm-excited' : 'arm-idle'} style={{ transformOrigin: '150px 130px' }}>
+          <path d="M 150 130 Q 185 120 180 180 Q 175 205 165 190 Q 155 170 150 130" fill="url(#bodyGrad)" stroke="url(#tealGrad)" strokeWidth="4" />
         </g>
 
-        {/* Main Spherical Body */}
-        <circle cx="100" cy="100" r="70" fill="url(#bodyGrad)" />
+        {/* Collar / Scarf */}
+        <path d="M 65 110 Q 100 130 135 110 Q 145 130 100 145 Q 55 130 65 110" fill="url(#tealGrad)" />
 
-        {/* Top Head Separator Line */}
-        <path d="M 45 65 Q 100 85 155 65" stroke="#e0e0e0" strokeWidth="2" fill="none" opacity="0.6" />
-        <circle cx="100" cy="55" r="3" fill="#e0e0e0" />
-
-        {/* Side Ear Flaps */}
-        <ellipse cx="25" cy="110" rx="10" ry="20" fill="#ffc2d1" stroke="#fff" strokeWidth="2" className="robot-ear" />
-        <ellipse cx="175" cy="110" rx="10" ry="20" fill="#ffc2d1" stroke="#fff" strokeWidth="2" className="robot-ear" />
-
-        {/* Face Group (Eyes, Cheeks, Mouth) for Look Around Animation */}
+        {/* Head Group (Look around animation) */}
         <g className="robot-face">
-          {/* Cute Big Eyes */}
-          <g style={{ transformOrigin: '70px 95px', transition: 'transform 0.2s', transform: eyeTransform }}>
-            <circle cx="70" cy="95" r="18" fill="url(#eyeGrad)" stroke="#ff9900" strokeWidth="2.5" />
-            <circle cx="75" cy="90" r="5" fill="#fff" opacity="0.9" />
-            <circle cx="65" cy="100" r="2" fill="#FACC15" opacity="0.9" />
-          </g>
+          {/* Head Base */}
+          <rect x="35" y="20" width="130" height="100" rx="50" fill="url(#bodyGrad)" />
+          {/* Head Top teal highlight */}
+          <ellipse cx="100" cy="30" rx="30" ry="8" fill="url(#tealGrad)" opacity="0.6" />
           
-          <g style={{ transformOrigin: '130px 95px', transition: 'transform 0.2s', transform: eyeTransform }}>
-            <circle cx="130" cy="95" r="18" fill="url(#eyeGrad)" stroke="#ff9900" strokeWidth="2.5" />
-            <circle cx="125" cy="90" r="5" fill="#fff" opacity="0.9" />
-            <circle cx="135" cy="100" r="2" fill="#FACC15" opacity="0.9" />
-          </g>
+          {/* Ear Dials */}
+          <rect x="25" y="55" width="20" height="30" rx="10" fill="url(#bodyGrad)" stroke="url(#tealGrad)" strokeWidth="2" className="robot-ear" />
+          <rect x="155" y="55" width="20" height="30" rx="10" fill="url(#bodyGrad)" stroke="url(#tealGrad)" strokeWidth="2" className="robot-ear" />
 
-          {/* Small Cheeks */}
-          <circle cx="45" cy="110" r="8" fill="#ff9999" opacity={mood === 'happy' ? 0.9 : 0.5} style={{ transition: 'opacity 0.3s' }} className="robot-cheek" />
-          <circle cx="155" cy="110" r="8" fill="#ff9999" opacity={mood === 'happy' ? 0.9 : 0.5} style={{ transition: 'opacity 0.3s' }} className="robot-cheek" />
-
-          {/* Mouth */}
-          <path 
-            d={mouthPath} 
-            stroke="#1a1a1a" 
-            strokeWidth="4" 
-            fill={mood === 'happy' ? "#ffb3c6" : "none"}
-            strokeLinecap="round" 
-            style={{ transition: 'd 0.3s, fill 0.3s' }}
-          />
+          {/* Black Digital Screen */}
+          <rect x="45" y="35" width="110" height="70" rx="35" fill="url(#screenGrad)" />
+          
+          {/* Neon Digital Eyes */}
+          <path d={eyePathLeft} fill="#00ffff" filter="url(#neonGlow)" style={{ transition: 'd 0.1s', transformOrigin: '80px 75px', transform: eyeTransform }} />
+          <path d={eyePathRight} fill="#00ffff" filter="url(#neonGlow)" style={{ transition: 'd 0.1s', transformOrigin: '120px 75px', transform: eyeTransform }} />
         </g>
-
-        {/* Arms Floating */}
-        <ellipse cx="40" cy="150" rx="15" ry="20" fill="#ffb3c6" stroke="#fff" strokeWidth="2" className={mood === 'happy' ? 'arm-excited' : 'arm-idle'} style={{ transformOrigin: '40px 150px' }} />
-        <ellipse cx="160" cy="150" rx="15" ry="20" fill="#ffb3c6" stroke="#fff" strokeWidth="2" className={mood === 'happy' ? 'arm-excited' : 'arm-idle'} style={{ transformOrigin: '160px 150px' }} />
-
-        {/* Bottom Base details */}
-        <rect x="75" y="160" width="50" height="8" rx="4" fill="#1a1a1a" opacity="0.8" />
       </g>
     </svg>
   );

@@ -247,10 +247,10 @@
 /* Cute Robot Overlay (Sitting on top of chat window) */
 .cute-robot-overlay {
   position: absolute;
-  top: -120px;
+  top: -150px;
   right: 20px;
-  width: 130px;
-  height: 130px;
+  width: 120px;
+  height: 150px;
   z-index: 1000;
   pointer-events: none;
   animation: slideRobot 15s ease-in-out infinite;

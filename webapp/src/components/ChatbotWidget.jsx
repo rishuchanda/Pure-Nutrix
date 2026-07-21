@@ -95,7 +95,7 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
     <div className="chatbot-widget-container">
       {isOpen && (
         <div className="chatbot-window">
-          {/* Cute Full Body Robot Sitting on Top */}
+          {/* Cute Robot Overlay (Sitting on top of chat window) */}
           <div className="cute-robot-overlay">
             <CuteRobot />
           </div>
