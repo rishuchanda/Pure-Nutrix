@@ -41,11 +41,11 @@ export const getChatbotResponse = (message) => {
     };
   }
 
-  // Price / Cost
-  if (msg.match(/\b(price|cost|how much|rate)\b/)) {
+  // Price / Cost / Products
+  if (msg.match(/\b(price|cost|how much|rate|product|products|buy|item|items)\b/)) {
     return {
-      text: "Our products range from ₹499 to ₹1,499 depending on the size and current offers. Please visit the 'Products' page for exact pricing!",
-      options: ["Go to Products", "Chat with Human"]
+      text: "We offer premium Himalayan Shilajit, Ashwagandha KSM-66, Irish Sea Moss, and Creatine Monohydrate. Prices range from ₹499 to ₹1,499. You can check our 'Products' page for exact pricing!",
+      options: ["Shilajit", "Ashwagandha", "Chat with Human"]
     };
   }
 
