@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Gen-Z Modern WhatsApp CRM (Standalone Fullscreen Theme)
-   Glassmorphism, vibrant gradients, and ultra-smooth animations.
+   Minimal Elegant WhatsApp CRM Theme
+   Clean lines, deep monochrome palettes, sophisticated typography.
 ========================================================================== */
 
 /* ─── Fullscreen & Splash Screen ───────────────────────────────────────── */
@@ -12,59 +12,55 @@
   width: 100vw;
   height: 100vh;
   z-index: 9999;
-  background: linear-gradient(135deg, #09090b 0%, #18181b 100%);
+  background-color: #0c0c0c; /* Deep, solid charcoal */
   display: flex;
   flex-direction: column;
   font-family: 'Inter', system-ui, sans-serif;
   overflow: hidden;
+  color: #ededed;
 }
 
-/* Floating Header */
+/* Header */
 .crm-floating-header {
-  position: relative;
-  z-index: 10;
-  height: 60px;
-  background: rgba(18, 18, 20, 0.6);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  height: 64px;
+  background-color: #121212;
+  border-bottom: 1px solid #222222;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
 .crm-back-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: transparent;
+  border: 1px solid #333333;
+  color: #a3a3a3;
   padding: 0.5rem 1rem;
-  border-radius: 30px;
+  border-radius: 4px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
 }
 
 .crm-back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(-3px);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+  border-color: #555555;
+  color: #ededed;
 }
 
 .crm-brand-title {
-  font-weight: 800;
-  letter-spacing: 2px;
-  font-size: 1.1rem;
-  color: #fff;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  font-size: 1rem;
+  color: #ededed;
+  text-transform: uppercase;
 }
 .crm-brand-title .gold-text {
-  background: linear-gradient(to right, #D4AF37, #FFD700);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #D4AF37;
+  font-weight: 400;
 }
 
 /* Splash Screen */
@@ -75,11 +71,11 @@
   width: 100vw;
   height: 100vh;
   z-index: 10000;
-  background: #09090b;
+  background-color: #0c0c0c;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeOut 0.5s ease 2s forwards;
+  animation: fadeOut 0.8s ease 1.5s forwards;
 }
 
 .crm-splash-content {
@@ -87,46 +83,34 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .crm-splash-logo {
-  width: 100px;
-  height: 100px;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   margin-bottom: 2rem;
-  box-shadow: 0 0 40px rgba(212, 175, 55, 0.2);
-  animation: pulseGlow 2s infinite alternate;
+  color: #D4AF37;
 }
 
 .crm-splash-content h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  background: linear-gradient(to right, #fff, #a1a1aa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: #ededed;
   margin-bottom: 0.5rem;
-  letter-spacing: -1px;
+  letter-spacing: 0.05em;
 }
 
 .crm-splash-content p {
-  color: #71717a;
-  font-size: 1.1rem;
+  color: #737373;
+  font-size: 0.9rem;
   margin-bottom: 3rem;
+  font-weight: 300;
 }
 
 .crm-splash-loader {
-  width: 200px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  overflow: hidden;
+  width: 150px;
+  height: 1px;
+  background-color: #222222;
   position: relative;
+  overflow: hidden;
 }
 
 .crm-splash-loader::after {
@@ -135,27 +119,17 @@
   top: 0;
   left: 0;
   height: 100%;
-  width: 40%;
-  background: linear-gradient(90deg, #D4AF37, #FFDF00);
-  border-radius: 10px;
-  animation: loadingBar 1.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  width: 30%;
+  background-color: #D4AF37;
+  animation: sweep 1.5s ease-in-out infinite;
 }
 
 @keyframes fadeOut {
   to { opacity: 0; visibility: hidden; }
 }
-@keyframes floatUp {
-  0% { opacity: 0; transform: translateY(30px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.1); transform: scale(1); }
-  100% { box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); transform: scale(1.05); }
-}
-@keyframes loadingBar {
-  0% { width: 0%; left: 0%; }
-  50% { width: 50%; left: 25%; }
-  100% { width: 100%; left: 100%; }
+@keyframes sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
 }
 
 
@@ -164,23 +138,22 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding: 1.5rem;
-  gap: 1.5rem;
-  height: calc(100vh - 60px);
+  padding: 2rem;
+  gap: 2rem;
+  height: calc(100vh - 64px);
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-/* ─── Top Stats Banner (Glass) ───────────────────────────────────────── */
+/* ─── Top Stats Banner ───────────────────────────────────────── */
 .crm-analytics-banner {
   display: flex;
   align-items: center;
-  gap: 2.5rem;
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
-  padding: 1.25rem 2rem;
+  gap: 3rem;
+  padding: 0 0 1rem 0;
+  border-bottom: 1px solid #222;
   flex-shrink: 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .crm-stat {
@@ -189,45 +162,43 @@
   gap: 1rem;
 }
 
-.stat-icon { color: #D4AF37; filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5)); }
-.stat-value { font-size: 1.5rem; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -0.5px; }
-.stat-label { font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; font-weight: 600; }
+.stat-icon { color: #555; }
+.stat-value { font-size: 1.5rem; font-weight: 400; color: #ededed; }
+.stat-label { font-size: 0.75rem; color: #737373; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
 
 .crm-top-actions { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
-.crm-add-btn { display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #D4AF37 0%, #aa8c2c 100%); border: none; font-weight: 600; border-radius: 12px; }
-.crm-refresh-btn { padding: 0.75rem !important; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
-.crm-refresh-btn:hover { background: rgba(255,255,255,0.1); }
+.crm-add-btn { display: flex; align-items: center; gap: 0.5rem; background-color: #ededed; color: #0c0c0c; border: none; font-weight: 500; font-size: 0.85rem; padding: 0.6rem 1.2rem; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+.crm-add-btn:hover { background-color: #ffffff; }
+.crm-refresh-btn { padding: 0.6rem !important; border-radius: 4px; background-color: transparent; border: 1px solid #333; color: #a3a3a3; cursor: pointer; transition: all 0.2s; }
+.crm-refresh-btn:hover { border-color: #555; color: #ededed; }
 
 /* ─── Main Workspace Layout ──────────────────────────────────────────── */
 .crm-main {
   display: flex;
   flex: 1;
   gap: 0;
+  background-color: #121212;
+  border: 1px solid #222222;
+  border-radius: 8px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
 /* ─── Sidebar (Navigation & Contacts) ────────────────────────────────── */
 .crm-sidebar {
   width: 320px;
   flex-shrink: 0;
-  border-right: 1px solid rgba(255,255,255,0.06);
+  border-right: 1px solid #222222;
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.02);
+  background-color: #0c0c0c;
 }
 
 /* Tabs */
 .crm-section-nav {
   display: flex;
-  padding: 1rem;
+  padding: 0.75rem;
   gap: 0.5rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  flex-wrap: wrap;
+  border-bottom: 1px solid #222222;
 }
 
 .crm-nav-btn {
@@ -236,35 +207,35 @@
   gap: 0.4rem;
   background: transparent;
   border: none;
-  color: #71717a;
+  color: #737373;
   padding: 0.5rem 0.75rem;
-  border-radius: 10px;
+  border-radius: 4px;
   cursor: pointer;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 500;
   transition: all 0.2s;
   flex: 1;
   justify-content: center;
 }
 
-.crm-nav-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
-.crm-nav-btn.active { color: #fff; background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); }
+.crm-nav-btn:hover { color: #ededed; background-color: #1a1a1a; }
+.crm-nav-btn.active { color: #0c0c0c; background-color: #ededed; }
 
 /* Search */
 .crm-search-box {
   margin: 1rem;
-  padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 14px;
+  padding: 0.6rem 1rem;
+  background-color: #121212;
+  border: 1px solid #222222;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  transition: border-color 0.3s;
 }
-.crm-search-box:focus-within { border-color: #D4AF37; box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2); }
-.crm-search-box input { background: transparent; border: none; color: #fff; flex: 1; font-size: 0.9rem; outline: none; }
-.crm-search-box svg { color: #a1a1aa; }
+.crm-search-box:focus-within { border-color: #444; }
+.crm-search-box input { background: transparent; border: none; color: #ededed; flex: 1; font-size: 0.85rem; outline: none; }
+.crm-search-box input::placeholder { color: #555; }
+.crm-search-box svg { color: #555; }
 
 /* Contact List */
 .crm-contact-list {
@@ -273,67 +244,62 @@
   display: flex;
   flex-direction: column;
 }
-.crm-contact-list::-webkit-scrollbar { width: 6px; }
-.crm-contact-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+.crm-contact-list::-webkit-scrollbar { width: 4px; }
+.crm-contact-list::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
 
 .crm-contact-item {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.25rem;
+  padding: 1rem;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-  transition: all 0.2s ease;
+  border-bottom: 1px solid #1a1a1a;
+  transition: background-color 0.2s ease;
 }
-.crm-contact-item:hover { background: rgba(255,255,255,0.03); }
-.crm-contact-item.active {
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%);
-  border-left: 3px solid #D4AF37;
-}
+.crm-contact-item:hover { background-color: #121212; }
+.crm-contact-item.active { background-color: #1a1a1a; border-left: 2px solid #ededed; padding-left: calc(1rem - 2px); }
 
 .contact-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
-  border: 1px solid rgba(255,255,255,0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #222;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.1rem;
+  color: #ededed;
+  font-weight: 400;
+  font-size: 1rem;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 .contact-info { flex: 1; overflow: hidden; }
 .contact-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem; }
-.contact-name { font-weight: 600; color: #fff; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.contact-time { font-size: 0.7rem; color: #71717a; }
-.contact-preview { font-size: 0.8rem; color: #a1a1aa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-name { font-weight: 500; color: #ededed; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-time { font-size: 0.7rem; color: #737373; font-weight: 300; }
+.contact-preview { font-size: 0.8rem; color: #737373; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 300; }
 
 
-/* ─── Chat Area (Gen-Z iMessage/Modern style) ────────────────────────── */
+/* ─── Chat Area ────────────────────────── */
 .crm-chat-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: transparent;
+  background-color: #121212;
   position: relative;
 }
 
 .chat-header {
   padding: 1.25rem 2rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background-color: #121212;
+  border-bottom: 1px solid #222222;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 .chat-header-info { display: flex; align-items: center; gap: 1rem; }
-.chat-header-info h3 { margin: 0; color: #fff; font-size: 1.2rem; font-weight: 700; }
-.chat-header-info p { margin: 0; color: #a1a1aa; font-size: 0.85rem; }
+.chat-header-info h3 { margin: 0; color: #ededed; font-size: 1rem; font-weight: 500; }
+.chat-header-info p { margin: 0; color: #737373; font-size: 0.8rem; font-weight: 300; }
 
 .chat-messages {
   flex: 1;
@@ -343,10 +309,10 @@
   flex-direction: column;
   gap: 1.5rem;
 }
-.chat-messages::-webkit-scrollbar { width: 8px; }
-.chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
 
-/* Modern Chat Bubbles */
+/* Minimal Chat Bubbles */
 .chat-message {
   max-width: 65%;
   display: flex;
@@ -357,25 +323,22 @@
 .chat-message.outbound { align-self: flex-end; }
 
 .message-bubble {
-  padding: 0.85rem 1.25rem;
-  font-size: 0.95rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
   line-height: 1.5;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  position: relative;
+  font-weight: 300;
+  border-radius: 4px;
 }
 
 .chat-message.inbound .message-bubble {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-radius: 20px 20px 20px 4px;
+  background-color: #1c1c1c;
+  border: 1px solid #2a2a2a;
+  color: #ededed;
 }
 
 .chat-message.outbound .message-bubble {
-  background: linear-gradient(135deg, #D4AF37 0%, #b59227 100%);
-  color: #000;
-  border-radius: 20px 20px 4px 20px;
-  font-weight: 500;
+  background-color: #ededed;
+  color: #0c0c0c;
 }
 
 .message-meta {
@@ -384,57 +347,57 @@
   gap: 0.5rem;
   margin-top: 0.4rem;
   font-size: 0.7rem;
-  color: #71717a;
-  padding: 0 0.5rem;
+  color: #555;
+  padding: 0 0.2rem;
 }
 .chat-message.outbound .message-meta { justify-content: flex-end; }
 
 .status-icon { display: flex; align-items: center; }
-.status-icon svg { color: #3b82f6; } /* Blue ticks for modern look */
+.status-icon svg { color: #a3a3a3; } 
 
 
 /* ─── Chat Input Area ────────────────────────────────────────────────── */
 .chat-input-area {
   padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-top: 1px solid rgba(255,255,255,0.05);
+  background-color: #121212;
+  border-top: 1px solid #222222;
   display: flex;
   gap: 1rem;
-  align-items: center;
+  align-items: flex-end;
 }
 
 .chat-input-area textarea {
   flex: 1;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 20px;
-  padding: 1rem 1.5rem;
-  color: #fff;
-  font-size: 0.95rem;
+  background-color: #0c0c0c;
+  border: 1px solid #222222;
+  border-radius: 4px;
+  padding: 0.8rem 1rem;
+  color: #ededed;
+  font-size: 0.9rem;
   resize: none;
   font-family: inherit;
-  transition: all 0.3s;
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+  transition: border-color 0.2s;
+  min-height: 20px;
+  font-weight: 300;
 }
-.chat-input-area textarea:focus { border-color: #D4AF37; outline: none; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2), 0 0 0 2px rgba(212, 175, 55, 0.2); }
+.chat-input-area textarea:focus { border-color: #555; outline: none; }
 
 .chat-input-area button {
-  width: 54px;
-  height: 54px;
-  border-radius: 27px;
-  background: linear-gradient(135deg, #D4AF37 0%, #aa8c2c 100%);
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  background-color: #ededed;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000;
+  color: #0c0c0c;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  transition: background-color 0.2s;
 }
-.chat-input-area button:hover:not(:disabled) { transform: scale(1.1); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5); }
-.chat-input-area button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.chat-input-area button:hover:not(:disabled) { background-color: #ffffff; }
+.chat-input-area button:disabled { opacity: 0.3; cursor: not-allowed; }
 
 
 /* ─── Empty State ────────────────────────────────────────────────────── */
@@ -444,19 +407,18 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #71717a;
+  color: #555;
   text-align: center;
 }
-.chat-empty-state svg { color: rgba(212, 175, 55, 0.2); margin-bottom: 1.5rem; animation: floatUp 2s infinite alternate ease-in-out; }
-.chat-empty-state h3 { color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem; font-weight: 700; letter-spacing: -0.5px; }
+.chat-empty-state svg { color: #333; margin-bottom: 1.5rem; stroke-width: 1px; }
+.chat-empty-state h3 { color: #a3a3a3; font-size: 1rem; margin-bottom: 0.5rem; font-weight: 400; }
 
 
 /* ─── Modals (Overrides for CRM specifically) ────────────────────────── */
 .crm-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.8);
   z-index: 100000;
   display: flex;
   align-items: center;
@@ -465,34 +427,37 @@
 
 .crm-modal {
   width: 100%;
-  max-width: 450px;
-  background: rgba(24, 24, 27, 0.9);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  max-width: 400px;
+  background-color: #121212;
+  border: 1px solid #222222;
+  border-radius: 8px;
   overflow: hidden;
-  animation: floatUp 0.3s ease-out;
 }
 
 .crm-modal-header {
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid #222222;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.crm-modal-header h3 { margin: 0; display: flex; align-items: center; gap: 0.75rem; font-size: 1.25rem; color: #fff; font-weight: 700; }
+.crm-modal-header h3 { margin: 0; font-size: 1rem; color: #ededed; font-weight: 500; }
 
-.crm-modal-body { padding: 2rem; }
-.crm-modal-body .input-group { margin-bottom: 1.5rem; }
-.crm-modal-body label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #a1a1aa; font-weight: 500; }
+.crm-modal-body { padding: 1.5rem; }
+.crm-modal-body .input-group { margin-bottom: 1.2rem; }
+.crm-modal-body label { display: block; margin-bottom: 0.4rem; font-size: 0.8rem; color: #a3a3a3; font-weight: 400; }
+.crm-modal-body .admin-input { background-color: #0c0c0c; border: 1px solid #222; color: #ededed; padding: 0.6rem; border-radius: 4px; width: 100%; font-size: 0.9rem; }
+.crm-modal-body .admin-input:focus { border-color: #555; outline: none; }
 
 .crm-modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
 }
+.crm-modal-actions button { padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.85rem; font-weight: 500; cursor: pointer; }
+.crm-modal-actions .admin-btn-secondary { background: transparent; border: 1px solid #333; color: #ededed; }
+.crm-modal-actions .admin-btn-primary { background: #ededed; border: none; color: #0c0c0c; }
 
 
 /* ─── Generic Sections (Settings, AutoReply, Campaigns) ─────────────── */
@@ -500,36 +465,37 @@
   flex: 1;
   padding: 3rem;
   overflow-y: auto;
-  color: #fff;
+  color: #ededed;
+  background-color: #121212;
 }
-.crm-campaign-section::-webkit-scrollbar { width: 8px; }
-.crm-campaign-section::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+.crm-campaign-section::-webkit-scrollbar { width: 4px; }
+.crm-campaign-section::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
 
-.section-header { margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
-.section-header h2 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px; }
-.section-header p { color: #a1a1aa; font-size: 1rem; }
+.section-header { margin-bottom: 2rem; border-bottom: 1px solid #222; padding-bottom: 1.5rem; }
+.section-header h2 { font-size: 1.25rem; font-weight: 400; margin-bottom: 0.25rem; }
+.section-header p { color: #737373; font-size: 0.9rem; font-weight: 300; }
 
 .campaign-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
-  padding: 2rem;
-  margin-bottom: 2rem;
+  background-color: #0c0c0c;
+  border: 1px solid #222222;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
 }
-.campaign-card h3 { font-size: 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+.campaign-card h3 { font-size: 1rem; margin-bottom: 1.2rem; font-weight: 500; color: #ededed; }
 
-.audience-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem; max-height: 250px; overflow-y: auto; }
+.audience-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 1rem; max-height: 250px; overflow-y: auto; }
 .audience-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  background: rgba(0,0,0,0.2);
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.03);
+  gap: 0.75rem;
+  background-color: #1a1a1a;
+  padding: 0.6rem 0.8rem;
+  border-radius: 4px;
+  border: 1px solid #222;
 }
 
 .rule-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-.rule-table th, .rule-table td { padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.rule-table th { color: #a1a1aa; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.rule-keyword { background: rgba(212, 175, 55, 0.1); color: #D4AF37; padding: 0.3rem 0.6rem; border-radius: 6px; font-family: monospace; font-size: 0.85rem; font-weight: 600; }
+.rule-table th, .rule-table td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid #222; font-size: 0.9rem; }
+.rule-table th { color: #737373; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
+.rule-keyword { background-color: #1a1a1a; color: #ededed; padding: 0.2rem 0.5rem; border-radius: 3px; font-family: monospace; font-size: 0.8rem; border: 1px solid #333; }
