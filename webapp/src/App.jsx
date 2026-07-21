@@ -170,9 +170,8 @@ function App() {
     if (currentView === 'whatsapp') {
       const fetchAndRedirect = async () => {
         try {
-          const { data, error } = await supabase.from('whatsapp_settings').select('business_phone_number').eq('id', 1).single();
+          const { data: phone, error } = await supabase.rpc('get_active_whatsapp_number');
           if (error) throw error;
-          const phone = data?.business_phone_number;
           if (phone) {
             window.location.href = `https://wa.me/${phone}?text=Hi`;
           } else {
