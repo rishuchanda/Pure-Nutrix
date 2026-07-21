@@ -118,6 +118,7 @@
 /* Messages Area */
 .chatbot-messages {
   flex: 1;
+  min-height: 0;
   padding: 1rem;
   overflow-y: auto;
   overscroll-behavior: contain;
