@@ -284,14 +284,27 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 480px) {
+  .chatbot-widget-container {
+    bottom: 16px;
+    right: 16px;
+  }
   .chatbot-window {
-    width: calc(100vw - 40px);
-    right: 20px;
-    bottom: 20px;
-    top: 120px; /* Leave space for the cute robot overlay */
+    width: calc(100vw - 32px);
+    right: 16px;
+    bottom: 16px;
+    top: 100px; /* Leave space for the cute robot overlay */
     height: auto;
     max-height: none;
     position: fixed;
+  }
+  .chatbot-fab-robot {
+    width: 65px;
+    height: 80px;
+  }
+  .chatbot-tooltip {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    margin-bottom: 25px;
   }
 }
 
