@@ -1,10 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
 /* ==========================================================================
-   Minimal Elegant WhatsApp CRM Theme
-   Clean lines, deep monochrome palettes, sophisticated typography.
+   Bento Box / Modern Rounded CRM Theme (Reference Inspired)
 ========================================================================== */
 
-/* ─── Fullscreen & Splash Screen ───────────────────────────────────────── */
-
+/* ─── Fullscreen Container ───────────────────────────────────────── */
 .crm-fullscreen-container {
   position: fixed;
   top: 0;
@@ -12,135 +12,104 @@
   width: 100vw;
   height: 100vh;
   z-index: 9999;
-  background-color: #0c0c0c; /* Deep, solid charcoal */
+  background-color: #f2f3f5; /* Light soft background */
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   overflow: hidden;
-  color: #ededed;
+  color: #1a1a1a;
 }
 
-/* Header */
+/* Floating Header */
 .crm-floating-header {
-  height: 64px;
-  background-color: #121212;
-  border-bottom: 1px solid #222222;
+  height: 70px;
+  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  z-index: 10;
 }
 
 .crm-back-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: transparent;
-  border: 1px solid #333333;
-  color: #a3a3a3;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 400;
+  background: #f5f5f5;
+  border: none;
+  color: #1a1a1a;
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .crm-back-btn:hover {
-  border-color: #555555;
-  color: #ededed;
+  background: #e5e5e5;
+  transform: translateX(-3px);
 }
 
 .crm-brand-title {
-  font-weight: 300;
-  letter-spacing: 0.1em;
-  font-size: 1rem;
-  color: #ededed;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-size: 1.2rem;
+  color: #1a1a1a;
 }
 .crm-brand-title .gold-text {
-  color: #D4AF37;
-  font-weight: 400;
+  color: #d1f34d; /* Lime green accent from reference */
+  background: #1a1a1a;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  margin-left: 0.3rem;
 }
 
 /* Splash Screen */
 .crm-splash-screen {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  top: 0; left: 0; width: 100vw; height: 100vh;
   z-index: 10000;
-  background-color: #0c0c0c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeOut 0.8s ease 1.5s forwards;
+  background-color: #161618;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeOut 0.6s ease 1.5s forwards;
+  color: #fff;
 }
 
 .crm-splash-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
 }
 
 .crm-splash-logo {
-  margin-bottom: 2rem;
-  color: #D4AF37;
+  margin-bottom: 2rem; color: #d1f34d;
 }
 
 .crm-splash-content h1 {
-  font-size: 1.5rem;
-  font-weight: 300;
-  color: #ededed;
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.05em;
-}
-
-.crm-splash-content p {
-  color: #737373;
-  font-size: 0.9rem;
-  margin-bottom: 3rem;
-  font-weight: 300;
+  font-size: 2rem; font-weight: 500; margin-bottom: 0.5rem;
 }
 
 .crm-splash-loader {
-  width: 150px;
-  height: 1px;
-  background-color: #222222;
-  position: relative;
-  overflow: hidden;
+  width: 150px; height: 4px; background-color: #333; border-radius: 4px; overflow: hidden; position: relative; margin-top: 2rem;
 }
 
 .crm-splash-loader::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 30%;
-  background-color: #D4AF37;
-  animation: sweep 1.5s ease-in-out infinite;
+  content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 40%;
+  background-color: #d1f34d; border-radius: 4px;
+  animation: sweep 1.2s ease-in-out infinite;
 }
 
-@keyframes fadeOut {
-  to { opacity: 0; visibility: hidden; }
-}
-@keyframes sweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(350%); }
-}
-
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+@keyframes sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
 
 /* ─── CRM Container ──────────────────────────────────────────────────── */
 .crm-container {
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding: 2rem;
-  gap: 2rem;
-  height: calc(100vh - 64px);
+  padding: 1.5rem;
+  gap: 1.5rem;
+  height: calc(100vh - 70px);
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
@@ -150,9 +119,8 @@
 .crm-analytics-banner {
   display: flex;
   align-items: center;
-  gap: 3rem;
-  padding: 0 0 1rem 0;
-  border-bottom: 1px solid #222;
+  gap: 1.5rem;
+  padding: 0;
   flex-shrink: 0;
 }
 
@@ -160,342 +128,259 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  background: #ffffff;
+  padding: 1rem 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
 }
 
-.stat-icon { color: #555; }
-.stat-value { font-size: 1.5rem; font-weight: 400; color: #ededed; }
-.stat-label { font-size: 0.75rem; color: #737373; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+.stat-icon {
+  background: #f5f5f5;
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: #1a1a1a;
+}
+.stat-value { font-size: 1.4rem; font-weight: 600; color: #1a1a1a; line-height: 1; }
+.stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; font-weight: 500; }
 
 .crm-top-actions { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
-.crm-add-btn { display: flex; align-items: center; gap: 0.5rem; background-color: #ededed; color: #0c0c0c; border: none; font-weight: 500; font-size: 0.85rem; padding: 0.6rem 1.2rem; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
-.crm-add-btn:hover { background-color: #ffffff; }
-.crm-refresh-btn { padding: 0.6rem !important; border-radius: 4px; background-color: transparent; border: 1px solid #333; color: #a3a3a3; cursor: pointer; transition: all 0.2s; }
-.crm-refresh-btn:hover { border-color: #555; color: #ededed; }
+.crm-add-btn { 
+  display: flex; align-items: center; gap: 0.5rem; 
+  background-color: #1a1a1a; color: #fff; border: none; font-weight: 500; font-size: 0.9rem; 
+  padding: 0.8rem 1.5rem; border-radius: 20px; cursor: pointer; transition: transform 0.2s; 
+}
+.crm-add-btn:hover { transform: scale(1.02); }
+.crm-refresh-btn { 
+  padding: 0.8rem !important; border-radius: 20px; background-color: #ffffff; 
+  border: none; color: #1a1a1a; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
 
 /* ─── Main Workspace Layout ──────────────────────────────────────────── */
 .crm-main {
   display: flex;
   flex: 1;
-  gap: 0;
-  background-color: #121212;
-  border: 1px solid #222222;
-  border-radius: 8px;
+  gap: 1.5rem;
+  border-radius: 24px;
   overflow: hidden;
 }
 
-/* ─── Sidebar (Navigation & Contacts) ────────────────────────────────── */
+/* ─── Sidebar (Dark Bento Style) ────────────────────────────────── */
 .crm-sidebar {
-  width: 320px;
+  width: 340px;
   flex-shrink: 0;
-  border-right: 1px solid #222222;
   display: flex;
   flex-direction: column;
-  background-color: #0c0c0c;
+  background-color: #161618;
+  border-radius: 24px;
+  padding: 1rem;
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 
-/* Tabs */
+/* Tabs inside dark sidebar */
 .crm-section-nav {
   display: flex;
-  padding: 0.75rem;
   gap: 0.5rem;
-  border-bottom: 1px solid #222222;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 .crm-nav-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: transparent;
-  border: none;
-  color: #737373;
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 500;
+  display: flex; align-items: center; gap: 0.4rem;
+  background: #232325; border: none; color: #a1a1aa;
+  padding: 0.6rem 0.8rem; border-radius: 12px;
+  cursor: pointer; font-size: 0.8rem; font-weight: 500; flex: 1; justify-content: center;
   transition: all 0.2s;
-  flex: 1;
-  justify-content: center;
 }
 
-.crm-nav-btn:hover { color: #ededed; background-color: #1a1a1a; }
-.crm-nav-btn.active { color: #0c0c0c; background-color: #ededed; }
+.crm-nav-btn:hover { color: #fff; background-color: #2e2e30; }
+.crm-nav-btn.active { color: #161618; background-color: #d1f34d; /* Lime green active state */ }
 
-/* Search */
+/* Search in sidebar */
 .crm-search-box {
-  margin: 1rem;
-  padding: 0.6rem 1rem;
-  background-color: #121212;
-  border: 1px solid #222222;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: #232325;
+  border-radius: 16px;
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1rem;
 }
-.crm-search-box:focus-within { border-color: #444; }
-.crm-search-box input { background: transparent; border: none; color: #ededed; flex: 1; font-size: 0.85rem; outline: none; }
-.crm-search-box input::placeholder { color: #555; }
-.crm-search-box svg { color: #555; }
+.crm-search-box input { background: transparent; border: none; color: #fff; flex: 1; font-size: 0.9rem; outline: none; font-family: inherit; }
+.crm-search-box input::placeholder { color: #71717a; }
+.crm-search-box svg { color: #71717a; }
 
 /* Contact List */
 .crm-contact-list {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;
 }
-.crm-contact-list::-webkit-scrollbar { width: 4px; }
-.crm-contact-list::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+.crm-contact-list::-webkit-scrollbar { display: none; }
 
 .crm-contact-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  cursor: pointer;
-  border-bottom: 1px solid #1a1a1a;
-  transition: background-color 0.2s ease;
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1rem; cursor: pointer;
+  background: #232325;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
 }
-.crm-contact-item:hover { background-color: #121212; }
-.crm-contact-item.active { background-color: #1a1a1a; border-left: 2px solid #ededed; padding-left: calc(1rem - 2px); }
+.crm-contact-item:hover { background: #2a2a2d; }
+.crm-contact-item.active {
+  background: #d1f34d; /* Bright lime green card for active */
+  color: #161618;
+}
 
 .contact-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #222;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ededed;
-  font-weight: 400;
-  font-size: 1rem;
-  flex-shrink: 0;
+  width: 44px; height: 44px; border-radius: 14px;
+  background-color: #161618;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 600; font-size: 1.1rem; flex-shrink: 0;
+}
+.crm-contact-item.active .contact-avatar {
+  background-color: #fff; color: #161618;
 }
 
 .contact-info { flex: 1; overflow: hidden; }
 .contact-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem; }
-.contact-name { font-weight: 500; color: #ededed; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.contact-time { font-size: 0.7rem; color: #737373; font-weight: 300; }
-.contact-preview { font-size: 0.8rem; color: #737373; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 300; }
+.contact-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit; }
+.contact-time { font-size: 0.7rem; opacity: 0.6; font-weight: 500; }
+.crm-contact-item:not(.active) .contact-name { color: #fff; }
+.contact-preview { font-size: 0.8rem; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; }
 
 
-/* ─── Chat Area ────────────────────────── */
+/* ─── Chat Area (White rounded container) ────────────────────────── */
 .crm-chat-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background-color: #121212;
+  flex: 1; display: flex; flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
   position: relative;
+  overflow: hidden;
 }
 
 .chat-header {
-  padding: 1.25rem 2rem;
-  background-color: #121212;
-  border-bottom: 1px solid #222222;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 1.5rem 2rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex; justify-content: space-between; align-items: center;
 }
 .chat-header-info { display: flex; align-items: center; gap: 1rem; }
-.chat-header-info h3 { margin: 0; color: #ededed; font-size: 1rem; font-weight: 500; }
-.chat-header-info p { margin: 0; color: #737373; font-size: 0.8rem; font-weight: 300; }
+.chat-header-info h3 { margin: 0; color: #1a1a1a; font-size: 1.2rem; font-weight: 600; }
+.chat-header-info p { margin: 0; color: #888; font-size: 0.85rem; font-weight: 400; }
 
 .chat-messages {
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  flex: 1; padding: 2rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;
 }
-.chat-messages::-webkit-scrollbar { width: 4px; }
-.chat-messages::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+.chat-messages::-webkit-scrollbar { width: 6px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 10px; }
 
-/* Minimal Chat Bubbles */
-.chat-message {
-  max-width: 65%;
-  display: flex;
-  flex-direction: column;
-}
-
+/* Rounded Chat Bubbles */
+.chat-message { max-width: 60%; display: flex; flex-direction: column; }
 .chat-message.inbound { align-self: flex-start; }
 .chat-message.outbound { align-self: flex-end; }
 
 .message-bubble {
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  font-weight: 300;
-  border-radius: 4px;
+  padding: 1rem 1.25rem; font-size: 0.95rem; line-height: 1.5; font-weight: 400;
 }
 
 .chat-message.inbound .message-bubble {
-  background-color: #1c1c1c;
-  border: 1px solid #2a2a2a;
-  color: #ededed;
+  background-color: #f5f5f5; color: #1a1a1a; border-radius: 20px 20px 20px 4px;
 }
 
 .chat-message.outbound .message-bubble {
-  background-color: #ededed;
-  color: #0c0c0c;
+  background-color: #1a1a1a; color: #ffffff; border-radius: 20px 20px 4px 20px;
 }
 
-.message-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.4rem;
-  font-size: 0.7rem;
-  color: #555;
-  padding: 0 0.2rem;
-}
+.message-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem; font-size: 0.7rem; color: #999; padding: 0 0.5rem; }
 .chat-message.outbound .message-meta { justify-content: flex-end; }
-
-.status-icon { display: flex; align-items: center; }
-.status-icon svg { color: #a3a3a3; } 
+.status-icon svg { color: #d1f34d; } 
 
 
 /* ─── Chat Input Area ────────────────────────────────────────────────── */
 .chat-input-area {
   padding: 1.5rem 2rem;
-  background-color: #121212;
-  border-top: 1px solid #222222;
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
+  background-color: #ffffff;
+  display: flex; gap: 1rem; align-items: center;
 }
 
 .chat-input-area textarea {
-  flex: 1;
-  background-color: #0c0c0c;
-  border: 1px solid #222222;
-  border-radius: 4px;
-  padding: 0.8rem 1rem;
-  color: #ededed;
-  font-size: 0.9rem;
-  resize: none;
-  font-family: inherit;
-  transition: border-color 0.2s;
-  min-height: 20px;
-  font-weight: 300;
+  flex: 1; background-color: #f5f5f5; border: none; border-radius: 24px;
+  padding: 1rem 1.5rem; color: #1a1a1a; font-size: 0.95rem; resize: none; font-family: inherit; font-weight: 400;
 }
-.chat-input-area textarea:focus { border-color: #555; outline: none; }
+.chat-input-area textarea:focus { outline: none; box-shadow: inset 0 0 0 2px #d1f34d; }
 
 .chat-input-area button {
-  width: 44px;
-  height: 44px;
-  border-radius: 4px;
-  background-color: #ededed;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #0c0c0c;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color 0.2s;
+  width: 50px; height: 50px; border-radius: 25px;
+  background-color: #d1f34d; border: none; display: flex; align-items: center; justify-content: center;
+  color: #161618; cursor: pointer; flex-shrink: 0; transition: transform 0.2s;
 }
-.chat-input-area button:hover:not(:disabled) { background-color: #ffffff; }
-.chat-input-area button:disabled { opacity: 0.3; cursor: not-allowed; }
+.chat-input-area button:hover:not(:disabled) { transform: scale(1.05); }
+.chat-input-area button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 
 /* ─── Empty State ────────────────────────────────────────────────────── */
 .chat-empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #555;
-  text-align: center;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; text-align: center; background: #fff; border-radius: 24px;
 }
-.chat-empty-state svg { color: #333; margin-bottom: 1.5rem; stroke-width: 1px; }
-.chat-empty-state h3 { color: #a3a3a3; font-size: 1rem; margin-bottom: 0.5rem; font-weight: 400; }
+.chat-empty-state svg { color: #e5e5e5; margin-bottom: 1.5rem; }
+.chat-empty-state h3 { color: #1a1a1a; font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 500; }
 
 
-/* ─── Modals (Overrides for CRM specifically) ────────────────────────── */
+/* ─── Modals (Rounded Modern) ────────────────────────── */
 .crm-modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 100000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 100000;
+  display: flex; align-items: center; justify-content: center;
 }
 
 .crm-modal {
-  width: 100%;
-  max-width: 400px;
-  background-color: #121212;
-  border: 1px solid #222222;
-  border-radius: 8px;
-  overflow: hidden;
+  width: 100%; max-width: 420px; background-color: #ffffff; border-radius: 24px; overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
 }
 
 .crm-modal-header {
-  padding: 1.2rem 1.5rem;
-  border-bottom: 1px solid #222222;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 1.5rem 2rem; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;
 }
-.crm-modal-header h3 { margin: 0; font-size: 1rem; color: #ededed; font-weight: 500; }
+.crm-modal-header h3 { margin: 0; font-size: 1.2rem; color: #1a1a1a; font-weight: 600; }
 
-.crm-modal-body { padding: 1.5rem; }
-.crm-modal-body .input-group { margin-bottom: 1.2rem; }
-.crm-modal-body label { display: block; margin-bottom: 0.4rem; font-size: 0.8rem; color: #a3a3a3; font-weight: 400; }
-.crm-modal-body .admin-input { background-color: #0c0c0c; border: 1px solid #222; color: #ededed; padding: 0.6rem; border-radius: 4px; width: 100%; font-size: 0.9rem; }
-.crm-modal-body .admin-input:focus { border-color: #555; outline: none; }
+.crm-modal-body { padding: 2rem; }
+.crm-modal-body .input-group { margin-bottom: 1.5rem; }
+.crm-modal-body label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #555; font-weight: 500; }
+.crm-modal-body .admin-input { background-color: #f5f5f5; border: none; color: #1a1a1a; padding: 0.8rem 1rem; border-radius: 12px; width: 100%; font-size: 0.95rem; font-family: inherit; }
+.crm-modal-body .admin-input:focus { outline: none; box-shadow: 0 0 0 2px #1a1a1a; }
 
-.crm-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-.crm-modal-actions button { padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.85rem; font-weight: 500; cursor: pointer; }
-.crm-modal-actions .admin-btn-secondary { background: transparent; border: 1px solid #333; color: #ededed; }
-.crm-modal-actions .admin-btn-primary { background: #ededed; border: none; color: #0c0c0c; }
+.crm-modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+.crm-modal-actions button { padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; }
+.crm-modal-actions .admin-btn-secondary { background: #f5f5f5; color: #1a1a1a; }
+.crm-modal-actions .admin-btn-primary { background: #1a1a1a; color: #ffffff; }
 
 
 /* ─── Generic Sections (Settings, AutoReply, Campaigns) ─────────────── */
 .crm-campaign-section {
-  flex: 1;
-  padding: 3rem;
-  overflow-y: auto;
-  color: #ededed;
-  background-color: #121212;
+  flex: 1; padding: 3rem; overflow-y: auto; color: #1a1a1a; background-color: #ffffff; border-radius: 24px;
 }
-.crm-campaign-section::-webkit-scrollbar { width: 4px; }
-.crm-campaign-section::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+.crm-campaign-section::-webkit-scrollbar { display: none; }
 
-.section-header { margin-bottom: 2rem; border-bottom: 1px solid #222; padding-bottom: 1.5rem; }
-.section-header h2 { font-size: 1.25rem; font-weight: 400; margin-bottom: 0.25rem; }
-.section-header p { color: #737373; font-size: 0.9rem; font-weight: 300; }
+.section-header { margin-bottom: 2.5rem; }
+.section-header h2 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
+.section-header p { color: #888; font-size: 1rem; font-weight: 400; }
 
 .campaign-card {
-  background-color: #0c0c0c;
-  border: 1px solid #222222;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  background-color: #f9f9f9; border-radius: 20px; padding: 2rem; margin-bottom: 1.5rem;
 }
-.campaign-card h3 { font-size: 1rem; margin-bottom: 1.2rem; font-weight: 500; color: #ededed; }
+.campaign-card h3 { font-size: 1.1rem; margin-bottom: 1.5rem; font-weight: 600; color: #1a1a1a; }
 
-.audience-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 1rem; max-height: 250px; overflow-y: auto; }
+/* In Settings Tab: overriding the default white text colors previously applied inline */
+.crm-campaign-section h2, .crm-campaign-section p, .crm-campaign-section label { color: #1a1a1a !important; }
+.crm-campaign-section input { background: #f5f5f5 !important; border: none !important; color: #1a1a1a !important; border-radius: 16px !important; }
+.crm-campaign-section input:focus { box-shadow: 0 0 0 2px #d1f34d !important; outline: none; }
+.crm-campaign-section button[type="submit"] { background: #d1f34d !important; color: #161618 !important; border-radius: 16px !important; border: none !important; font-weight: 600 !important; }
+
+.audience-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; max-height: 250px; overflow-y: auto; }
 .audience-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background-color: #1a1a1a;
-  padding: 0.6rem 0.8rem;
-  border-radius: 4px;
-  border: 1px solid #222;
+  display: flex; align-items: center; gap: 0.75rem; background-color: #ffffff; padding: 0.8rem 1rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
 }
 
 .rule-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-.rule-table th, .rule-table td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid #222; font-size: 0.9rem; }
-.rule-table th { color: #737373; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
-.rule-keyword { background-color: #1a1a1a; color: #ededed; padding: 0.2rem 0.5rem; border-radius: 3px; font-family: monospace; font-size: 0.8rem; border: 1px solid #333; }
+.rule-table th, .rule-table td { padding: 1rem; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; }
+.rule-table th { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.rule-keyword { background-color: #eef2ff; color: #4f46e5; padding: 0.3rem 0.6rem; border-radius: 8px; font-family: monospace; font-size: 0.85rem; font-weight: 600; }
