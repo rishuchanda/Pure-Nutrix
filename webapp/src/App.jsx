@@ -51,9 +51,13 @@ function App() {
     window.addEventListener('popstate', handlePopState);
     
     // Initial load
+    const isPathAdmin = window.location.pathname === '/admin';
     const initialHash = window.location.hash.replace('#', '');
     const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
-    if (validViews.includes(initialHash)) {
+    
+    if (isPathAdmin) {
+      // Do nothing to the hash if we are on the admin page
+    } else if (validViews.includes(initialHash)) {
       setCurrentView(initialHash);
       window.history.replaceState({ view: initialHash }, '', '#' + initialHash);
     } else {
