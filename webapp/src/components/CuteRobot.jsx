@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { playRobotSound } from '../utils/robotSounds';
+
 
 const CuteRobot = () => {
   const [mood, setMood] = useState('idle');
@@ -11,10 +11,7 @@ const CuteRobot = () => {
       const randomMood = moods[Math.floor(Math.random() * moods.length)];
       setMood(randomMood);
       
-      // Play sound for the mood
-      if (randomMood !== 'idle') {
-        playRobotSound(randomMood);
-      }
+      // Removed sound for the mood
       
       // Auto revert from blink after 200ms
       if (randomMood === 'blink') {

@@ -20,7 +20,7 @@ import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import RainEffect from './components/RainEffect';
-import MonsoonSalePopup from './components/MonsoonSalePopup';
+
 import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
@@ -239,7 +239,7 @@ function App() {
           >
             <main>
               <Hero3D onOrder={handleOrder} />
-              <MonsoonSalePopup onShopClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })} />
+
               <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} onAddToCart={handleAddToCart} />
               <WhyChooseUs />
               <TrustSection />
