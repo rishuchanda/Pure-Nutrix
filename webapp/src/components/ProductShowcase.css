@@ -35,17 +35,15 @@
 .product-tile {
   display: flex;
   flex-direction: column;
-  padding: 15px;
-  gap: 15px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  transition: all 0.2s ease;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  transition: opacity 0.2s ease;
   cursor: pointer;
 }
 
 .product-tile:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  opacity: 0.95;
 }
 
 .product-image-container {
@@ -54,7 +52,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  perspective: 1000px; /* For 3D Tilt */
+  background-color: #f1f1f1; /* Light grey like minimalist screenshot */
+  padding: 30px 0;
+  margin-bottom: 15px;
 }
 
 .glow-backdrop {
@@ -85,30 +85,23 @@
   width: 100%;
   max-width: 100%;
   height: 250px;
-  border-radius: 8px;
   object-fit: contain;
-  background: #f8f9fa;
+  background: transparent;
+  mix-blend-mode: multiply; /* Removes white bg */
 }
 
 .product-details {
   width: 100%;
   display: flex;
   flex-direction: column;
-  min-width: 0; /* Critical fix: prevents the reviews slider from breaking the flex layout */
+  min-width: 0;
+  text-align: left; /* Left align everything */
 }
 
-.product-category {
-  font-size: 0.75rem;
-  letter-spacing: 1px;
-  margin-bottom: 5px;
-  text-transform: uppercase;
-  color: #666;
-}
-
-.product-name {
+.product-name-minimal {
   font-size: 1.1rem;
-  line-height: 1.4;
-  margin-bottom: 8px;
+  line-height: 1.3;
+  margin-bottom: 5px;
   color: #111;
   font-weight: 500;
   display: -webkit-box;
@@ -117,22 +110,41 @@
   overflow: hidden;
 }
 
-.product-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 15px;
-}
-
-.product-qty {
-  color: #666;
+.product-desc-minimal {
   font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.product-price {
-  font-size: 1.3rem;
+.product-rating-minimal {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 12px;
+}
+
+.product-meta-minimal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.product-price-minimal {
+  font-size: 1.1rem;
   font-weight: 600;
   color: #111;
+}
+
+.product-original-price-minimal {
+  font-size: 0.95rem;
+  text-decoration: line-through;
+  color: #999;
 }
 
 .product-actions {
@@ -141,26 +153,21 @@
   margin-top: auto;
 }
 
-.add-to-cart-btn {
+.add-to-cart-btn-minimal {
   flex: 1;
-  padding: 10px;
-  font-size: 0.9rem;
-  background: transparent;
-  color: var(--color-accent-gold);
-  border: 1px solid var(--color-accent-gold);
-  border-radius: 6px;
-  font-weight: 600;
+  width: 100%;
+  padding: 12px;
+  font-size: 0.95rem;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.buy-now-btn {
-  flex: 1;
-  padding: 10px;
-  font-size: 0.9rem;
-  background: var(--color-accent-gold);
-  color: #fff;
-  border: 1px solid var(--color-accent-gold);
-  border-radius: 6px;
-  font-weight: 600;
+.add-to-cart-btn-minimal:hover {
+  background: #333333;
 }
 
 .product-description ul {
@@ -196,25 +203,22 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 10;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
   transition: all 0.2s;
   color: #111111;
 }
 
 .carousel-btn:hover {
-  background: #f9fafb;
-  transform: translateY(-50%) scale(1.05);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  background: #ffffff;
 }
 
 .prev-btn {
@@ -227,24 +231,24 @@
 
 .carousel-dots {
   position: absolute;
-  bottom: -30px;
+  bottom: 15px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .carousel-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #e4e4e7;
+  background: #ccc;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .carousel-dot:hover {
-  background: #a1a1aa;
+  background: #999;
 }
 
 .carousel-dot.active {
@@ -364,11 +368,6 @@
   .products-grid {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
-  
-  .product-name {
-    font-size: 2rem;
-    line-height: 1.25;
-  }
 }
 
 @media (max-width: 768px) {
@@ -380,51 +379,48 @@
     font-size: 2.2rem;
     line-height: 1.2;
   }
-  .product-tile {
-    padding: 10px;
-    gap: 10px;
-  }
   .product-image {
     max-width: 100%;
-    height: 120px;
+    height: 160px;
   }
-  .product-name {
-    font-size: 0.85rem;
+  .product-name-minimal {
+    font-size: 0.9rem;
     line-height: 1.2;
     -webkit-line-clamp: 2;
   }
-  .product-price {
-    font-size: 1.1rem;
+  .product-desc-minimal {
+    font-size: 0.75rem;
+    margin-bottom: 8px;
   }
-  .product-actions {
-    flex-direction: column;
+  .product-price-minimal {
+    font-size: 1rem;
   }
-  .buy-now-btn, .add-to-cart-btn {
-    padding: 8px;
-    font-size: 0.8rem;
+  .product-original-price-minimal {
+    font-size: 0.85rem;
+  }
+  .add-to-cart-btn-minimal {
+    padding: 10px;
+    font-size: 0.85rem;
   }
 }
 
 @media (max-width: 480px) {
-  .carousel-btn {
-    display: none; /* Hide arrows on small screens, rely on swipe/dots */
-  }
   .product-image-container {
-    margin-bottom: 20px;
+    padding: 15px 0;
+    margin-bottom: 10px;
   }
-  .product-tile {
-    padding: 10px;
-    gap: 8px;
-  }
-  .product-name {
-    font-size: 0.7rem; /* Very small so full title fits */
-    line-height: 1.2;
-    margin-bottom: 5px;
-    -webkit-line-clamp: unset; /* Remove clamp so full title shows */
+  .product-name-minimal {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    -webkit-line-clamp: unset; 
     overflow: visible;
   }
-  .product-price {
-    font-size: 0.9rem; /* Make price proportional */
+  .product-desc-minimal {
+    font-size: 0.7rem;
+    margin-bottom: 6px;
+  }
+  .product-price-minimal {
+    font-size: 0.9rem;
   }
   .section-title {
     font-size: 1.5rem;
@@ -435,5 +431,16 @@
   }
   .reviews-slider {
     padding-bottom: 10px;
+  }
+  .carousel-btn {
+    width: 24px;
+    height: 24px;
+  }
+  .carousel-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  .carousel-dots {
+    bottom: 8px;
   }
 }

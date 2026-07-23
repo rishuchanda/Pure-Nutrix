@@ -100,48 +100,38 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
       </div>
       
         <div className="product-details">
-          <div className="product-rating">
-            <Star size={14} className="star-icon" fill="currentColor" />
-            <Star size={14} className="star-icon" fill="currentColor" />
-            <Star size={14} className="star-icon" fill="currentColor" />
-            <Star size={14} className="star-icon" fill="currentColor" />
-            <Star size={14} className="star-icon" fill="currentColor" />
-            <span className="rating-text">({getProductReviews(product).totalCount}+ Reviews)</span>
+          <h2 className="product-name-minimal">{product.name}</h2>
+          
+          <p className="product-desc-minimal">
+            {product.description || 'Premium formulation for maximum efficacy.'}
+          </p>
+          
+          <div className="product-rating-minimal">
+            <Star size={12} className="star-icon" fill="#111" color="#111" />
+            <Star size={12} className="star-icon" fill="#111" color="#111" />
+            <Star size={12} className="star-icon" fill="#111" color="#111" />
+            <Star size={12} className="star-icon" fill="#111" color="#111" />
+            <Star size={12} className="star-icon" color="#111" />
           </div>
-        
-        <h3 className="product-category text-gold">{product.category}</h3>
-        <h2 className="product-name">{product.name}</h2>
-        
-        <div className="product-meta">
-          <span className="product-qty">{product.quantity || '30'} {product.product_form || 'Capsules'}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="product-price">{typeof product.price === 'number' ? '₹' + product.price : product.price}</span>
+          
+          <div className="product-meta-minimal">
+            <span className="product-price-minimal">
+              {typeof product.price === 'number' ? '₹ ' + product.price : product.price}
+            </span>
             {product.original_price && product.original_price > product.price && (
-              <>
-                <span style={{ textDecoration: 'line-through', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>₹{product.original_price}</span>
-                <span style={{ color: '#059669', fontSize: '0.85rem', fontWeight: '600' }}>
-                  ({Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF)
-                </span>
-              </>
+              <span className="product-original-price-minimal">₹ {product.original_price}</span>
             )}
           </div>
+          
+          <div className="product-actions">
+            <button 
+              className="add-to-cart-btn-minimal" 
+              onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); }}
+            >
+              Add to Cart
+            </button>
+          </div>
         </div>
-        
-        <div className="product-actions">
-          <button 
-            className="add-to-cart-btn" 
-            onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); }}
-          >
-            Add to Cart
-          </button>
-          <button 
-            className="buy-now-btn" 
-            onClick={(e) => { e.stopPropagation(); onOrder(product); }}
-          >
-            Buy Now
-          </button>
-        </div>
-      </div>
     </motion.div>
   );
 };
