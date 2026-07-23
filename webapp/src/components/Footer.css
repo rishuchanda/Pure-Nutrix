@@ -72,4 +72,28 @@
   .footer-links-group {
     align-items: center;
   }
+  .footer-desc {
+    font-size: 0.85rem;
+  }
+  .footer-links-group h3 {
+    font-size: 1rem;
+  }
+  .footer-links-group a {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-desc {
+    font-size: 0.75rem;
+  }
+  .footer-links-group h3 {
+    font-size: 0.9rem;
+  }
+  .footer-links-group a {
+    font-size: 0.75rem;
+  }
+  .footer-bottom {
+    font-size: 0.75rem;
+  }
 }

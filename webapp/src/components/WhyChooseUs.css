@@ -190,7 +190,11 @@
     padding: 70px 0;
   }
   .wcu-title {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
+  }
+  
+  .wcu-subtitle {
+    font-size: 0.95rem;
   }
   
   /* Fit full table without sliding */
@@ -218,7 +222,7 @@
   
   .wcu-table th {
     padding: 6px 4px;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     white-space: normal;
     text-align: center;
     line-height: 1.2;
@@ -228,7 +232,7 @@
   .wcu-th-other { width: 36%; }
   .wcu-th-pure { 
     width: 36%; 
-    font-size: 0.95rem !important; 
+    font-size: 0.85rem !important; 
   }
   
   .wcu-table td {
@@ -237,32 +241,32 @@
   }
   
   .wcu-feature-inner {
-    font-size: 0.75rem;
-    gap: 6px;
+    font-size: 0.7rem;
+    gap: 4px;
     flex-direction: column;
     text-align: center;
     justify-content: center;
   }
   
   .wcu-feature-inner svg {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     margin: 0 auto;
     display: block;
   }
   
   .wcu-td-content {
-    font-size: 0.75rem;
-    gap: 6px;
+    font-size: 0.65rem;
+    gap: 4px;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    line-height: 1.25;
+    line-height: 1.2;
   }
 
   .wcu-check-icon, .wcu-cross-icon {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
     margin-top: 0;
   }
   
@@ -272,6 +276,15 @@
 
   .wcu-td-feature, .wcu-td-pure {
     border-radius: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wcu-title {
+    font-size: 1.5rem;
+  }
+  .wcu-subtitle {
+    font-size: 0.85rem;
   }
 }
 
