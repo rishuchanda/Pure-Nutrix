@@ -16,7 +16,7 @@ const ScienceSection = () => {
           >
             <div className="science-image-glow"></div>
             {/* Using an aesthetic product image to represent the science/purity vibe */}
-            <img src="/assets/products/collagen/collagen 4.jpg" alt="Science of Beauty" className="science-image" />
+            <img src="./assets/products/collagen/collagen 4.jpg" alt="Science of Beauty" className="science-image" />
           </motion.div>
           <motion.div 
             className="science-content"
