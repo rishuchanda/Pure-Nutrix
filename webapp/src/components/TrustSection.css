@@ -95,8 +95,8 @@
   }
   
   .trust-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
   }
 
   .trust-card {
@@ -132,23 +132,25 @@
   }
   
   .trust-grid {
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
   }
   
   .trust-card {
-    padding: 12px 8px;
+    padding: 8px 4px;
   }
   
   .trust-icon-wrapper {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
   
   .badge-title {
-    font-size: 0.8rem;
+    font-size: 0.65rem;
+    line-height: 1.1;
   }
   
   .badge-desc {
-    font-size: 0.7rem;
+    display: none;
   }
 }
