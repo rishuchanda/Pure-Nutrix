@@ -115,7 +115,12 @@ const SupportPage = ({ initialTab = 'contact', onBack }) => {
                   <div className="contact-icon"><MapPin size={24} /></div>
                   <div className="contact-details">
                     <h3>Our Headquarters</h3>
-                    <p>Pure Nutrix<br />99, Keshar Vihar, Goner Road,<br />Jaipur, Rajasthan - 303012, India.</p>
+                    <p>
+                      <strong>D3 PRODUCTION</strong> (Pure Nutrix)<br />
+                      Keshar Vihar, Goner Road, Near Bus Stop, Dantli,<br />
+                      Jaipur, Rajasthan - 303012, India.<br />
+                      <span style={{fontSize: '0.85em', color: '#a0a0a0', marginTop: '4px', display: 'block'}}>GSTIN: 08FJOPM3122F2Z5</span>
+                    </p>
                   </div>
                 </div>
               </div>

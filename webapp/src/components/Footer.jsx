@@ -9,6 +9,12 @@ const Footer = ({ onOpenQuality, onOpenLegalPolicy, onOpenSupport }) => {
           <img src="/assets/logo.png" alt="Pure Nutrix" className="footer-logo" />
           <h2 className="text-gold">PURE NUTRIX</h2>
           <p className="footer-desc">Premium skin and hair care nutraceuticals formulated for advanced cellular radiance.</p>
+          <div className="footer-company-info" style={{ marginTop: '15px', fontSize: '0.85rem', color: '#a0a0a0', lineHeight: '1.4' }}>
+            <strong>D3 PRODUCTION</strong><br />
+            Keshar Vihar, Goner Road, Near Bus Stop, Dantli,<br />
+            Jaipur, Rajasthan - 303012, India.<br />
+            GSTIN: 08FJOPM3122F2Z5
+          </div>
         </div>
         
         <div className="footer-links-group">
@@ -28,7 +34,7 @@ const Footer = ({ onOpenQuality, onOpenLegalPolicy, onOpenSupport }) => {
       </div>
       
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} Pure Nutrix. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Pure Nutrix. A brand of <strong>D3 PRODUCTION</strong>. All rights reserved.</p>
       </div>
     </footer>
   );

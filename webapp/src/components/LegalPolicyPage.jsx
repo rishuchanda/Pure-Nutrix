@@ -104,7 +104,7 @@ const LegalPolicyPage = ({ onBack }) => {
       content: (
         <div className="policy-content">
           <h3>Overview</h3>
-          <p>This website is operated by Pure Nutrix. By visiting our site and/or purchasing something from us, you engage in our "Service" and agree to be bound by the following terms and conditions.</p>
+          <p>This website is operated by Pure Nutrix, a brand of <strong>D3 PRODUCTION</strong>. By visiting our site and/or purchasing something from us, you engage in our "Service" and agree to be bound by the following terms and conditions.</p>
 
           <h3>Product Information & Medical Disclaimer</h3>
           <p>The products and claims made about specific products on or through this site have not been evaluated to diagnose, treat, cure, or prevent disease. The information provided on this site is for informational purposes only and is not intended as a substitute for advice from your physician or other healthcare professional. Always consult with a healthcare professional before starting any diet, exercise, or supplementation program.</p>
