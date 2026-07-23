@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import RainEffect from './RainEffect';
+
 import { supabase } from '../supabaseClient';
 import { ShoppingBag } from 'lucide-react';
 import './Hero3D.css';
@@ -52,7 +52,7 @@ const Hero3D = ({ onOrder }) => {
       // Find the product that matches the current slide's keyword
       const keyword = slides[currentImageIndex].keyword;
       const matchedProduct = products.find(p => p.name.toLowerCase().includes(keyword));
-      
+
       // If we found a match, order it. Otherwise, fallback to the first product.
       if (matchedProduct) {
         onOrder(matchedProduct);
@@ -70,19 +70,19 @@ const Hero3D = ({ onOrder }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, ease: "easeOut" }}
-        style={{ 
-          position: 'relative', 
-          width: '100%', 
-          cursor: 'pointer', 
-          zIndex: 10, 
-          pointerEvents: 'auto', 
-          overflow: 'hidden' 
+        style={{
+          position: 'relative',
+          width: '100%',
+          cursor: 'pointer',
+          zIndex: 10,
+          pointerEvents: 'auto',
+          overflow: 'hidden'
         }}
         onClick={handleShopNow}
       >
         <div style={{ position: 'relative', width: '100%' }}>
           {slides.map((slide, index) => (
-            <img 
+            <img
               key={slide.src}
               src={slide.src}
               alt={`Premium Product Slide ${index + 1}`}
@@ -103,7 +103,7 @@ const Hero3D = ({ onOrder }) => {
         </div>
 
         {/* Manual Navigation Arrows */}
-        <button 
+        <button
           onClick={handlePrev}
           style={{
             position: 'absolute', left: '2%', top: '50%', transform: 'translateY(-50%)',
@@ -117,7 +117,7 @@ const Hero3D = ({ onOrder }) => {
         >
           &#10094;
         </button>
-        <button 
+        <button
           onClick={handleNext}
           style={{
             position: 'absolute', right: '2%', top: '50%', transform: 'translateY(-50%)',
@@ -133,16 +133,7 @@ const Hero3D = ({ onOrder }) => {
         </button>
       </motion.div>
 
-      {/* Premium Gold Line Separator */}
-      <div style={{
-        width: '100%',
-        height: '2px',
-        background: 'linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%)',
-        boxShadow: '0 2px 15px rgba(212, 175, 55, 0.6), 0 0 5px rgba(212, 175, 55, 0.3)',
-        marginTop: '-1px',
-        position: 'relative',
-        zIndex: 20
-      }}></div>
+
 
     </section>
   );

@@ -5,7 +5,10 @@ export const getProductReviews = (product) => {
   // Deterministic count based on product name/id
   const nameLength = product?.name?.length || 10;
   const totalCount = isGlutathione ? 186 : (120 + (nameLength * 7));
-  const rating = 4.8;
+  
+  // Stable random rating between 4.5 and 4.9
+  const possibleRatings = [4.5, 4.6, 4.7, 4.8, 4.9];
+  const rating = isGlutathione ? 4.8 : possibleRatings[(nameLength * 17) % possibleRatings.length];
 
   const names = [
     "Priya Sharma", "Rahul Verma", "Neha Gupta", "Amit Kumar", "Sneha Desai", 

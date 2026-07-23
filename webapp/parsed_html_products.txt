@@ -1,0 +1,249 @@
+0: Bath &amp; Body &ndash; Minimalist
+1: Skip to content
+2: 🎁 Build Your Own Bundle — Save an additional up to 15% off
+3: Upto 33% OFF + Freebies
+4: Get Additional Free Surprise gift on orders above 1199 - Auto Add on checkout
+5: Trust Circle: Earn rewards on your skincare journey!
+6: Enjoy free shipping on every order!
+7: Search  -->
+8: Search  -->
+9: Search          Account
+16: Skin &amp; Body
+19: New Launches
+21: Best Sellers
+22: On Sale from ₹ 285
+23: Salicylic Acid + LHA 2% Cleanser
+24: On Sale from ₹ 249
+25: SPF 50 Sunscreen
+26: On Sale from ₹ 332
+27: Vitamin B5 10% Moisturizer
+28: On Sale from ₹ 237
+29: Niacinamide 10% Face Serum
+30: On Sale from ₹ 285
+31: Vitamin C 10% Face Serum
+32: On Sale from ₹ 237
+33: Salicylic Acid 2% Face Serum
+35: Skin &amp; Body Care
+36: Shop by Concern
+38: Pigmentation
+41: Underarm Darkness
+45: Shop by Ingredients
+47: BHA / Salicylic Acid
+48: Retinoid / Retinol
+49: Niacinamide
+66: New Launch: Retinol 0.1% Serum   Our New Anti-Aging Powerhouse
+70: Ceramide &amp; Vitamin B5 Delicate Cleanser
+73: Ceramide &amp; Squalane Nourishing Lotion
+76: Zinc Oxide + B5 Healing Ointment
+79: Provitamin D3 Massage Oil
+82: Shop by Concern
+84: Damaged Hair
+86: Scalp Irritation
+87: Frizzy Hair
+90: Hair Thinning
+91: Shop by Ingredients
+93: Maleic Acid
+100: New Launch: Hydrating Factors 7.3% Hair Shampoo
+101: AI Assistants
+102: Skin Insights- Image Analyzer
+103: Clare - AI Assistant
+104: Track Order
+105: Search  -->
+106: Search  -->
+107: Search          Account
+113: Close sidebar
+116: Skin &amp; Body
+119: New Launches
+121: Best Sellers
+123: Salicylic Acid + LHA 2% Cleanser
+124: SPF 50 Sunscreen
+125: Vitamin B5 10% Moisturizer
+126: Niacinamide 10% Face Serum
+127: Vitamin C 10% Face Serum
+128: Salicylic Acid 2% Face Serum
+130: Skin &amp; Body Care
+132: Shop by Concern
+135: Pigmentation
+138: Underarm Darkness
+142: Shop by Ingredients
+145: BHA / Salicylic Acid
+146: Retinoid / Retinol
+147: Niacinamide
+167: New Launch: Retinol 0.1% Serum   Our New Anti-Aging Powerhouse
+170: Ceramide &amp; Vitamin B5 Delicate Cleanser
+171: Ceramide &amp; Squalane Nourishing Lotion
+172: Zinc Oxide + B5 Healing Ointment
+173: Provitamin D3 Massage Oil
+177: Shop by Concern
+180: Damaged Hair
+182: Scalp Irritation
+183: Frizzy Hair
+186: Hair Thinning
+187: Shop by Ingredients
+190: Maleic Acid
+198: New Launch: Hydrating Factors 7.3% Hair Shampoo
+199: AI Assistants
+201: Skin Insights- Image Analyzer
+202: Clare - AI Assistant
+203: Track Order
+209: Bath &amp; Body    Treat your body from head to toe with our range of science-backed &amp;  efficacious range of body care products. Protect every last inch of your skin
+211: Featured  Most relevant  Best selling  Alphabetically, A-Z  Alphabetically, Z-A  Price, low to high  Price, high to low  Date, old to new  Date, new to old
+219: Cleanse (1)
+222: Moisturize (1)
+224: Type of Product
+228: Body Lotion (1)
+229: Combo Kit (2)
+230: Body Wash (1)
+231: Underarm Roll-On (1)
+235: Sun Protection (2)
+236: Dry Skin (1)
+237: Underarm darkness (1)
+238: Body Odour (1)
+246: BHA / Salicylic Acid (1)
+247: Niacinamide (2)
+248: UV Filters (2)
+249: Nonapeptide (1)
+250: Hypochlorous Acid (HOCl) (1)
+251: Availability
+253: In stock (6)
+254: Out of stock (1)
+256: {document.querySelectorAll('#FacetFiltersFormMobile show-more')?.forEach(elm=>{elm.init()})},10);document.getElementById('site-filters-sidebar').show()">
+258: {document.querySelectorAll('#FacetFiltersFormMobile show-more')?.forEach(elm=>{elm.init()})},10);document.getElementById('site-filters-sidebar').show()">
+260: Showing 7 products
+262: "disableSwipe": true
+264: class="product-item__slider css-slider--no-desktop-drag css-slider--overlay-navigation"
+266: Nonapeptide + AHA 6% Underarm Roll-On
+267: Fades Underarm darkness & Odour
+268: product-item.liquid -->
+269: yotpo-stars.liquid -->
+270: yotpo-stars.liquid -->
+275: Select Title
+276: e.removeAttribute('checked'));r.checked=true;r.closest('product-variants').dispatchEvent(new Event('change',{bubbles:true}))}"
+278: Default Title
+279: Select Title
+280: Default Title
+282: Default Title
+284: Add to cart
+285: Best Seller
+287: "disableSwipe": true
+289: class="product-item__slider css-slider--no-desktop-drag css-slider--overlay-navigation"
+291: Niacinamide 5% Body Lotion
+292: Damaged Barrier, Dry & Flaky Skin
+293: product-item.liquid -->
+294: yotpo-stars.liquid -->
+295: yotpo-stars.liquid -->
+300: Select Title
+301: e.removeAttribute('checked'));r.checked=true;r.closest('product-variants').dispatchEvent(new Event('change',{bubbles:true}))}"
+303: Default Title
+304: Select Title
+305: Default Title
+307: Default Title
+309: Add to cart
+310: Best Seller
+311: Salicylic Acid + LHA 2% Body Wash
+312: Excess Sweat, Body Acne & Rough Skin
+313: product-item.liquid -->
+314: yotpo-stars.liquid -->
+315: yotpo-stars.liquid -->
+320: Select Title
+321: e.removeAttribute('checked'));r.checked=true;r.closest('product-variants').dispatchEvent(new Event('change',{bubbles:true}))}"
+323: Default Title
+324: Select Title
+325: Default Title
+327: Default Title
+329: Add to cart
+331: "disableSwipe": true
+333: class="product-item__slider css-slider--no-desktop-drag css-slider--overlay-navigation"
+335: HOCL Skin Relief Spray 150 ppm
+336: Eczema, Acne, Redness & Damaged skin barrier
+337: product-item.liquid -->
+338: yotpo-stars.liquid -->
+339: yotpo-stars.liquid -->
+344: Select Title
+345: e.removeAttribute('checked'));r.checked=true;r.closest('product-variants').dispatchEvent(new Event('change',{bubbles:true}))}"
+347: Default Title
+348: Select Title
+349: Default Title
+351: Default Title
+353: Add to cart
+355: "disableSwipe": true
+357: class="product-item__slider css-slider--no-desktop-drag css-slider--overlay-navigation"
+359: SPF 30 Body Lotion
+360: Sun protection, UV exposure / damage
+361: product-item.liquid -->
+362: yotpo-stars.liquid -->
+363: yotpo-stars.liquid -->
+368: Select Title
+369: e.removeAttribute('checked'));r.checked=true;r.closest('product-variants').dispatchEvent(new Event('change',{bubbles:true}))}"
+371: Default Title
+372: Select Title
+373: Default Title
+375: Default Title
+377: Add to cart
+378: Body Care Kit
+379: Odour, Acne, Sebum & Rough Skin
+380: product-item.liquid -->
+381: yotpo-stars.liquid -->
+382: yotpo-stars.liquid -->
+387: Select Title
+388: e.removeAttribute('checked'));r.checked=true;r.closest('product-variants').dispatchEvent(new Event('change',{bubbles:true}))}"
+390: Default Title
+391: Select Title
+393: Default Title
+397: Sun Protection Body Care Kit
+398: UV Damage & Chapped Lips
+399: product-item.liquid -->
+400: yotpo-stars.liquid -->
+401: yotpo-stars.liquid -->
+406: Select Title
+407: e.removeAttribute('checked'));r.checked=true;r.closest('product-variants').dispatchEvent(new Event('change',{bubbles:true}))}"
+409: Default Title
+410: Select Title
+411: Default Title
+413: Default Title
+415: Add to cart
+416: Filter and sort
+417: Close sidebar
+419: Featured  Most relevant  Best selling  Alphabetically, A-Z  Alphabetically, Z-A  Price, low to high  Price, high to low  Date, old to new  Date, new to old
+427: Cleanse (1)
+430: Moisturize (1)
+432: Type of Product
+436: Body Lotion (1)
+437: Combo Kit (2)
+438: Body Wash (1)
+439: Underarm Roll-On (1)
+443: Sun Protection (2)
+444: Dry Skin (1)
+445: Underarm darkness (1)
+446: Body Odour (1)
+454: BHA / Salicylic Acid (1)
+455: Niacinamide (2)
+456: UV Filters (2)
+457: Nonapeptide (1)
+458: Hypochlorous Acid (HOCl) (1)
+459: Availability
+461: In stock (6)
+462: Out of stock (1)
+464: Company Overview
+467: Privacy notice
+468: Cookie Policy
+469: Terms &amp; conditions
+471: Corporate Information
+472: Media Outreach
+473: Distributor Queries
+474: Grievance Redressal
+475: Quick Links
+478: Shipping Policy
+479: Return &amp; refund policy
+480: Payment Policy
+481: Track order
+482: Download App
+483: Contact Us   Need help fast?   +91 7412-092487  This is AI WhatsApp number. Kindly DM.  OR Fill out  our form  or email   [email&#160;protected]    For gifting inquiries, write to us at   [email&#160;protected]
+488: Copyright &copy; 2026  Minimalist .  Powered by Shopify
+489: Shopping Cart
+491: Close sidebar
+492: SHOP FOR ₹799 AND GET A FREE SUNSCREEN
+494: Your cart is currently empty.
+499: Continue browsing
+500: You will earn    worth MCash on this order
+506: Close sidebar

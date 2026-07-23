@@ -1,11 +1,10 @@
 .trust-section {
   padding: 80px 5%;
-  background-color: var(--color-bg-primary); /* MUST have a background for mix-blend-mode to work */
+  background-color: var(--color-bg-primary); 
   text-align: center;
   position: relative;
-  overflow: hidden; /* Added to keep video inside bounds */
+  overflow: hidden; 
   z-index: 2;
-  border-top: 1px solid #e4e4e7;
   border-bottom: 1px solid #e4e4e7;
 }
 
@@ -40,40 +39,35 @@
 }
 
 .trust-card {
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
-  border-radius: 20px;
-  padding: 40px 30px;
+  background: transparent;
+  border: none;
+  padding: 20px;
   text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .trust-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+  transform: translateY(-2px);
 }
 
 .icon-wrapper {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: var(--color-bg-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
-  border: 1px solid #e4e4e7;
-  color: var(--color-accent-gold);
-  transition: all 0.3s ease;
+  margin-bottom: 15px;
+  color: #111111;
+  transition: all 0.2s ease;
 }
 
 .trust-card:hover .icon-wrapper {
-  background: var(--color-accent-gold);
-  color: #ffffff;
-  border-color: var(--color-accent-gold);
+  background: #e5e5e5;
 }
 
 .badge-title {

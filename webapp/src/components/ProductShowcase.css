@@ -37,7 +37,7 @@
   flex-direction: column;
   background-color: transparent;
   border: none;
-  border-radius: 0;
+  border-radius: 16px;
   transition: opacity 0.2s ease;
   cursor: pointer;
 }
@@ -52,8 +52,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f1f1f1; /* Light grey like minimalist screenshot */
-  padding: 30px 0;
+  background-color: transparent;
   margin-bottom: 15px;
 }
 
@@ -161,6 +160,7 @@
   background: #000000;
   color: #ffffff;
   border: none;
+  border-radius: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -275,6 +275,17 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.product-card {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .ingredient-pill {

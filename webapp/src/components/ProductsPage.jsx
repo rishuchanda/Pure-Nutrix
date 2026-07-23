@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Star } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { getProductReviews } from '../utils/mockReviews';
+import { getProductDetails } from '../utils/productDetailsData';
 import './ProductsPage.css';
 
-const ProductsPage = ({ onProductClick, onBack, onOrder, onAddToCart }) => {
+const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,7 +17,7 @@ const ProductsPage = ({ onProductClick, onBack, onOrder, onAddToCart }) => {
           .from('products')
           .select('*')
           .order('created_at', { ascending: true });
-        
+
         if (error) throw error;
         setProducts(data || []);
       } catch (err) {
@@ -28,87 +30,98 @@ const ProductsPage = ({ onProductClick, onBack, onOrder, onAddToCart }) => {
   }, []);
 
   return (
-    <div className="products-page-wrapper section-padding">
-      <div className="container">
+    <div className="products-page-wrapper">
+      <div className="products-container">
         <button className="back-btn" onClick={onBack}>
-          <ArrowLeft size={20} /> Back to Home
+          <ArrowLeft size={16} /> Back to Home
         </button>
-        
-        <div className="section-header" style={{ marginTop: '20px' }}>
-          <motion.h2 
-            className="section-title"
+
+        <div className="products-header">
+          <motion.h1
+            className="products-title"
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            ALL <span className="text-gold">PRODUCTS</span>
-          </motion.h2>
-          <p className="section-subtitle">Discover our complete range of premium nutrition</p>
+            All Products
+          </motion.h1>
+          <motion.p
+            className="products-subtitle"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            Treat your body from head to toe with our range of science-backed & efficacious nutraceutical products. Protect every last inch of your health.
+          </motion.p>
+        </div>
+
+        <div className="products-top-bar">
+          <div>Showing {products.length} products</div>
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <span>Filter</span>
+            <span>Sort By</span>
+          </div>
         </div>
 
         {loading ? (
-          <div className="loading-spinner" style={{ textAlign: 'center', margin: '50px 0' }}>Loading premium collection...</div>
+          <div style={{ padding: '40px 0', color: '#555' }}>Loading collection...</div>
         ) : (
           <div className="products-grid">
-            {products.map((product, index) => (
-              <motion.div 
-                key={product.id}
-                className="product-tile"
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                onClick={() => onProductClick(product)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="product-image-container">
-                  {product.image_urls && product.image_urls.length > 0 ? (
-                    <img 
-                      src={product.image_urls[0]} 
-                      alt={product.name} 
-                      className="product-image"
-                    />
-                  ) : (
-                    <div className="product-image placeholder" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#222' }}>No Image</div>
-                  )}
-                </div>
-                
-                <div className="product-details">
-                  <h3 className="product-category text-gold">{product.category || 'NUTRITION'}</h3>
-                  <h2 className="product-name">{product.name}</h2>
-                  
-                  <div className="product-meta">
-                    <span className="product-qty">{product.quantity || '30'} {product.product_form || 'Capsules'}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span className="product-price">₹{product.price}</span>
-                      {product.original_price && product.original_price > product.price && (
-                        <>
-                          <span style={{ textDecoration: 'line-through', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>₹{product.original_price}</span>
-                          <span style={{ color: '#059669', fontSize: '0.85rem', fontWeight: '600' }}>
-                            ({Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF)
-                          </span>
-                        </>
-                      )}
-                    </div>
+            {products.map((product, index) => {
+              const reviewData = getProductReviews(product);
+              const dynamicDetails = getProductDetails(product.name);
+
+              return (
+                <motion.div
+                  key={product.id}
+                  className="product-item"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  onClick={() => onProductClick(product)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="product-item-image-wrap">
+                    <span className="badge-best-seller">Best Seller</span>
+                    {product.image_urls && product.image_urls.length > 0 ? (
+                      <img src={product.image_urls[0]} alt={product.name} />
+                    ) : (
+                      <div style={{ padding: '40px', color: '#888' }}>No Image</div>
+                    )}
                   </div>
 
-                  <div className="product-actions">
-                    <button 
-                      className="add-to-cart-btn" 
-                      onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); }}
+                  <div className="product-item-details">
+                    <h2 className="product-item-title">{product.name}</h2>
+                    <p className="product-item-subtitle">{dynamicDetails.subtitle}</p>
+
+                    <div className="product-item-stars">
+                      <div style={{ display: 'flex' }}>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} size={14} fill="#fbbf24" stroke="none" className="star-icon" />
+                        ))}
+                      </div>
+                      <span>{reviewData.rating} ({reviewData.totalCount} reviews)</span>
+                    </div>
+
+                    <div className="product-item-price">
+                      <span>₹{product.price}</span>
+                      {product.original_price && product.original_price > product.price && (
+                        <span className="product-item-mrp">₹{product.original_price}</span>
+                      )}
+                    </div>
+
+                    <button
+                      className="btn-add-to-cart"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToCart && onAddToCart(product);
+                      }}
                     >
-                      Add to Cart
-                    </button>
-                    <button 
-                      className="buy-now-btn" 
-                      onClick={(e) => { e.stopPropagation(); onOrder(product); }}
-                    >
-                      Buy Now
+                      Add to cart
                     </button>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

@@ -19,7 +19,8 @@ import { supabase } from './supabaseClient';
 import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
-import RainEffect from './components/RainEffect';
+import { Helmet } from 'react-helmet-async';
+
 
 import ChatbotWidget from './components/ChatbotWidget';
 
@@ -49,17 +50,30 @@ function App() {
     };
 
     window.addEventListener('popstate', handlePopState);
-    
+
     // Initial load
     const isPathAdmin = window.location.pathname === '/admin';
     const initialHash = window.location.hash.replace('#', '');
     const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
-    
+
     if (isPathAdmin) {
       // Do nothing to the hash if we are on the admin page
     } else if (validViews.includes(initialHash) && initialHash !== 'home') {
-      setCurrentView(initialHash);
-      window.history.replaceState({ view: initialHash }, '', '#' + initialHash);
+      const state = window.history.state;
+      if (state && state.product) {
+        setSelectedProduct(state.product);
+      }
+
+      if ((initialHash === 'pdp' || initialHash === 'order') && !(state && state.product)) {
+        setCurrentView('products');
+        window.history.replaceState({ view: 'products' }, '', '#products');
+      } else {
+        setCurrentView(initialHash);
+        // Don't replace state if we already have it with product
+        if (!state || !state.product) {
+          window.history.replaceState({ view: initialHash }, '', '#' + initialHash);
+        }
+      }
     } else {
       setCurrentView('home');
       window.history.replaceState({ view: 'home' }, '', window.location.pathname);
@@ -141,7 +155,7 @@ function App() {
   const handleBackToHome = () => {
     setCurrentView('home');
     setSelectedProduct(null);
-    window.history.pushState({ view: 'home' }, '', window.location.pathname);
+    window.history.pushState({ view: 'home' }, '', '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -208,29 +222,46 @@ function App() {
     };
   }, []);
 
+  const getPageTitle = () => {
+    switch (currentView) {
+      case 'products': return 'All Products | Pure Nutrix';
+      case 'cart': return 'Your Cart | Pure Nutrix';
+      case 'account': return 'My Account | Pure Nutrix';
+      case 'quality-standards': return 'Quality Standards | Pure Nutrix';
+      case 'legal-policy': return 'Legal Policy | Pure Nutrix';
+      case 'support': return 'Support & Contact | Pure Nutrix';
+      case 'order': return 'Checkout | Pure Nutrix';
+      default: return 'Pure Nutrix | Premium Skincare & Nutraceuticals';
+    }
+  };
+
   return (
     <>
+      <Helmet>
+        <title>{getPageTitle()}</title>
+      </Helmet>
       <motion.div
         className="scroll-progress-bar"
         style={{ scaleX: scrollYProgress }}
       />
       {currentView !== 'admin' && (
-        <Navbar 
-          user={user} 
+        <Navbar
+          user={user}
           onGoHome={handleBackToHome}
           onOpenProducts={handleOpenProducts}
           onOpenQuality={handleOpenQuality}
           onOpenSupport={handleOpenSupport}
-          onOpenAuth={() => setIsAuthModalOpen(true)} 
+          onOpenAuth={() => setIsAuthModalOpen(true)}
           onOpenAccount={handleOpenAccount}
-          onSignOut={() => supabase.auth.signOut()} 
+          onSignOut={() => supabase.auth.signOut()}
           onOpenCart={handleOpenCart}
           cartCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)}
+          onProductClick={handleOpenProductDetails}
         />
       )}
       <AnimatePresence mode="wait">
         {currentView === 'home' ? (
-          <motion.div 
+          <motion.div
             key="home"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -247,7 +278,7 @@ function App() {
             <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} onOpenSupport={handleOpenSupport} />
           </motion.div>
         ) : currentView === 'order' ? (
-          <motion.div 
+          <motion.div
             key="order"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -257,17 +288,17 @@ function App() {
             <OrderPage product={selectedProduct} cartItems={currentView === 'order' && !selectedProduct ? cartItems : null} onBack={handleBackToHome} />
           </motion.div>
         ) : currentView === 'cart' ? (
-          <motion.div 
+          <motion.div
             key="cart"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <CartPage 
-              cartItems={cartItems} 
-              onUpdateQuantity={handleUpdateCartQty} 
-              onRemoveItem={handleRemoveFromCart} 
+            <CartPage
+              cartItems={cartItems}
+              onUpdateQuantity={handleUpdateCartQty}
+              onRemoveItem={handleRemoveFromCart}
               onBack={handleBackToHome}
               onCheckout={() => {
                 setSelectedProduct(null); // Clear selected product so OrderPage uses cartItems
@@ -277,7 +308,7 @@ function App() {
             />
           </motion.div>
         ) : currentView === 'admin' ? (
-          <motion.div 
+          <motion.div
             key="admin"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -287,7 +318,7 @@ function App() {
             <AdminDashboard user={user} onBack={handleBackToHome} />
           </motion.div>
         ) : currentView === 'account' ? (
-          <motion.div 
+          <motion.div
             key="account"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -297,7 +328,7 @@ function App() {
             <AccountPage user={user} onBack={handleBackToHome} onSignOut={() => supabase.auth.signOut()} />
           </motion.div>
         ) : currentView === 'products' ? (
-          <motion.div 
+          <motion.div
             key="products"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -307,17 +338,17 @@ function App() {
             <ProductsPage onProductClick={handleOpenProductDetails} onBack={handleBackToHome} onOrder={handleOrder} onAddToCart={handleAddToCart} />
           </motion.div>
         ) : currentView === 'pdp' ? (
-          <motion.div 
+          <motion.div
             key="pdp"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} />
+            <ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} onProductClick={handleOpenProductDetails} />
           </motion.div>
         ) : currentView === 'quality-standards' ? (
-          <motion.div 
+          <motion.div
             key="quality-standards"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -327,7 +358,7 @@ function App() {
             <QualityStandardsPage onBack={handleBackToHome} onExplore={handleOpenProducts} />
           </motion.div>
         ) : currentView === 'legal-policy' ? (
-          <motion.div 
+          <motion.div
             key="legal-policy"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -337,7 +368,7 @@ function App() {
             <LegalPolicyPage onBack={handleBackToHome} />
           </motion.div>
         ) : currentView === 'support' ? (
-          <motion.div 
+          <motion.div
             key="support"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -347,7 +378,7 @@ function App() {
             <SupportPage onBack={handleBackToHome} />
           </motion.div>
         ) : currentView === 'whatsapp' ? (
-          <motion.div 
+          <motion.div
             key="whatsapp"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -361,9 +392,9 @@ function App() {
           </motion.div>
         ) : null}
       </AnimatePresence>
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
       {currentView !== 'admin' && <ChatbotWidget phoneNumber="919057607030" defaultMessage="Hi, I need help with Pure Nutrix products." />}
     </>

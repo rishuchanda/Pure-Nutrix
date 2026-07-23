@@ -1,25 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Lato:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 
 :root {
-  --color-bg-primary: #d1d5db; /* Grayish background to match hero section */
-  --color-bg-secondary: #cbd5e1;
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9f9f9;
   --color-text-primary: #111111;
-  --color-text-secondary: #52525b;
-  --color-title-text: #5a5f66; /* Dark platinum for titles */
+  --color-text-secondary: #555555;
+  --color-title-text: #111111;
   
-  /* Gold / Emerald Theme */
-  --color-accent-gold: #b8860b; /* Darker, richer gold for better contrast */
-  --color-accent-gold-glow: rgba(184, 134, 11, 0.4);
+  --color-accent-gold: #000000; /* Replaced gold with black for minimalist theme */
   --color-accent-emerald: #059669;
   
-  /* Luxurious Skincare Fonts */
-  --font-primary: 'Lato', sans-serif;
-  --font-display: 'Cinzel', serif;
+  --font-primary: 'DM Sans', sans-serif;
+  --font-display: 'DM Sans', sans-serif;
 
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(212, 175, 55, 0.15); /* Subtle gold border instead of grey */
-  
-  --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: all 0.3s ease;
 }
 
 * {
@@ -48,28 +42,21 @@ html, body {
   position: relative;
 }
 
-/* Glassmorphism Utilities */
+/* Flat Design Utilities */
 .glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.02);
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
   transition: var(--transition-smooth);
 }
 
 .glass-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(212, 175, 55, 0.3);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.05), 0 5px 15px rgba(212, 175, 55, 0.05);
+  border-color: #cccccc;
 }
 
 /* Typography Utilities */
@@ -80,17 +67,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .text-gradient {
-  background: linear-gradient(to right, #111111, #71717a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #111111; /* Flat black instead of gradient */
 }
 
 .text-gold {
-  background: linear-gradient(to right, #b8860b 0%, #996515 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #555555; /* Flat grey instead of gold gradient */
 }
 
 /* Common Layout Utilities */
@@ -118,25 +99,20 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, #111111 0%, #2a2a2a 100%);
+  background: #000000;
   color: #ffffff;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: none;
   padding: 14px 32px;
-  border-radius: 8px; /* Sleeker, less pill-like */
+  border-radius: 12px;
   font-family: var(--font-primary);
-  font-weight: 400;
-  font-size: 1.05rem;
+  font-weight: 500;
+  font-size: 1rem;
   cursor: pointer;
   transition: var(--transition-smooth);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  letter-spacing: 1px;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-  border-color: var(--color-accent-gold);
-  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15);
+  background: #333333;
 }
 
 .btn-outline {
@@ -144,7 +120,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-primary);
   border: 1px solid #e4e4e7;
   padding: 12px 28px;
-  border-radius: 8px;
+  border-radius: 12px;
   font-family: var(--font-primary);
   font-weight: 400;
   font-size: 1rem;
@@ -160,13 +136,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Canvas Container */
 .canvas-container {
-  position: fixed; /* Keep it fixed so it stays in background */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: auto; /* Allow mouse tracking */
+  display: none; /* Hide any background canvas effects */
 }
 
 /* Premium Scrollbar Customization - Hidden for Immersive Experience */

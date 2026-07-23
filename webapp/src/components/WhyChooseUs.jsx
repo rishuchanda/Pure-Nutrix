@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import RainEffect from './RainEffect';
+
 import './WhyChooseUs.css';
 
 const comparisons = [
@@ -108,7 +108,7 @@ const rowVariants = {
 const WhyChooseUs = () => {
   return (
     <section className="why-choose-us section-padding" id="science">
-      <RainEffect />
+
       <div className="container">
         <motion.div 
           className="wcu-header"

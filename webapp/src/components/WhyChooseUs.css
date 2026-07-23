@@ -73,12 +73,12 @@
 }
 
 .wcu-table th {
-  text-align: left;
-  padding: 15px 25px;
-  font-size: 1.3rem;
-  font-weight: 700;
+  padding: 20px;
+  text-align: center;
+  font-weight: 600;
   color: #111111;
-  border-bottom: 2px solid #f3f4f6;
+  border-bottom: 2px solid #e5e5e5;
+  font-size: 1.1rem;
 }
 
 .wcu-th-feature {
@@ -103,13 +103,11 @@
 .wcu-table tbody tr {
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, background-color 0.4s ease;
   background-color: #ffffff;
-  border-radius: 12px;
 }
 
 .wcu-table tbody tr:hover {
   transform: scale(1.02) translateY(-2px);
   background-color: var(--color-bg-secondary);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   z-index: 10;
   position: relative;
 }
@@ -120,8 +118,6 @@
 }
 
 .wcu-td-feature {
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
   border-left: 2px solid transparent;
 }
 
@@ -130,8 +126,6 @@
 }
 
 .wcu-td-pure {
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
   background: rgba(212, 175, 55, 0.05); /* Very light gold tint */
   border-left: 1px solid rgba(212, 175, 55, 0.2);
 }
@@ -199,18 +193,11 @@
   
   /* Fit full table without sliding */
   .wcu-table-container {
-    padding: 10px 5px;
-    border-radius: 12px;
-    width: 100%;
-    /* Aspect ratio width / height. Make it taller than wide. */
-    aspect-ratio: 3 / 4; /* Taller so all 5 rows can fit */
-    background: #ffffff;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  overflow-x: auto;
+  border: 1px solid #e5e5e5;
+  background: #ffffff;
+  padding: 30px;
+}
   
   .wcu-table {
     width: 100%;

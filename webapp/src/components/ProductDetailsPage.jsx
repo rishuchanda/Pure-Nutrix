@@ -1,16 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, ShieldCheck, Truck, ArrowLeft, CheckCircle, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
+import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus } from 'lucide-react';
 import { getProductReviews } from '../utils/mockReviews';
+import { getProductDetails } from '../utils/productDetailsData';
+import { supabase } from '../supabaseClient';
 import './ProductDetailsPage.css';
 
-const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
+const Accordion = ({ title, children, defaultOpen = false }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="pdp-accordion">
+      <button className="pdp-accordion-header" onClick={() => setIsOpen(!isOpen)}>
+        {title}
+        {isOpen ? <Minus size={20} /> : <Plus size={20} />}
+      </button>
+      {isOpen && <div className="pdp-accordion-content">{children}</div>}
+    </div>
+  );
+};
+
+const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductClick }) => {
   const [activeImage, setActiveImage] = useState(0);
-  const [direction, setDirection] = useState(0); // For animation direction
+  const [direction, setDirection] = useState(0);
+  const [otherProducts, setOtherProducts] = useState([]);
+
+  useEffect(() => {
+    if (!product) return;
+    const fetchOthers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .neq('id', product.id)
+          .limit(4);
+        if (!error && data) {
+          setOtherProducts(data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchOthers();
+  }, [product]);
 
   if (!product) return null;
 
   const reviewData = getProductReviews(product);
+  const details = getProductDetails(product.name);
 
   const handleNextImage = () => {
     if (product.image_urls && product.image_urls.length > 0) {
@@ -26,81 +63,58 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
     }
   };
 
-  const slideVariants = {
-    enter: (direction) => ({
-      x: direction > 0 ? 300 : -300,
-      opacity: 0
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1
-    },
-    exit: (direction) => ({
-      zIndex: 0,
-      x: direction < 0 ? 300 : -300,
-      opacity: 0
-    })
-  };
-
   return (
-    <div className="pdp-wrapper section-padding">
-      <div className="container">
+    <div className="pdp-wrapper">
+      <Helmet>
+        <title>{product.name} | Pure Nutrix</title>
+        <meta name="title" content={`${product.name} | Pure Nutrix`} />
+        <meta name="description" content={details.subtitle || `Buy ${product.name} at Pure Nutrix. Premium formulation for advanced results.`} />
+        <meta property="og:title" content={`${product.name} | Pure Nutrix`} />
+        <meta property="og:description" content={details.subtitle || `Buy ${product.name} at Pure Nutrix. Premium formulation.`} />
+        {product.image_urls && product.image_urls[0] && <meta property="og:image" content={product.image_urls[0]} />}
+      </Helmet>
+      
+      <div className="pdp-container">
         <button className="back-btn" onClick={onBack}>
-          <ArrowLeft size={20} /> Back to Products
+          <ArrowLeft size={16} /> Back to Products
         </button>
 
         <div className="pdp-grid">
-          {/* Left Column: Image Gallery */}
-          <div className="pdp-gallery">
-            <div className="pdp-main-image-container" style={{ position: 'relative' }}>
+          {/* LEFT COLUMN - STICKY GALLERY */}
+          <div className="pdp-gallery-column">
+            <div className="pdp-main-image-container">
               {product.image_urls && product.image_urls.length > 0 ? (
                 <>
-                  <AnimatePresence initial={false} custom={direction}>
-                    <motion.img
-                      key={activeImage}
-                      src={product.image_urls[activeImage]}
-                      alt={product.name}
-                      className="pdp-main-image"
-                      custom={direction}
-                      variants={slideVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
-                      style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}
-                      drag="x"
-                      dragConstraints={{ left: 0, right: 0 }}
-                      dragElastic={1}
-                      onDragEnd={(e, { offset, velocity }) => {
-                        const swipe = Math.abs(offset.x) * velocity.x;
-                        if (swipe < -10000) handleNextImage();
-                        else if (swipe > 10000) handlePrevImage();
-                      }}
-                    />
-                  </AnimatePresence>
-                  
+                  <motion.img
+                    key={activeImage}
+                    src={product.image_urls[activeImage]}
+                    alt={product.name}
+                    className="pdp-main-image"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
                   {product.image_urls.length > 1 && (
                     <>
-                      <button className="image-nav-btn prev-btn" onClick={handlePrevImage} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
-                        <ChevronLeft size={24} color="#111" />
+                      <button className="image-nav-btn prev-btn" onClick={handlePrevImage}>
+                        <ChevronLeft size={20} />
                       </button>
-                      <button className="image-nav-btn next-btn" onClick={handleNextImage} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
-                        <ChevronRight size={24} color="#111" />
+                      <button className="image-nav-btn next-btn" onClick={handleNextImage}>
+                        <ChevronRight size={20} />
                       </button>
                     </>
                   )}
                 </>
               ) : (
-                <div className="pdp-no-image">No Image Available</div>
+                <div style={{ padding: '40px', color: '#888' }}>No Image Available</div>
               )}
             </div>
-            
+
             {product.image_urls && product.image_urls.length > 1 && (
               <div className="pdp-thumbnails">
                 {product.image_urls.map((img, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className={`pdp-thumbnail ${activeImage === idx ? 'active' : ''}`}
                     onClick={() => setActiveImage(idx)}
                   >
@@ -111,131 +125,157 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart }) => {
             )}
           </div>
 
-          <div className="pdp-info">
-            <div className="pdp-bogo-banner">
-              <span className="bogo-icon">🌧️</span> <span className="bogo-text-content">Monsoon Sale: Buy 1 Get 1 FREE Automatically Applied!</span>
-            </div>
-            
-            <h3 className="pdp-category text-gold">{product.category}</h3>
+          {/* RIGHT COLUMN - PRODUCT INFO */}
+          <div className="pdp-info-column">
+            <span className="pdp-badge-best-seller">Best Seller</span>
+
             <h1 className="pdp-title">{product.name}</h1>
-            
+            <p className="pdp-subtitle">{details.subtitle}</p>
+
+            <div className="pdp-star-summary" onClick={() => document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' })}>
+              <div className="pdp-stars">
+                <Star size={16} fill="#fbbf24" stroke="none" />
+                <Star size={16} fill="#fbbf24" stroke="none" />
+                <Star size={16} fill="#fbbf24" stroke="none" />
+                <Star size={16} fill="#fbbf24" stroke="none" />
+                <Star size={16} fill="#fbbf24" stroke="none" />
+              </div>
+              <span>{reviewData.rating} ({reviewData.totalCount} reviews)</span>
+            </div>
+
             <div className="pdp-price-row">
               <span className="pdp-price">₹{product.price}</span>
               {product.original_price && product.original_price > product.price && (
-                <div className="pdp-price-details">
-                  <span className="pdp-mrp">₹{product.original_price}</span>
-                  <span className="pdp-discount">
-                    ({Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF)
-                  </span>
-                </div>
+                <span className="pdp-mrp">₹{product.original_price}</span>
               )}
               <span className="pdp-tax-inclusive">(Inclusive of all taxes)</span>
             </div>
 
-            <p className="pdp-short-desc">{product.short_description}</p>
+            <div className="pdp-offers-box">
+              <div className="pdp-offer-item"><strong>Offer:</strong> Monsoon Refresh Sale: Buy 1 Get 1 FREE Automatically Applied!</div>
+            </div>
+
+            <div className="pdp-tags">
+              {details.tags.map((tag, idx) => (
+                <span key={idx} className="pdp-tag">{tag}</span>
+              ))}
+            </div>
 
             <div className="pdp-actions">
-              <button className="btn-outline pdp-cart-btn" onClick={() => onAddToCart && onAddToCart(product)}>
-                <ShoppingBag size={20} /> Add to Cart
+              <button className="btn-add-cart" onClick={() => onAddToCart && onAddToCart(product)}>
+                Add to Cart
               </button>
-              <button className="btn-primary pdp-order-btn" onClick={() => onOrder(product)}>
-                <ShoppingBag size={20} /> Buy Now
+              <button className="btn-buy-now" onClick={() => onOrder(product)}>
+                Buy Now
               </button>
             </div>
 
-            <div className="pdp-trust-badges">
-              <div className="pdp-trust-badge"><CheckCircle size={20} className="text-gold"/> 100% Authentic</div>
-              <div className="pdp-trust-badge"><Truck size={20} className="text-gold"/> 2-5 Days Delivery</div>
-              <div className="pdp-trust-badge"><ShieldCheck size={20} className="text-gold"/> Secure Payment</div>
-            </div>
+            <div className="pdp-accordions">
+              <Accordion title="What makes it special" defaultOpen={true}>
+                <p>{details.whatMakesItSpecial.description}</p>
+                <ul style={{ paddingLeft: '20px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {details.whatMakesItSpecial.bullets.map((bullet, idx) => (
+                    <li key={idx}>{bullet}</li>
+                  ))}
+                </ul>
+              </Accordion>
 
-            {/* Granular Details requested by user */}
-            <div className="pdp-specs">
-              <h3 className="pdp-section-title">Product Specifications</h3>
-              <table className="pdp-specs-table">
-                <tbody>
-                  <tr>
-                    <th>Product Form</th>
-                    <td>{product.product_form || 'Capsules'}</td>
-                  </tr>
-                  <tr>
-                    <th>Quantity</th>
-                    <td>{product.quantity || '30'} {product.product_form || 'Capsules'}</td>
-                  </tr>
-                  <tr>
-                    <th>Product Type</th>
-                    <td>{product.product_type || 'N/A'}</td>
-                  </tr>
-                  <tr>
-                    <th>Pack Of</th>
-                    <td>{product.pack_of || '1'}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="pdp-details-sections">
-              <div className="pdp-detail-section">
-                <h3 className="pdp-section-title">Composition / Ingredients</h3>
-                <p>{product.composition || 'N/A'}</p>
-              </div>
-
-              <div className="pdp-detail-section">
-                <h3 className="pdp-section-title">Nutrient Content</h3>
-                <p style={{ whiteSpace: 'pre-wrap' }}>{product.nutrient_content || 'N/A'}</p>
-              </div>
-
-              <div className="pdp-detail-section">
-                <h3 className="pdp-section-title">Usage Instructions</h3>
-                <p>{product.usage_instructions || 'N/A'}</p>
-              </div>
-            </div>
-            
-            {/* Customer Reviews Section */}
-            <div className="pdp-reviews-section">
-              <h3 className="pdp-section-title">Customer Reviews</h3>
-              
-              <div className="pdp-reviews-summary">
-                <div className="pdp-reviews-overall">
-                  <span className="pdp-rating-big">{reviewData.rating}</span>
-                  <div className="pdp-rating-stars">
-                    <Star size={18} fill="currentColor" className="text-gold" />
-                    <Star size={18} fill="currentColor" className="text-gold" />
-                    <Star size={18} fill="currentColor" className="text-gold" />
-                    <Star size={18} fill="currentColor" className="text-gold" />
-                    <Star size={18} fill="currentColor" className="text-gold" />
-                  </div>
-                  <span className="pdp-rating-count">Based on {reviewData.totalCount} reviews</span>
+              <Accordion title="How to use">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  {details.howToUse.steps.map((step, idx) => (
+                    <div key={idx}><strong>{step.title}:</strong> {step.desc}</div>
+                  ))}
+                  <div><em>{details.howToUse.note}</em></div>
                 </div>
-              </div>
+              </Accordion>
 
-              <div className="pdp-reviews-list">
-                {reviewData.reviewsList.map(review => (
-                  <div key={review.id} className="pdp-review-card">
-                    <div className="pdp-review-header">
-                      <div className="pdp-reviewer-info">
-                        <div className="pdp-reviewer-avatar">
-                          {review.name.charAt(0)}
-                        </div>
-                        <div>
-                          <h4 className="pdp-reviewer-name">{review.name}</h4>
-                          <span className="pdp-verified-badge">✔ Verified Buyer</span>
-                        </div>
+              <Accordion title="Science & Ingredients">
+                <p style={{ marginBottom: '10px' }}><strong>Key Ingredients:</strong></p>
+                <p>{details.scienceAndIngredients.keyIngredients}</p>
+                <p style={{ marginTop: '10px' }}>{details.scienceAndIngredients.description}</p>
+              </Accordion>
+
+              <Accordion title="Product Specifications">
+                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '10px' }}>
+                  <strong style={{ color: '#111' }}>Product Form:</strong> <span>{details.specs.form}</span>
+                  <strong style={{ color: '#111' }}>Quantity:</strong> <span>{details.specs.quantity}</span>
+                  <strong style={{ color: '#111' }}>Pack Of:</strong> <span>{details.specs.packOf}</span>
+                  <strong style={{ color: '#111' }}>Shelf Life:</strong> <span>{details.specs.shelfLife}</span>
+                </div>
+              </Accordion>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM FULL WIDTH SECTIONS */}
+        <div className="pdp-bottom-sections" id="reviews">
+          <h2 className="pdp-section-header">Customer Reviews</h2>
+
+          <div className="pdp-ai-summary">
+            <h3>✨ AI Generated Review Summary</h3>
+            <p>{details.aiSummary.text}</p>
+            <div className="pdp-ai-topics">
+              {details.aiSummary.topics.map((topic, idx) => (
+                <span key={idx} className="pdp-ai-topic">{topic}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="pdp-reviews-list">
+            {reviewData.reviewsList.map((review, idx) => (
+              <div key={idx} className="pdp-review-item">
+                <div className="pdp-review-header">
+                  <div>
+                    <div className="pdp-reviewer-name">{review.name}</div>
+                    <div className="pdp-verified">✔ Verified Buyer</div>
+                  </div>
+                  <div className="pdp-review-date">{review.date}</div>
+                </div>
+                <div className="pdp-stars" style={{ marginBottom: '10px' }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} size={14} fill={i < review.rating ? "#fbbf24" : "none"} stroke={i < review.rating ? "none" : "#cccccc"} />
+                  ))}
+                </div>
+                <div className="pdp-review-text">"{review.comment}"</div>
+              </div>
+            ))}
+          </div>
+
+          <h2 className="pdp-section-header" style={{ marginTop: '40px' }}>Q&A</h2>
+          <div className="pdp-qa-list">
+            {details.faq.map((item, idx) => (
+              <div key={idx} className="pdp-qa-item">
+                <div className="pdp-qa-q">Q: {item.q}</div>
+                <div className="pdp-qa-a">A: {item.a}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* SUGGESTED PRODUCTS */}
+          {otherProducts.length > 0 && (
+            <div className="pdp-suggested-products" style={{ marginTop: '60px', borderTop: '1px solid #e5e5e5', paddingTop: '60px' }}>
+              <h2 className="pdp-section-header">You May Also Like</h2>
+              <div className="products-grid" style={{ marginBottom: '0' }}>
+                {otherProducts.map((op, idx) => (
+                  <div key={op.id} className="product-item" onClick={() => { window.scrollTo(0, 0); onProductClick && onProductClick(op); }} style={{ cursor: 'pointer' }}>
+                    <div className="product-item-image-wrap">
+                      {op.image_urls && op.image_urls.length > 0 ? (
+                        <img src={op.image_urls[0]} alt={op.name} />
+                      ) : (
+                        <div style={{ padding: '40px', color: '#888' }}>No Image</div>
+                      )}
+                    </div>
+                    <div className="product-item-details">
+                      <h2 className="product-item-title">{op.name}</h2>
+                      <div className="product-item-price">
+                        <span>₹{op.price}</span>
                       </div>
-                      <span className="pdp-review-date">{review.date}</span>
                     </div>
-                    <div className="pdp-review-stars">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} size={14} fill={i < review.rating ? "currentColor" : "none"} className={i < review.rating ? "text-gold" : "text-gray"} />
-                      ))}
-                    </div>
-                    <p className="pdp-review-text">{review.comment}</p>
                   </div>
                 ))}
               </div>
             </div>
-
-          </div>
+          )}
         </div>
       </div>
     </div>

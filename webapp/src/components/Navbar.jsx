@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Menu, X, User } from 'lucide-react';
+import { ShoppingCart, Menu, X, User, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import './Navbar.css';
+import SearchPopup from './SearchPopup';
 
-const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenProducts, onOpenQuality, onOpenSupport, cartCount = 0, onOpenCart }) => {
+const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenProducts, onOpenQuality, onOpenSupport, cartCount = 0, onOpenCart, onProductClick }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,7 +18,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
   }, []);
 
   return (
-    <motion.nav 
+    <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
@@ -26,7 +28,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
         <div className="navbar-logo" onClick={onGoHome} style={{ cursor: 'pointer' }}>
           <img src="./assets/logo.png" alt="Pure Nutrix Logo" className="logo-img" />
         </div>
-        
+
         <div className="navbar-links">
           <a href="/" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); }}>Home</a>
           <a href="#products" className="nav-link" onClick={(e) => { e.preventDefault(); onOpenProducts(); }}>Products</a>
@@ -55,23 +57,31 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
             )}
           </div>
 
+          <button
+            className="btn-outline search-btn"
+            onClick={() => setIsSearchOpen(true)}
+            style={{ padding: '10px' }}
+          >
+            <Search size={20} />
+          </button>
+
           {/* Mobile Account Icon */}
-          <button 
-            className="btn-outline mobile-account-icon hide-on-desktop" 
+          <button
+            className="btn-outline mobile-account-icon hide-on-desktop"
             onClick={user ? onOpenAccount : onOpenAuth}
           >
             <User size={20} />
           </button>
 
-          <button 
+          <button
             className={`btn-outline cart-btn ${cartCount === 0 ? 'hide-on-mobile' : 'mobile-small-cart'}`}
             onClick={onOpenCart}
           >
             <ShoppingCart size={20} />
             <span className="cart-count">{cartCount}</span>
           </button>
-          
-          <button 
+
+          <button
             className="mobile-menu-btn"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
@@ -82,7 +92,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           className="mobile-menu glass"
@@ -92,7 +102,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
           <a href="#quality" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenQuality(); }}>Quality</a>
           <a href="#about" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); setTimeout(() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Our Science</a>
           <a href="#contact" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenSupport(); }}>Contact</a>
-          
+
           <div className="mobile-menu-auth-actions">
             {user ? (
               <>
@@ -112,6 +122,15 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
           </div>
         </motion.div>
       )}
+
+      <SearchPopup
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onProductClick={(product) => {
+          setIsSearchOpen(false);
+          onProductClick && onProductClick(product);
+        }}
+      />
     </motion.nav>
   );
 };

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { getProductReviews } from '../utils/mockReviews';
-import RainEffect from './RainEffect';
+
 import './ProductShowcase.css';
 
 const ProductIngredients = ({ ingredients }) => {
@@ -26,12 +26,12 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
   const imagesList = product.image_urls || product.images || [];
 
   const nextImage = (e) => {
-    if(e) e.stopPropagation();
+    if (e) e.stopPropagation();
     setCurrentImgIdx((prev) => (prev + 1) % imagesList.length);
   };
 
   const prevImage = (e) => {
-    if(e) e.stopPropagation();
+    if (e) e.stopPropagation();
     setCurrentImgIdx((prev) => (prev === 0 ? imagesList.length - 1 : prev - 1));
   };
 
@@ -41,7 +41,7 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "0px" }}
@@ -58,10 +58,10 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
         {/* Image with simple fade */}
         <div className="image-wrapper" style={{ touchAction: 'none' }}>
           <AnimatePresence mode="wait">
-            <motion.img 
+            <motion.img
               key={currentImgIdx}
-              src={imagesList[currentImgIdx]} 
-              alt={`${product.name} - Image ${currentImgIdx + 1}`} 
+              src={imagesList[currentImgIdx]}
+              alt={`${product.name} - Image ${currentImgIdx + 1}`}
               className="product-image"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -90,48 +90,48 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
         {/* Carousel Dots */}
         <div className="carousel-dots">
           {imagesList.map((_, idx) => (
-            <span 
-              key={idx} 
+            <span
+              key={idx}
               className={`carousel-dot ${idx === currentImgIdx ? 'active' : ''}`}
               onClick={(e) => { e.stopPropagation(); setCurrentImgIdx(idx); }}
             />
           ))}
         </div>
       </div>
-      
-        <div className="product-details">
-          <h2 className="product-name-minimal">{product.name}</h2>
-          
-          <p className="product-desc-minimal">
-            {product.description || 'Premium formulation for maximum efficacy.'}
-          </p>
-          
-          <div className="product-rating-minimal">
-            <Star size={12} className="star-icon" fill="#111" color="#111" />
-            <Star size={12} className="star-icon" fill="#111" color="#111" />
-            <Star size={12} className="star-icon" fill="#111" color="#111" />
-            <Star size={12} className="star-icon" fill="#111" color="#111" />
-            <Star size={12} className="star-icon" color="#111" />
-          </div>
-          
-          <div className="product-meta-minimal">
-            <span className="product-price-minimal">
-              {typeof product.price === 'number' ? '₹ ' + product.price : product.price}
-            </span>
-            {product.original_price && product.original_price > product.price && (
-              <span className="product-original-price-minimal">₹ {product.original_price}</span>
-            )}
-          </div>
-          
-          <div className="product-actions">
-            <button 
-              className="add-to-cart-btn-minimal" 
-              onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); }}
-            >
-              Add to Cart
-            </button>
-          </div>
+
+      <div className="product-details">
+        <h2 className="product-name-minimal">{product.name}</h2>
+
+        <p className="product-desc-minimal">
+          {product.description || 'Premium formulation for maximum efficacy.'}
+        </p>
+
+        <div className="product-rating-minimal">
+          <Star size={12} className="star-icon" fill="#111" color="#111" />
+          <Star size={12} className="star-icon" fill="#111" color="#111" />
+          <Star size={12} className="star-icon" fill="#111" color="#111" />
+          <Star size={12} className="star-icon" fill="#111" color="#111" />
+          <Star size={12} className="star-icon" color="#111" />
         </div>
+
+        <div className="product-meta-minimal">
+          <span className="product-price-minimal">
+            {typeof product.price === 'number' ? '₹ ' + product.price : product.price}
+          </span>
+          {product.original_price && product.original_price > product.price && (
+            <span className="product-original-price-minimal">₹ {product.original_price}</span>
+          )}
+        </div>
+
+        <div className="product-actions">
+          <button
+            className="add-to-cart-btn-minimal"
+            onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); }}
+          >
+            Add to Cart
+          </button>
+        </div>
+      </div>
     </motion.div>
   );
 };
@@ -148,7 +148,7 @@ const ProductShowcase = ({ onOrder, onProductClick, onAddToCart }) => {
           .select('*')
           .order('created_at', { ascending: true })
           .limit(3);
-        
+
         if (error) throw error;
         setProducts(data || []);
       } catch (err) {
@@ -162,9 +162,9 @@ const ProductShowcase = ({ onOrder, onProductClick, onAddToCart }) => {
 
   return (
     <section className="product-showcase section-padding" id="products">
-      <RainEffect />
+
       <div className="container">
-        <motion.div 
+        <motion.div
           className="section-header"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
