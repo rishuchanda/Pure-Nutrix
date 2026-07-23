@@ -35,8 +35,11 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  width: 100vw;
-  max-width: 100%;
+  width: 100%;
+  
+  /* Hide scrollbar for Firefox, IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 #root {
@@ -166,19 +169,9 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: auto; /* Allow mouse tracking */
 }
 
-/* Premium Scrollbar Customization */
+/* Premium Scrollbar Customization - Hidden for Immersive Experience */
 ::-webkit-scrollbar {
-  width: 6px; /* Very thin and elegant */
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #d1d5db; /* Soft minimalist grey */
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-gold); /* Subtle gold on hover */
+  display: none; /* Hide scrollbar for Chrome, Safari and Opera */
 }
 
 /* Scroll Progress Bar */

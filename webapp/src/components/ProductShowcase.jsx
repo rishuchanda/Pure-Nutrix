@@ -157,7 +157,7 @@ const ProductShowcase = ({ onOrder, onProductClick, onAddToCart }) => {
           .from('products')
           .select('*')
           .order('created_at', { ascending: true })
-          .limit(2);
+          .limit(3);
         
         if (error) throw error;
         setProducts(data || []);
@@ -182,7 +182,7 @@ const ProductShowcase = ({ onOrder, onProductClick, onAddToCart }) => {
           transition={{ duration: 0.8 }}
         >
           <h2 className="section-title">Our Premium <span className="text-gradient">Products</span></h2>
-          <p className="section-subtitle">Scientifically backed ingredients for visible, lasting results. Available in a compact grid view.</p>
+          <p className="section-subtitle">Scientifically backed ingredients for visible, lasting results.</p>
         </motion.div>
 
         <div className="products-grid">

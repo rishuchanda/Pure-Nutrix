@@ -6,9 +6,19 @@ import './OrderPage.css';
 
 const OrderPage = ({ product, cartItems, onBack }) => {
   const [step, setStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState('razorpay');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
   const [formData, setFormData] = useState({
     name: '',
@@ -71,50 +81,136 @@ const OrderPage = ({ product, cartItems, onBack }) => {
       // Use the first image from the first product as thumbnail
       const firstProductImage = orderItems.length > 0 ? (orderItems[0].product.image_urls || orderItems[0].product.images || [])[0] || '' : '';
       
-      // Insert into Supabase
-      const { error } = await supabase
-        .from('orders')
-        .insert([
-          {
-            user_id: user.id,
-            customer_name: formData.name,
-            customer_mobile: formData.mobile,
-            shipping_address: addressString,
-            city: formData.city,
-            state: formData.state,
-            pincode: formData.pincode,
-            product_name: finalProductName,
-            price: finalTotal,
-            qty: totalQuantity,
-            image: firstProductImage,
-            status: 'Processing'
-          }
-        ]);
+      const saveOrderToDB = async (user, addressString, finalProductName, firstProductImage) => {
+        const { error } = await supabase
+          .from('orders')
+          .insert([
+            {
+              user_id: user.id,
+              customer_name: formData.name,
+              customer_mobile: formData.mobile,
+              shipping_address: addressString,
+              city: formData.city,
+              state: formData.state,
+              pincode: formData.pincode,
+              product_name: finalProductName,
+              price: finalTotal,
+              qty: totalQuantity,
+              image: firstProductImage,
+              status: 'Processing'
+            }
+          ]);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Try sending WhatsApp order confirmation asynchronously
-      try {
-        await supabase.functions.invoke('send-whatsapp', {
-          body: {
-            phone_number: '91' + formData.mobile.replace(/[^0-9]/g, ''), // Assuming India country code +91
-            message: `Hi ${formData.name},\n\nYour order for ${finalProductName} has been confirmed! Total: ₹${finalTotal}.\n\nThank you for choosing Pure-Nutrix.`,
-            type: 'text'
-          }
+        // Try sending WhatsApp order confirmation asynchronously
+        try {
+          await supabase.functions.invoke('send-whatsapp', {
+            body: {
+              phone_number: '91' + formData.mobile.replace(/[^0-9]/g, ''), // Assuming India country code +91
+              message: `Hi ${formData.name},\n\nYour order for ${finalProductName} has been confirmed! Total: ₹${finalTotal}.\n\nThank you for choosing Pure-Nutrix.`,
+              type: 'text'
+            }
+          });
+        } catch (waError) {
+          console.error('Failed to send WhatsApp message (Edge Function might not be deployed yet):', waError);
+        }
+
+        setTimeout(() => {
+          setIsProcessing(false);
+          setIsSuccess(true);
+        }, 500);
+      };
+
+      if (paymentMethod === 'razorpay') {
+        const res = await loadRazorpayScript();
+        if (!res) {
+          throw new Error('Razorpay SDK failed to load. Are you online?');
+        }
+
+        // 1. Create order using standard fetch to capture exact errors
+        const orderResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-create-order`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({ amount: Math.round(finalTotal * 100), receipt: `rcpt_${Date.now()}` })
         });
-      } catch (waError) {
-        console.error('Failed to send WhatsApp message (Edge Function might not be deployed yet):', waError);
-      }
 
-      // Artificial delay for premium checkout feel
-      setTimeout(() => {
-        setIsProcessing(false);
-        setIsSuccess(true);
-      }, 1500);
+        const orderText = await orderResponse.text();
+        let orderData;
+        try { orderData = JSON.parse(orderText); } catch(e) {}
+
+        if (!orderResponse.ok || !orderData || !orderData.id) {
+          const errMsg = (orderData && orderData.error) 
+            ? (typeof orderData.error === 'object' ? JSON.stringify(orderData.error) : orderData.error) 
+            : `Server returned ${orderResponse.status}: ${orderText.substring(0, 50)}`;
+          throw new Error(errMsg);
+        }
+
+        // 2. Open modal
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TGxE26GAunhV2M',
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: "Pure Nutrix",
+          description: "Premium Product Purchase",
+          order_id: orderData.id,
+          handler: async function (response){
+            // 3. Verify Payment using standard fetch
+            const verifyResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-verify-payment`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+
+            const verifyData = await verifyResponse.json().catch(() => ({}));
+
+            if (!verifyResponse.ok || !verifyData || !verifyData.success) {
+               alert(`Payment verification failed. Please contact support.`);
+               setIsProcessing(false);
+               return;
+            }
+            
+            // Payment verified! Proceed to save order.
+            await saveOrderToDB(user, addressString, finalProductName, firstProductImage);
+          },
+          prefill: {
+            name: formData.name,
+            contact: formData.mobile
+          },
+          theme: {
+            color: "#D4AF37"
+          },
+          modal: {
+            ondismiss: function() {
+              setIsProcessing(false);
+            }
+          }
+        };
+
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.on('payment.failed', function (response){
+          alert("Payment failed: " + response.error.description);
+          setIsProcessing(false);
+        });
+        paymentObject.open();
+
+      } else {
+        await saveOrderToDB(user, addressString, finalProductName, firstProductImage);
+      }
       
     } catch (error) {
-      console.error('Error placing order:', error.message);
-      alert('Failed to place order: ' + error.message);
+      console.error('Error placing order:', error);
+      alert('Failed to place order: ' + (error.message || JSON.stringify(error)));
       setIsProcessing(false);
     }
   };
@@ -144,28 +240,9 @@ const OrderPage = ({ product, cartItems, onBack }) => {
             <div className="checkout-layout">
               {/* Left Side: Form */}
               <div className="checkout-form-section glass-card">
-                <div className="steps-indicator">
-                  <div className={`step ${step >= 1 ? 'active' : ''}`}>
-                    <div className="step-circle">1</div>
-                    <span>Shipping</span>
-                  </div>
-                  <div className="step-line" />
-                  <div className={`step ${step >= 2 ? 'active' : ''}`}>
-                    <div className="step-circle">2</div>
-                    <span>Payment</span>
-                  </div>
-                </div>
-
-                <form onSubmit={step === 1 ? (e) => { e.preventDefault(); setStep(2); } : handlePayment}>
-                  
-                  {step === 1 && (
-                    <motion.div 
-                      className="form-step"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <h2 className="step-title">Shipping Address</h2>
+                <form onSubmit={handlePayment}>
+                  <div className="form-step">
+                    <h2 className="step-title">Shipping Details</h2>
                       <div className="input-group">
                         <label>Full Name</label>
                         <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="Raman Sharma" />
@@ -202,68 +279,17 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                           <input type="text" name="city" value={formData.city} onChange={handleInputChange} required placeholder="Mumbai" />
                         </div>
                       </div>
-                      
-                      <button type="submit" className="btn-primary continue-btn">
-                        Continue to Payment
+                      {authError && <div className="error-message" style={{ color: 'red', margin: '15px 0' }}>{authError}</div>}
+
+                      <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing} style={{ marginTop: '20px' }}>
+                        {isProcessing ? 'Processing Securely...' : `Pay Online ₹${finalTotal}`}
                       </button>
-                    </motion.div>
-                  )}
 
-                  {step === 2 && (
-                    <motion.div 
-                      className="form-step"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <div className="step-header-with-back">
-                        <button type="button" className="mini-back-btn" onClick={() => setStep(1)}>
-                          <ArrowLeft size={16} />
-                        </button>
-                        <h2 className="step-title">Payment Method</h2>
-                      </div>
-                      
-                      {authError && <div className="error-message" style={{ color: 'red', marginBottom: '15px' }}>{authError}</div>}
-
-                      <div className="payment-methods">
-                        <label className={`payment-option ${paymentMethod === 'card' ? 'selected' : ''}`}>
-                          <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} />
-                          <CreditCard size={24} className="pay-icon" />
-                          <div className="pay-details">
-                            <span className="pay-title">Credit / Debit Card</span>
-                            <span className="pay-subtitle">Visa, MasterCard, Amex</span>
-                          </div>
-                        </label>
-                        
-                        <label className={`payment-option ${paymentMethod === 'upi' ? 'selected' : ''}`}>
-                          <input type="radio" name="payment" value="upi" checked={paymentMethod === 'upi'} onChange={() => setPaymentMethod('upi')} />
-                          <Wallet size={24} className="pay-icon" />
-                          <div className="pay-details">
-                            <span className="pay-title">UPI</span>
-                            <span className="pay-subtitle">Google Pay, PhonePe, Paytm</span>
-                          </div>
-                        </label>
-
-                        <label className={`payment-option ${paymentMethod === 'cod' ? 'selected' : ''}`}>
-                          <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} />
-                          <Truck size={24} className="pay-icon" />
-                          <div className="pay-details">
-                            <span className="pay-title">Cash on Delivery</span>
-                            <span className="pay-subtitle">Pay when you receive it</span>
-                          </div>
-                        </label>
-                      </div>
-
-                      <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing}>
-                        {isProcessing ? 'Processing Securely...' : `Pay ₹${finalTotal}`}
-                      </button>
-                      
-                      <div className="secure-badge">
+                      <div className="secure-badge" style={{ marginTop: '15px', justifyContent: 'center' }}>
                         <ShieldCheck size={16} />
                         <span>256-bit SSL Secure Checkout</span>
                       </div>
-                    </motion.div>
-                  )}
+                    </div>
 
                 </form>
               </div>

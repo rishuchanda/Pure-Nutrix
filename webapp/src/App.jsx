@@ -238,7 +238,7 @@ function App() {
             transition={{ duration: 0.5 }}
           >
             <main>
-              <Hero3D />
+              <Hero3D onOrder={handleOrder} />
               <MonsoonSalePopup onShopClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })} />
               <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} onAddToCart={handleAddToCart} />
               <WhyChooseUs />
