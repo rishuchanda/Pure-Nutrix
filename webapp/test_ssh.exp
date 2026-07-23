@@ -1,0 +1,6 @@
+#!/usr/bin/expect -f
+set timeout 10
+spawn ssh -o StrictHostKeyChecking=no rishu@purenutrix.in "pwd; ls -la"
+expect "password:"
+send "R15huch@nd@\r"
+expect eof
