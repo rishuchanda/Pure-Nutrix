@@ -276,8 +276,8 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                       </div>
                     </div>
                     <div className="qty-amount-row" style={{marginTop: 12}}>
-                      <span className="label">Quantity: <span className="value">1</span></span>
-                      <span className="label">Total: <span className="value bold">₹{order.total_amount}</span></span>
+                      <span className="label">Quantity: <span className="value">{order.qty || 1}</span></span>
+                      <span className="label">Total: <span className="value bold">₹{order.price || order.total_amount || '0'}</span></span>
                     </div>
                   </div>
                   <div className="order-card-bottom">
@@ -336,11 +336,11 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                 <p>Placed on {formattedDate}</p>
               </div>
               <button 
-                className="btn-outline-premium print-hide" 
-                style={{ width: 'auto', padding: '6px 12px', fontSize: '13px', borderRadius: '8px' }}
+                className="print-hide" 
+                style={{ background: '#111', color: '#fff', border: 'none', padding: '8px 16px', fontSize: '13px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                 onClick={() => window.print()}
               >
-                Invoice
+                Download Invoice
               </button>
             </div>
             <div className="odh-item" style={{display: 'flex', gap: 16, marginTop: 16}}>
@@ -351,7 +351,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
               )}
               <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                 <p className="odh-name">{activeOrder.product_name}</p>
-                <p className="odh-price">₹{activeOrder.total_amount}</p>
+                <p className="odh-price">₹{activeOrder.price || activeOrder.total_amount || '0'}</p>
               </div>
             </div>
           </div>
