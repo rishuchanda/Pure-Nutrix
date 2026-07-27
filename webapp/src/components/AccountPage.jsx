@@ -52,6 +52,84 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     navigateTo('order-details');
   };
 
+  const handleDownloadInvoice = (orderItem, e) => {
+    if (e) e.stopPropagation();
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(17, 17, 17);
+    doc.text("TAX INVOICE", 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Pure Nutrix - Science. Nature. Health.", 14, 30);
+    doc.text("GSTIN: 07AAACA1234A1Z5", 14, 35);
+    
+    // Order Details
+    doc.setFontSize(12);
+    doc.setTextColor(17, 17, 17);
+    doc.text("Order Information", 14, 50);
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Order ID: ${orderItem.id.split('-')[0].toUpperCase()}`, 14, 58);
+    
+    const dateObj = new Date(orderItem.created_at);
+    const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
+    doc.text(`Order Date: ${formattedDate}`, 14, 64);
+    
+    // Billing / Shipping
+    doc.setFontSize(12);
+    doc.setTextColor(17, 17, 17);
+    doc.text("Bill To / Ship To:", 120, 50);
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text(orderItem.customer_name || 'Customer', 120, 58);
+    
+    const address = orderItem.shipping_address 
+      ? `${orderItem.shipping_address}, ${orderItem.city || ''}, ${orderItem.state || ''} - ${orderItem.pincode || ''}` 
+      : 'No Address Provided';
+    
+    const splitTitle = doc.splitTextToSize(address, 70);
+    doc.text(splitTitle, 120, 64);
+    
+    // Table Data
+    const price = orderItem.price || orderItem.total_amount || 0;
+    const qty = orderItem.qty || 1;
+    const basePrice = (price / 1.18).toFixed(2); // Assuming 18% GST inclusive
+    const gstAmount = (price - basePrice).toFixed(2);
+    
+    const tableData = [
+      [
+        orderItem.product_name,
+        qty,
+        `Rs ${basePrice}`,
+        `18% (Rs ${gstAmount})`,
+        `Rs ${price}`
+      ]
+    ];
+    
+    doc.autoTable({
+      startY: 85,
+      head: [['Product Description', 'Qty', 'Base Price', 'GST (18%)', 'Total Amount']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [17, 17, 17] }
+    });
+    
+    const finalY = doc.lastAutoTable.finalY || 120;
+    doc.setFontSize(14);
+    doc.setTextColor(17, 17, 17);
+    doc.text(`Grand Total (Inclusive of Taxes): Rs ${price}`, 14, finalY + 15);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Thank you for choosing Pure Nutrix!", 14, finalY + 30);
+    doc.text("This is a computer generated invoice and does not require a physical signature.", 14, finalY + 36);
+    
+    doc.save(`PureNutrix_Invoice_${orderItem.id.split('-')[0].toUpperCase()}.pdf`);
+  };
+
   // Routine Persistence
   useEffect(() => {
     const storedRoutine = localStorage.getItem('purenutrix_routine');
@@ -316,84 +394,6 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     const isShipped = status === 'shipped' || status === 'out_for_delivery' || status === 'delivered';
     const isOutForDelivery = status === 'out_for_delivery' || status === 'delivered';
     const isDelivered = status === 'delivered';
-
-    const handleDownloadInvoice = (orderItem, e) => {
-      if (e) e.stopPropagation();
-      const doc = new jsPDF();
-      
-      // Header
-      doc.setFontSize(22);
-      doc.setTextColor(17, 17, 17);
-      doc.text("TAX INVOICE", 14, 22);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text("Pure Nutrix - Science. Nature. Health.", 14, 30);
-      doc.text("GSTIN: 07AAACA1234A1Z5", 14, 35);
-      
-      // Order Details
-      doc.setFontSize(12);
-      doc.setTextColor(17, 17, 17);
-      doc.text("Order Information", 14, 50);
-      doc.setFontSize(10);
-      doc.setTextColor(80, 80, 80);
-      doc.text(`Order ID: ${orderItem.id.split('-')[0].toUpperCase()}`, 14, 58);
-      
-      const dateObj = new Date(orderItem.created_at);
-      const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
-      doc.text(`Order Date: ${formattedDate}`, 14, 64);
-      
-      // Billing / Shipping
-      doc.setFontSize(12);
-      doc.setTextColor(17, 17, 17);
-      doc.text("Bill To / Ship To:", 120, 50);
-      doc.setFontSize(10);
-      doc.setTextColor(80, 80, 80);
-      doc.text(orderItem.customer_name || 'Customer', 120, 58);
-      
-      const address = orderItem.shipping_address 
-        ? `${orderItem.shipping_address}, ${orderItem.city || ''}, ${orderItem.state || ''} - ${orderItem.pincode || ''}` 
-        : 'No Address Provided';
-      
-      const splitTitle = doc.splitTextToSize(address, 70);
-      doc.text(splitTitle, 120, 64);
-      
-      // Table Data
-      const price = orderItem.price || orderItem.total_amount || 0;
-      const qty = orderItem.qty || 1;
-      const basePrice = (price / 1.18).toFixed(2); // Assuming 18% GST inclusive
-      const gstAmount = (price - basePrice).toFixed(2);
-      
-      const tableData = [
-        [
-          orderItem.product_name,
-          qty,
-          `Rs ${basePrice}`,
-          `18% (Rs ${gstAmount})`,
-          `Rs ${price}`
-        ]
-      ];
-      
-      doc.autoTable({
-        startY: 85,
-        head: [['Product Description', 'Qty', 'Base Price', 'GST (18%)', 'Total Amount']],
-        body: tableData,
-        theme: 'grid',
-        headStyles: { fillColor: [17, 17, 17] }
-      });
-      
-      const finalY = doc.lastAutoTable.finalY || 120;
-      doc.setFontSize(14);
-      doc.setTextColor(17, 17, 17);
-      doc.text(`Grand Total (Inclusive of Taxes): Rs ${price}`, 14, finalY + 15);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text("Thank you for choosing Pure Nutrix!", 14, finalY + 30);
-      doc.text("This is a computer generated invoice and does not require a physical signature.", 14, finalY + 36);
-      
-      doc.save(`PureNutrix_Invoice_${orderItem.id.split('-')[0].toUpperCase()}.pdf`);
-    };
 
     const orderAddress = activeOrder.shipping_address 
       ? `${activeOrder.shipping_address}, ${activeOrder.city || ''}, ${activeOrder.state || ''} - ${activeOrder.pincode || ''}`
