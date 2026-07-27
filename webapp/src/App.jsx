@@ -35,16 +35,48 @@ function App() {
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
-    const handlePopState = (event) => {
+    const handlePopState = async (event) => {
       const state = event.state;
       if (state && state.view) {
         setCurrentView(state.view);
         if (state.product) setSelectedProduct(state.product);
       } else {
-        const hash = window.location.hash.replace('#', '');
+        const hashPath = window.location.hash.replace('#', '');
+        const [view, productSlug] = hashPath.split('/');
+        
         const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
-        if (validViews.includes(hash)) {
-          setCurrentView(hash);
+        
+        if (validViews.includes(view)) {
+          if ((view === 'pdp' || view === 'order') && productSlug) {
+            // Fetch product by slug or id
+            try {
+              const { data, error } = await supabase
+                .from('products')
+                .select('*')
+                .eq('slug', productSlug)
+                .single();
+                
+              if (data) {
+                setSelectedProduct(data);
+                setCurrentView(view);
+              } else {
+                // fallback to ID search if slug fails (backward compatibility)
+                const { data: idData } = await supabase.from('products').select('*').eq('id', productSlug).single();
+                if (idData) {
+                  setSelectedProduct(idData);
+                  setCurrentView(view);
+                } else {
+                  setCurrentView('products');
+                  window.history.replaceState({ view: 'products' }, '', '#products');
+                }
+              }
+            } catch (err) {
+              setCurrentView('products');
+              window.history.replaceState({ view: 'products' }, '', '#products');
+            }
+          } else {
+            setCurrentView(view);
+          }
         } else {
           setCurrentView('home');
         }
@@ -55,25 +87,50 @@ function App() {
 
     // Initial load
     const isPathAdmin = window.location.pathname === '/admin';
-    const initialHash = window.location.hash.replace('#', '');
+    const initialHashPath = window.location.hash.replace('#', '');
+    const [initialView, initialSlug] = initialHashPath.split('/');
     const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
 
     if (isPathAdmin) {
       // Do nothing to the hash if we are on the admin page
-    } else if (validViews.includes(initialHash) && initialHash !== 'home') {
+    } else if (validViews.includes(initialView) && initialView !== 'home') {
       const state = window.history.state;
+      
       if (state && state.product) {
         setSelectedProduct(state.product);
-      }
-
-      if ((initialHash === 'pdp' || initialHash === 'order') && !(state && state.product)) {
+        setCurrentView(initialView);
+      } else if ((initialView === 'pdp' || initialView === 'order') && initialSlug) {
+        // We have a slug but no state, fetch it
+        supabase
+          .from('products')
+          .select('*')
+          .eq('slug', initialSlug)
+          .single()
+          .then(({ data, error }) => {
+             if (data) {
+               setSelectedProduct(data);
+               setCurrentView(initialView);
+             } else {
+               // Fallback to id
+               return supabase.from('products').select('*').eq('id', initialSlug).single();
+             }
+          })
+          .then(res => {
+             if (res && res.data) {
+               setSelectedProduct(res.data);
+               setCurrentView(initialView);
+             } else if (res && res.error) {
+               setCurrentView('products');
+               window.history.replaceState({ view: 'products' }, '', '#products');
+             }
+          });
+      } else if ((initialView === 'pdp' || initialView === 'order') && !initialSlug) {
         setCurrentView('products');
         window.history.replaceState({ view: 'products' }, '', '#products');
       } else {
-        setCurrentView(initialHash);
-        // Don't replace state if we already have it with product
+        setCurrentView(initialView);
         if (!state || !state.product) {
-          window.history.replaceState({ view: initialHash }, '', '#' + initialHash);
+          window.history.replaceState({ view: initialView }, '', '#' + initialView);
         }
       }
     } else {
@@ -119,7 +176,8 @@ function App() {
   const handleOrder = (product) => {
     setSelectedProduct(product);
     setCurrentView('order');
-    window.history.pushState({ view: 'order', product }, '', '#order');
+    const path = product.slug ? `#order/${product.slug}` : `#order/${product.id}`;
+    window.history.pushState({ view: 'order', product }, '', path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -150,7 +208,8 @@ function App() {
   const handleOpenProductDetails = (product) => {
     setSelectedProduct(product);
     setCurrentView('pdp');
-    window.history.pushState({ view: 'pdp', product }, '', '#pdp');
+    const path = product.slug ? `#pdp/${product.slug}` : `#pdp/${product.id}`;
+    window.history.pushState({ view: 'pdp', product }, '', path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
