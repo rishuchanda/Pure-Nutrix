@@ -645,7 +645,7 @@
     display: grid;
     grid-template-columns: 320px 1fr;
     max-width: 1200px;
-    margin: 40px auto;
+    margin: 120px auto 40px; /* Increased top margin to clear fixed navbar */
     gap: 40px;
     background: transparent;
     padding: 0 20px;
