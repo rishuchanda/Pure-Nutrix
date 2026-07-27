@@ -42,6 +42,8 @@ const CRMTab = ({ onBack }) => {
 
   // Campaign State
   const [bulkMessage, setBulkMessage] = useState('');
+  const [campaignSubject, setCampaignSubject] = useState('');
+  const [campaignChannel, setCampaignChannel] = useState('whatsapp'); // whatsapp | email | both
   const [isSendingBlast, setIsSendingBlast] = useState(false);
   const [blastResult, setBlastResult] = useState(null);
 
@@ -259,22 +261,60 @@ const CRMTab = ({ onBack }) => {
   // ─── Campaign Blast ───────────────────────────────────────────────────────
   const handleSendBlast = async () => {
     if (!bulkMessage.trim()) return;
-    if (!window.confirm(`Send this message to ${filteredContacts.length} contacts?`)) return;
+    if ((campaignChannel === 'email' || campaignChannel === 'both') && !campaignSubject.trim()) {
+      alert("Please enter an email subject.");
+      return;
+    }
+    if (!window.confirm(`Send this message to ${filteredContacts.length} contacts via ${campaignChannel.toUpperCase()}?`)) return;
     setIsSendingBlast(true);
     setBlastResult(null);
     let sent = 0, failed = 0;
+    
     for (const contact of filteredContacts) {
+      let contactSuccess = false;
       try {
-        const { data } = await supabase.functions.invoke('send-whatsapp', {
-          body: { phone_number: contact.phone_number, message: bulkMessage.replace('{{name}}', contact.name || 'Customer'), type: 'text' }
-        });
-        if (data?.success) { sent++; } else { failed++; }
+        const messageText = bulkMessage.replace('{{name}}', contact.name || 'Customer');
+        let waSuccess = true;
+        let emailSuccess = true;
+
+        if (campaignChannel === 'whatsapp' || campaignChannel === 'both') {
+          const { data } = await supabase.functions.invoke('send-whatsapp', {
+            body: { phone_number: contact.phone_number, message: messageText, type: 'text' }
+          });
+          waSuccess = !!data?.success;
+        }
+        
+        if (campaignChannel === 'email' || campaignChannel === 'both') {
+          if (contact.email) {
+            const htmlMessage = messageText.replace(/\n/g, '<br/>');
+            const { data } = await supabase.functions.invoke('send-email', {
+              body: { 
+                to: contact.email, 
+                subject: campaignSubject.replace('{{name}}', contact.name || 'Customer'),
+                html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">${htmlMessage}</div>`
+              }
+            });
+            emailSuccess = !!data?.success;
+          } else {
+             // If they don't have an email but channel is 'email' only, it's a fail.
+             if (campaignChannel === 'email') emailSuccess = false;
+          }
+        }
+
+        if ((campaignChannel === 'whatsapp' && waSuccess) || 
+            (campaignChannel === 'email' && emailSuccess) || 
+            (campaignChannel === 'both' && (waSuccess || emailSuccess))) {
+           contactSuccess = true;
+        }
+
+        if (contactSuccess) { sent++; } else { failed++; }
         await new Promise(r => setTimeout(r, 300)); // Rate limit
       } catch { failed++; }
     }
     setBlastResult({ sent, failed });
     setIsSendingBlast(false);
     setBulkMessage('');
+    setCampaignSubject('');
   };
 
   // ─── Auto-Reply CRUD ──────────────────────────────────────────────────────
@@ -677,7 +717,33 @@ const CRMTab = ({ onBack }) => {
               <div className="campaign-layout">
                 <div className="campaign-form glass-card">
                   <h3>Compose Message</h3>
+                  <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                      <input type="radio" name="campaignChannel" checked={campaignChannel === 'whatsapp'} onChange={() => setCampaignChannel('whatsapp')} />
+                      WhatsApp Only
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                      <input type="radio" name="campaignChannel" checked={campaignChannel === 'email'} onChange={() => setCampaignChannel('email')} />
+                      Email Only
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                      <input type="radio" name="campaignChannel" checked={campaignChannel === 'both'} onChange={() => setCampaignChannel('both')} />
+                      Both (WhatsApp + Email)
+                    </label>
+                  </div>
+                  
                   <p className="campaign-tip">Use <code>{'{{name}}'}</code> to personalize with customer name.</p>
+
+                  {(campaignChannel === 'email' || campaignChannel === 'both') && (
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Email Subject (e.g. Special Offer for {{name}}!)"
+                      value={campaignSubject}
+                      onChange={(e) => setCampaignSubject(e.target.value)}
+                      style={{ marginBottom: '10px' }}
+                    />
+                  )}
 
                   <textarea
                     className="admin-input campaign-textarea"

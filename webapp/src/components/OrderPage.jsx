@@ -90,6 +90,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
               user_id: user.id,
               customer_name: formData.name,
               customer_mobile: formData.mobile,
+              customer_email: user.email,
               shipping_address: addressString,
               city: formData.city,
               state: formData.state,
@@ -104,17 +105,43 @@ const OrderPage = ({ product, cartItems, onBack }) => {
 
         if (error) throw error;
 
-        // Try sending WhatsApp order confirmation asynchronously
+        // Try sending WhatsApp and Email order confirmations asynchronously
         try {
+          // WhatsApp Confirmation
           await supabase.functions.invoke('send-whatsapp', {
             body: {
-              phone_number: '91' + formData.mobile.replace(/[^0-9]/g, ''), // Assuming India country code +91
+              phone_number: '91' + formData.mobile.replace(/[^0-9]/g, ''),
               message: `Hi ${formData.name},\n\nYour order for ${finalProductName} has been confirmed! Total: ₹${finalTotal}.\n\nThank you for choosing Pure-Nutrix.`,
               type: 'text'
             }
           });
-        } catch (waError) {
-          console.error('Failed to send WhatsApp message (Edge Function might not be deployed yet):', waError);
+          
+          // Email Confirmation
+          if (user.email) {
+            await supabase.functions.invoke('send-email', {
+              body: {
+                to: user.email,
+                subject: `Order Confirmed: ${finalProductName}`,
+                html: `
+                  <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #D4AF37;">Pure Nutrix Order Confirmation</h2>
+                    <p>Hi ${formData.name},</p>
+                    <p>Thank you for your order! We have successfully received it and are preparing it for shipment.</p>
+                    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                      <strong>Order Details:</strong><br/>
+                      Items: ${finalProductName}<br/>
+                      Total Amount: ₹${finalTotal}<br/>
+                      Shipping Address: ${addressString}
+                    </div>
+                    <p>We'll notify you once your order is dispatched.</p>
+                    <p>Stay Healthy,<br/>The Pure Nutrix Team</p>
+                  </div>
+                `
+              }
+            });
+          }
+        } catch (commError) {
+          console.error('Failed to send confirmation messages:', commError);
         }
 
         setTimeout(() => {

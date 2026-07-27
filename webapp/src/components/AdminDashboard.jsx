@@ -186,10 +186,10 @@ const AdminDashboard = ({ user }) => {
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
 
       // Send WhatsApp Notification for Shipped or Delivered statuses
-      if (newStatus === 'shipped' || newStatus === 'delivered') {
+      if (newStatus.toLowerCase() === 'shipped' || newStatus.toLowerCase() === 'delivered') {
         const order = orders.find(o => o.id === orderId);
-        if (order && order.customer_mobile) {
-          try {
+        try {
+          if (order && order.customer_mobile) {
             await supabase.functions.invoke('send-whatsapp', {
               body: {
                 phone_number: '91' + order.customer_mobile.replace(/[^0-9]/g, ''),
@@ -197,12 +197,32 @@ const AdminDashboard = ({ user }) => {
                 type: 'text'
               }
             });
-          } catch (waError) {
-            console.error('Failed to send WhatsApp status update:', waError);
           }
+          
+          // Send Email Notification
+          if (order && order.customer_email) {
+            await supabase.functions.invoke('send-email', {
+              body: {
+                to: order.customer_email,
+                subject: `Order Update: ${newStatus.toUpperCase()}`,
+                html: `
+                  <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #D4AF37;">Pure Nutrix Order Update</h2>
+                    <p>Hi ${order.customer_name},</p>
+                    <p>Your order status has been updated to: <strong>${newStatus.toUpperCase()}</strong>.</p>
+                    <p>If you have any questions, please contact our support team.</p>
+                    <p>Stay Healthy,<br/>The Pure Nutrix Team</p>
+                  </div>
+                `
+              }
+            });
+          }
+        } catch (commError) {
+          console.error('Failed to send status update messages:', commError);
         }
       }
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       alert('Failed to update status');
     }
   };
