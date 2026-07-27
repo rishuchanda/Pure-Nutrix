@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { 
   ChevronLeft, Search, Package, CheckCircle, Layers, 
   Tag, Gift, Star, Heart, Headphones, User, MapPin, 
@@ -109,7 +109,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
       ]
     ];
     
-    doc.autoTable({
+    autoTable(doc, {
       startY: 85,
       head: [['Product Description', 'Qty', 'Base Price', 'GST (18%)', 'Total Amount']],
       body: tableData,
