@@ -484,6 +484,15 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
             </div>
           )}
 
+          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }} className="print-hide">
+            <button 
+              style={{ padding: '14px 32px', fontSize: '15px', borderRadius: '12px', background: '#111', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
+              onClick={(e) => handleDownloadInvoice(activeOrder, e)}
+            >
+              📄 View Full GST Invoice
+            </button>
+          </div>
+
           {allProducts.length > 0 && (
             <div className="order-address-box premium-shadow print-hide" style={{marginTop: 24, paddingBottom: 16}}>
               <h4>You might also like</h4>
@@ -500,15 +509,6 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
               </div>
             </div>
           )}
-
-          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }} className="print-hide">
-            <button 
-              style={{ padding: '14px 32px', fontSize: '15px', borderRadius: '12px', background: '#111', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
-              onClick={(e) => handleDownloadInvoice(activeOrder, e)}
-            >
-              📄 View Full GST Invoice
-            </button>
-          </div>
 
         </div>
       </motion.div>
