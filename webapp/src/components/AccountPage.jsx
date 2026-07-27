@@ -1,87 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowLeft, User, Package, MapPin, CreditCard, 
-  Settings, LogOut, CheckCircle2, Truck, Box, Calendar
+  ChevronLeft, Search, Wallet, Truck, Package, 
+  XSquare, Heart, Headphones, User, MapPin, 
+  ChevronRight, LogOut, Camera
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import './AccountPage.css';
 
-const TRACKING_STEPS = [
-  { id: 'placed', label: 'Order Placed', icon: Box },
-  { id: 'processing', label: 'Processing', icon: Settings },
-  { id: 'shipped', label: 'Shipped', icon: Truck },
-  { id: 'out_for_delivery', label: 'Out for Delivery', icon: MapPin },
-  { id: 'delivered', label: 'Delivered', icon: CheckCircle2 }
-];
-
-const OrderTracking = ({ status }) => {
-  const currentStepIndex = TRACKING_STEPS.findIndex(s => s.id === status);
-  
-  return (
-    <div className="tracking-container">
-      <div className="tracking-progress-bar">
-        {/* Desktop animated bar */}
-        <motion.div 
-          className="tracking-progress-fill desktop-fill"
-          initial={{ width: 0 }}
-          animate={{ width: `${(currentStepIndex / (TRACKING_STEPS.length - 1)) * 100}%` }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-        />
-        {/* Mobile animated bar */}
-        <motion.div 
-          className="tracking-progress-fill mobile-fill"
-          initial={{ height: 0 }}
-          animate={{ height: `${(currentStepIndex / (TRACKING_STEPS.length - 1)) * 100}%` }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-        />
-      </div>
-      <div className="tracking-steps">
-        {TRACKING_STEPS.map((step, index) => {
-          const isCompleted = index <= currentStepIndex;
-          const isCurrent = index === currentStepIndex;
-          const Icon = step.icon;
-
-          return (
-            <div key={step.id} className={`tracking-step ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
-              <div className="step-icon-wrapper">
-                <Icon size={20} />
-              </div>
-              <span className="step-label">{step.label}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 const AccountPage = ({ user, onBack, onSignOut }) => {
-  const [activeTab, setActiveTab] = useState('profile');
+  const [view, setView] = useState('dashboard'); // 'dashboard', 'orders', 'profile', 'address'
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
-
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm('Are you sure you want to cancel this order?')) return;
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', orderId);
-      if (error) throw error;
-      
-      // Update local state
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o));
-      alert('Order cancelled successfully.');
-    } catch (err) {
-      console.error('Failed to cancel order:', err);
-      alert('Failed to cancel order. Please try again.');
-    }
-  };
-
-  // If no user is passed (edge case), just use mock details
-  const userEmail = user?.email || 'premium.member@purenutrix.com';
-  const userName = userEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ') || 'Valued Member';
+  const [orderFilter, setOrderFilter] = useState('All'); 
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -101,235 +32,229 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
         setLoadingOrders(false);
       }
     };
+    fetchOrders();
+  }, [user]);
 
-    if (activeTab === 'orders') {
-      fetchOrders();
-    }
-  }, [user, activeTab]);
+  const userEmail = user?.email || 'premium.member@purenutrix.com';
+  const userName = userEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ') || 'Valued Member';
+  const displayUserName = userName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 
-  return (
-    <div className="account-page-wrapper">
-      <div className="account-container container">
-        <div className="account-header">
-          <button className="back-btn" onClick={onBack}>
-            <ArrowLeft size={20} />
-            <span>Back to Store</span>
+  const navigateToOrders = (filter) => {
+    let internalFilter = filter;
+    if (filter === 'Pending Payment') internalFilter = 'pending';
+    setOrderFilter(filter);
+    setView('orders');
+  };
+
+  const getFilteredOrders = () => {
+    if (orderFilter === 'All') return orders;
+    let filterTerm = orderFilter.toLowerCase();
+    if (filterTerm === 'pending payment') filterTerm = 'pending';
+    return orders.filter(o => o.status.toLowerCase().includes(filterTerm));
+  };
+
+  const renderDashboard = () => (
+    <motion.div 
+      className="mobile-dashboard"
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      key="dashboard"
+    >
+      <div className="dashboard-header">
+        <button className="back-btn-header" onClick={onBack}>
+          <ChevronLeft size={24} />
+        </button>
+        <span className="header-title">Profile</span>
+        <div style={{ width: 24 }}></div> 
+      </div>
+
+      <div className="profile-section">
+        <div className="wave-bg">
+          <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <path fill="url(#grad1)" fillOpacity="1" d="M0,128L48,138.7C96,149,192,171,288,160C384,149,480,107,576,96C672,85,768,107,864,133.3C960,160,1056,192,1152,192C1248,192,1344,160,1392,144L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style={{ stopColor: '#e6004c', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#ff0055', stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        
+        <div className="avatar-wrapper">
+          <div className="avatar-circle">
+            <User size={40} color="#666" strokeWidth={1.5} />
+          </div>
+          <button className="camera-btn">
+            <Camera size={14} color="#fff" />
           </button>
-          <h1 className="account-page-title">My <span className="text-gold">Account</span></h1>
+        </div>
+        <h2 className="profile-name">{displayUserName}</h2>
+        <p className="profile-role">Customer</p>
+      </div>
+
+      <div className="dashboard-content">
+        <div className="orders-summary-section">
+          <h3 className="section-title">My Orders</h3>
+          <div className="orders-grid">
+            <div className="grid-item" onClick={() => navigateToOrders('Pending Payment')}>
+              <div className="grid-icon blue"><Wallet size={26} strokeWidth={1.5} /></div>
+              <span>Pending Payment</span>
+            </div>
+            <div className="grid-item" onClick={() => navigateToOrders('Delivered')}>
+              <div className="grid-icon red"><Truck size={26} strokeWidth={1.5} /></div>
+              <span>Delivered</span>
+            </div>
+            <div className="grid-item" onClick={() => navigateToOrders('Processing')}>
+              <div className="grid-icon pink"><Package size={26} strokeWidth={1.5} /></div>
+              <span>Processing</span>
+            </div>
+            <div className="grid-item" onClick={() => navigateToOrders('Cancelled')}>
+              <div className="grid-icon green"><XSquare size={26} strokeWidth={1.5} /></div>
+              <span>Cancelled</span>
+            </div>
+            <div className="grid-item" onClick={() => setView('wishlist')}>
+              <div className="grid-icon heart-icon"><Heart size={26} fill="#ff4d79" color="#ff4d79" /></div>
+              <span>Wishlist</span>
+            </div>
+            <div className="grid-item" onClick={() => alert('Redirecting to WhatsApp support...')}>
+              <div className="grid-icon purple"><Headphones size={26} strokeWidth={1.5} /></div>
+              <span>Customer Care</span>
+            </div>
+          </div>
         </div>
 
-        <div className="account-layout">
-          {/* Sidebar Navigation */}
-          <div className="account-sidebar glass-card">
-            <div className="user-profile-summary">
-              <div className="avatar-circle">
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <div className="user-info-text">
-                <h3>{userName}</h3>
-                <p>Premium Member</p>
-              </div>
+        <div className="menu-list">
+          <div className="menu-item" onClick={() => setView('profile')}>
+            <div className="menu-left">
+              <div className="menu-icon"><User size={20} color="#555" /></div>
+              <span className="menu-text">Edit Profile</span>
             </div>
-
-            <nav className="account-nav">
-              <button 
-                className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-                onClick={() => setActiveTab('profile')}
-              >
-                <User size={20} />
-                <span>My Profile</span>
-              </button>
-              <button 
-                className={`nav-item ${activeTab === 'orders' ? 'active' : ''}`}
-                onClick={() => setActiveTab('orders')}
-              >
-                <Package size={20} />
-                <span>Order History</span>
-              </button>
-              <button 
-                className={`nav-item ${activeTab === 'addresses' ? 'active' : ''}`}
-                onClick={() => setActiveTab('addresses')}
-              >
-                <MapPin size={20} />
-                <span>Saved Addresses</span>
-              </button>
-              <button 
-                className={`nav-item ${activeTab === 'payment' ? 'active' : ''}`}
-                onClick={() => setActiveTab('payment')}
-              >
-                <CreditCard size={20} />
-                <span>Payment Methods</span>
-              </button>
-            </nav>
-
-            <button className="sign-out-btn" onClick={onSignOut}>
-              <LogOut size={20} />
-              <span>Sign Out</span>
-            </button>
+            <ChevronRight size={20} color="#ccc" />
           </div>
-
-          {/* Main Content Area */}
-          <div className="account-content glass-card">
-            <AnimatePresence mode="wait">
-              
-              {activeTab === 'profile' && (
-                <motion.div
-                  key="profile"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="tab-content"
-                >
-                  <h2 className="tab-title">Personal Details</h2>
-                  <div className="profile-form">
-                    <div className="input-row">
-                      <div className="input-group">
-                        <label>Full Name</label>
-                        <input type="text" defaultValue={userName} readOnly />
-                      </div>
-                      <div className="input-group">
-                        <label>Email Address</label>
-                        <input type="email" defaultValue={userEmail} readOnly />
-                      </div>
-                    </div>
-                    <div className="input-row">
-                      <div className="input-group">
-                        <label>Mobile Number</label>
-                        <input type="tel" defaultValue="9876543210" placeholder="10-digit mobile number" maxLength="10" />
-                      </div>
-                      <div className="input-group">
-                        <label>Date of Birth</label>
-                        <input type="date" />
-                      </div>
-                    </div>
-                    <button className="btn-primary update-btn">Update Profile</button>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'orders' && (
-                <motion.div
-                  key="orders"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="tab-content"
-                >
-                  <h2 className="tab-title">Order History & Tracking</h2>
-                  <div className="orders-list">
-                    {loadingOrders ? (
-                      <p>Loading your orders...</p>
-                    ) : orders.length === 0 ? (
-                      <div className="empty-state">
-                        <Package size={48} />
-                        <h3>No Orders Found</h3>
-                        <p>You haven't placed any orders yet.</p>
-                        <button className="btn-outline add-new-btn" onClick={onBack}>Shop Now</button>
-                      </div>
-                    ) : (
-                      orders.map((order) => (
-                        <div key={order.id} className="order-history-card">
-                          <div className="order-card-header">
-                            <div className="order-meta">
-                              <span className="order-id">Order {order.id.split('-')[0]}</span>
-                              <span className="order-date">
-                                <Calendar size={14}/> 
-                                {new Date(order.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                              </span>
-                            </div>
-                            <span className={`order-status-badge ${order.status.toLowerCase() === 'delivered' ? 'success' : order.status.toLowerCase() === 'cancelled' ? 'error' : 'pending'}`}>
-                              {order.status.replace(/_/g, ' ').toUpperCase()}
-                            </span>
-                          </div>
-
-                          <div className="order-product-details">
-                            <img src={order.image} alt={order.product_name} className="order-product-img" />
-                            <div className="product-info">
-                              <h4>{order.product_name}</h4>
-                              <p>Qty: {order.qty}</p>
-                              <span className="product-price">₹{order.price}</span>
-                            </div>
-                            
-                            {/* Cancel Button for valid states */}
-                            {(order.status.toLowerCase() === 'pending' || order.status.toLowerCase() === 'packing') && (
-                              <button 
-                                onClick={() => handleCancelOrder(order.id)}
-                                className="btn-outline" 
-                                style={{ marginLeft: 'auto', alignSelf: 'center', color: '#ef4444', borderColor: '#ef4444' }}
-                              >
-                                Cancel Order
-                              </button>
-                            )}
-                          </div>
-
-                          <div className="order-tracking-section">
-                            <OrderTracking status={order.status.toLowerCase()} />
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'addresses' && (
-                <motion.div
-                  key="addresses"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="tab-content"
-                >
-                  <div className="address-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                    <h2 className="tab-title" style={{ marginBottom: 0 }}>Saved Addresses</h2>
-                    <button className="btn-outline add-new-btn">Add New Address</button>
-                  </div>
-                  
-                  <div className="addresses-list" style={{ display: 'grid', gap: '20px' }}>
-                    <div className="address-card" style={{ padding: '25px', border: '1px solid var(--glass-border)', borderRadius: '16px', background: 'var(--color-bg-secondary)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                        <span style={{ background: '#e2e8f0', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>HOME</span>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                          <button style={{ background: 'none', border: 'none', color: 'var(--color-accent-gold)', cursor: 'pointer', fontWeight: 600 }}>Edit</button>
-                          <button style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 600 }}>Delete</button>
-                        </div>
-                      </div>
-                      <h4 style={{ fontSize: '1.1rem', marginBottom: '5px' }}>{userName}</h4>
-                      <p style={{ color: 'var(--color-text-secondary)', marginBottom: '5px' }}>Flat No. 402, Sai Apartment</p>
-                      <p style={{ color: 'var(--color-text-secondary)', marginBottom: '5px' }}>Main Road, Andheri West</p>
-                      <p style={{ color: 'var(--color-text-secondary)', marginBottom: '5px' }}>Landmark: near Apollo Hospital</p>
-                      <p style={{ color: 'var(--color-text-secondary)', marginBottom: '15px' }}>Mumbai, Maharashtra - 400053</p>
-                      <p style={{ fontWeight: 600 }}>Mobile: 9876543210</p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'payment' && (
-                <motion.div
-                  key="payment"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="tab-content empty-state"
-                >
-                  <div className="empty-icon-wrapper">
-                    <CreditCard size={48} />
-                  </div>
-                  <h2 className="tab-title">No Payment Methods Saved</h2>
-                  <p>You haven't saved any payment methods yet. Adding them makes checkout faster!</p>
-                  <button className="btn-outline add-new-btn">Add New</button>
-                </motion.div>
-              )}
-
-            </AnimatePresence>
+          <div className="menu-item" onClick={() => setView('address')}>
+            <div className="menu-left">
+              <div className="menu-icon"><MapPin size={20} color="#555" /></div>
+              <span className="menu-text">Shipping Address</span>
+            </div>
+            <ChevronRight size={20} color="#ccc" />
           </div>
         </div>
       </div>
+
+      <div className="logout-wrapper">
+        <button className="logout-btn" onClick={onSignOut}>
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  const renderOrdersList = () => {
+    const filteredOrders = getFilteredOrders();
+    
+    return (
+      <motion.div 
+        className="mobile-orders"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        key="orders"
+      >
+        <div className="dashboard-header orders-header">
+          <button className="back-btn-header" onClick={() => setView('dashboard')}>
+            <ChevronLeft size={24} />
+          </button>
+          <button className="search-btn-header">
+            <Search size={24} />
+          </button>
+        </div>
+
+        <div className="orders-page-content">
+          <h1 className="page-main-title">My Orders</h1>
+          
+          <div className="order-tabs-scroll">
+            {['All', 'Pending Payment', 'Delivered', 'Processing', 'Cancelled'].map(tab => (
+              <button 
+                key={tab}
+                className={`order-tab ${orderFilter === tab ? 'active' : ''}`}
+                onClick={() => setOrderFilter(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="orders-list-cards">
+            {loadingOrders ? (
+              <p className="loading-text">Loading orders...</p>
+            ) : filteredOrders.length === 0 ? (
+              <p className="loading-text">No orders found in this category.</p>
+            ) : (
+              filteredOrders.map(order => {
+                const dateObj = new Date(order.created_at);
+                const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
+                
+                return (
+                  <div key={order.id} className="order-card-new">
+                    <div className="order-card-top">
+                      <span className="order-no">Order No: {order.id.split('-')[0]}</span>
+                      <span className="order-date">{formattedDate}</span>
+                    </div>
+                    <div className="order-card-middle">
+                      <div className="tracking-row">
+                        <span className="label">Tracking number:</span>
+                        <span className="value">{order.tracking_id || 'Pending'}</span>
+                      </div>
+                      <div className="qty-amount-row">
+                        <span className="label">Quantity: <span className="value">1</span></span>
+                        <span className="label">Total Amount: <span className="value bold">₹{order.total_amount}</span></span>
+                      </div>
+                    </div>
+                    <div className="order-card-bottom">
+                      <button className="details-btn">Details</button>
+                      <span className={`status-text ${order.status.toLowerCase()}`}>
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  return (
+    <div className="account-redesign-wrapper">
+      <AnimatePresence mode="wait">
+        {view === 'dashboard' && renderDashboard()}
+        {view === 'orders' && renderOrdersList()}
+        {(view === 'profile' || view === 'address' || view === 'wishlist') && (
+          <motion.div 
+            className="mobile-dashboard"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            key="placeholder"
+          >
+            <div className="dashboard-header">
+              <button className="back-btn-header" onClick={() => setView('dashboard')}>
+                <ChevronLeft size={24} />
+              </button>
+              <span className="header-title">{view.charAt(0).toUpperCase() + view.slice(1)}</span>
+              <div style={{ width: 24 }}></div>
+            </div>
+            <div className="dashboard-content" style={{ marginTop: 20 }}>
+              <p style={{textAlign: 'center', color: '#666'}}>This section is currently under development.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
