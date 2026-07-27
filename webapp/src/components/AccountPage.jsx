@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, Search, Package, CheckCircle, Layers, 
   Tag, Gift, Star, Heart, Headphones, User, MapPin, 
-  ChevronRight, LogOut, Camera, Copy
+  ChevronRight, LogOut, Camera, Copy, Plus
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import './AccountPage.css';
@@ -14,9 +14,57 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [orderFilter, setOrderFilter] = useState('All'); 
 
-  // Mock states for new features
+  // Persistent Routine State
   const [routineChecked, setRoutineChecked] = useState({ morning: false, workout: false, night: false });
 
+  // Load routing from URL on mount and listen to popstate
+  useEffect(() => {
+    const handlePopState = () => {
+      const hashPath = window.location.hash.replace('#', '');
+      const [mainView, subView] = hashPath.split('/');
+      
+      if (mainView === 'account') {
+        setView(subView || 'dashboard');
+      }
+    };
+
+    // Initial check
+    handlePopState();
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Update URL when view changes inside the dashboard
+  const navigateTo = (newView) => {
+    setView(newView);
+    if (newView === 'dashboard') {
+      window.history.pushState({ view: 'account' }, '', '#account');
+    } else {
+      window.history.pushState({ view: 'account', subView: newView }, '', `#account/${newView}`);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Routine Persistence
+  useEffect(() => {
+    const storedRoutine = localStorage.getItem('purenutrix_routine');
+    if (storedRoutine) {
+      try {
+        setRoutineChecked(JSON.parse(storedRoutine));
+      } catch (e) {
+        console.error("Could not parse routine");
+      }
+    }
+  }, []);
+
+  const toggleRoutine = (key) => {
+    const updated = { ...routineChecked, [key]: !routineChecked[key] };
+    setRoutineChecked(updated);
+    localStorage.setItem('purenutrix_routine', JSON.stringify(updated));
+  };
+
+  // Orders
   useEffect(() => {
     const fetchOrders = async () => {
       if (!user) return;
@@ -44,7 +92,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
 
   const navigateToOrders = (filter = 'All') => {
     setOrderFilter(filter);
-    setView('orders');
+    navigateTo('orders');
   };
 
   const getFilteredOrders = () => {
@@ -54,7 +102,13 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     return orders.filter(o => o.status.toLowerCase().includes(filterTerm));
   };
 
-  const renderDashboard = () => (
+  const handleCopyReferral = () => {
+    const code = `NUTRIX-${user?.id?.substring(0,6).toUpperCase() || 'VIP26'}`;
+    navigator.clipboard.writeText(code);
+    alert('Referral Code Copied: ' + code);
+  };
+
+  const renderDashboardGrid = () => (
     <motion.div 
       className="mobile-dashboard premium-dashboard"
       initial={{ opacity: 0, x: -20 }}
@@ -62,7 +116,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
       exit={{ opacity: 0, x: 20 }}
       key="dashboard"
     >
-      <div className="dashboard-header">
+      <div className="dashboard-header mobile-only">
         <button className="back-btn-header" onClick={onBack}>
           <ChevronLeft size={24} />
         </button>
@@ -70,7 +124,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
         <div style={{ width: 24 }}></div> 
       </div>
 
-      <div className="profile-section clean-profile">
+      <div className="profile-section clean-profile mobile-only">
         <div className="wave-bg">
           <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
             <path fill="url(#grad1)" fillOpacity="1" d="M0,128L48,138.7C96,149,192,171,288,160C384,149,480,107,576,96C672,85,768,107,864,133.3C960,160,1056,192,1152,192C1248,192,1344,160,1392,144L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
@@ -92,7 +146,6 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
           </button>
         </div>
         <h2 className="profile-name">{displayUserName}</h2>
-        {/* Removed "Customer" tag as requested */}
       </div>
 
       <div className="dashboard-content premium-content">
@@ -103,31 +156,31 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
             <div className="grid-icon-wrap"><Package size={28} strokeWidth={1.5} color="#333" /></div>
             <span>My Orders</span>
           </div>
-          <div className="premium-grid-card" onClick={() => setView('routine')}>
+          <div className="premium-grid-card" onClick={() => navigateTo('routine')}>
             <div className="grid-icon-wrap"><CheckCircle size={28} strokeWidth={1.5} color="#333" /></div>
             <span>Daily Routine</span>
           </div>
-          <div className="premium-grid-card" onClick={() => setView('stacks')}>
+          <div className="premium-grid-card" onClick={() => navigateTo('stacks')}>
             <div className="grid-icon-wrap"><Layers size={28} strokeWidth={1.5} color="#333" /></div>
             <span>Saved Stacks</span>
           </div>
-          <div className="premium-grid-card" onClick={() => setView('offers')}>
+          <div className="premium-grid-card" onClick={() => navigateTo('offers')}>
             <div className="grid-icon-wrap"><Tag size={28} strokeWidth={1.5} color="#333" /></div>
             <span>Offers for You</span>
           </div>
-          <div className="premium-grid-card" onClick={() => setView('refer')}>
+          <div className="premium-grid-card" onClick={() => navigateTo('refer')}>
             <div className="grid-icon-wrap"><Gift size={28} strokeWidth={1.5} color="#333" /></div>
             <span>Refer & Earn</span>
           </div>
-          <div className="premium-grid-card" onClick={() => setView('reviews')}>
+          <div className="premium-grid-card" onClick={() => navigateTo('reviews')}>
             <div className="grid-icon-wrap"><Star size={28} strokeWidth={1.5} color="#333" /></div>
             <span>My Reviews</span>
           </div>
         </div>
 
-        {/* Vertical Menu List for Secondary Actions */}
-        <div className="premium-menu-list">
-          <div className="menu-item" onClick={() => setView('wishlist')}>
+        {/* Vertical Menu List for Mobile (Hidden on Desktop) */}
+        <div className="premium-menu-list mobile-only">
+          <div className="menu-item" onClick={() => navigateTo('wishlist')}>
             <div className="menu-left">
               <div className="menu-icon"><Heart size={20} color="#555" /></div>
               <span className="menu-text">Wishlist</span>
@@ -141,14 +194,14 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
             </div>
             <ChevronRight size={20} color="#ccc" />
           </div>
-          <div className="menu-item" onClick={() => setView('profile')}>
+          <div className="menu-item" onClick={() => navigateTo('profile')}>
             <div className="menu-left">
               <div className="menu-icon"><User size={20} color="#555" /></div>
               <span className="menu-text">Edit Profile</span>
             </div>
             <ChevronRight size={20} color="#ccc" />
           </div>
-          <div className="menu-item" onClick={() => setView('address')}>
+          <div className="menu-item" onClick={() => navigateTo('address')}>
             <div className="menu-left">
               <div className="menu-icon"><MapPin size={20} color="#555" /></div>
               <span className="menu-text">Shipping Address</span>
@@ -158,7 +211,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
         </div>
       </div>
 
-      <div className="logout-wrapper">
+      <div className="logout-wrapper mobile-only">
         <button className="logout-btn" onClick={onSignOut}>
           <LogOut size={20} />
           <span>Logout securely</span>
@@ -179,7 +232,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
         key="orders"
       >
         <div className="dashboard-header orders-header">
-          <button className="back-btn-header" onClick={() => setView('dashboard')}>
+          <button className="back-btn-header" onClick={() => navigateTo('dashboard')}>
             <ChevronLeft size={24} />
           </button>
           <button className="search-btn-header">
@@ -247,18 +300,17 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     );
   };
 
-  // Placeholder renderers for new premium features
   const renderRoutineTracker = () => (
     <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="routine">
       <div className="dashboard-header orders-header">
-        <button className="back-btn-header" onClick={() => setView('dashboard')}><ChevronLeft size={24} /></button>
+        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
       </div>
       <div className="orders-page-content">
         <h1 className="page-main-title">Daily Routine</h1>
         <p className="premium-subtitle">Track your supplement intake to stay consistent.</p>
         
         <div className="routine-list">
-          <div className={`routine-card premium-shadow ${routineChecked.morning ? 'completed' : ''}`} onClick={() => setRoutineChecked({...routineChecked, morning: !routineChecked.morning})}>
+          <div className={`routine-card premium-shadow ${routineChecked.morning ? 'completed' : ''}`} onClick={() => toggleRoutine('morning')}>
             <div className="routine-info">
               <h3>Morning Dosage</h3>
               <p>L-Glutathione 1000mg + Vitamin C</p>
@@ -266,7 +318,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
             <div className="check-circle-ui">{routineChecked.morning && <CheckCircle size={20} color="#fff" />}</div>
           </div>
           
-          <div className={`routine-card premium-shadow ${routineChecked.workout ? 'completed' : ''}`} onClick={() => setRoutineChecked({...routineChecked, workout: !routineChecked.workout})}>
+          <div className={`routine-card premium-shadow ${routineChecked.workout ? 'completed' : ''}`} onClick={() => toggleRoutine('workout')}>
             <div className="routine-info">
               <h3>Post-Workout</h3>
               <p>100% Whey Protein Isolate (1 Scoop)</p>
@@ -274,7 +326,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
             <div className="check-circle-ui">{routineChecked.workout && <CheckCircle size={20} color="#fff" />}</div>
           </div>
           
-          <div className={`routine-card premium-shadow ${routineChecked.night ? 'completed' : ''}`} onClick={() => setRoutineChecked({...routineChecked, night: !routineChecked.night})}>
+          <div className={`routine-card premium-shadow ${routineChecked.night ? 'completed' : ''}`} onClick={() => toggleRoutine('night')}>
             <div className="routine-info">
               <h3>Night Recovery</h3>
               <p>Ashwagandha KSM-66</p>
@@ -289,16 +341,16 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
   const renderReferAndEarn = () => (
     <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="refer">
       <div className="dashboard-header orders-header">
-        <button className="back-btn-header" onClick={() => setView('dashboard')}><ChevronLeft size={24} /></button>
+        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
       </div>
       <div className="orders-page-content" style={{textAlign: 'center'}}>
         <div className="referral-icon-large"><Gift size={48} color="#ff0055" /></div>
-        <h1 className="page-main-title" style={{textAlign: 'center', marginTop: 20}}>Refer & Earn ₹500</h1>
-        <p className="premium-subtitle">Give your friends ₹300 off their first order, and you get ₹500 when they buy.</p>
+        <h1 className="page-main-title" style={{textAlign: 'center', marginTop: 20}}>Refer & Earn ₹100</h1>
+        <p className="premium-subtitle">Give your friends ₹100 off their first order, and you get ₹100 when they buy.</p>
         
         <div className="referral-code-box premium-shadow">
           <span className="code-text">NUTRIX-{user?.id?.substring(0,6).toUpperCase() || 'VIP26'}</span>
-          <button className="copy-btn"><Copy size={18} /> Copy</button>
+          <button className="copy-btn" onClick={handleCopyReferral}><Copy size={18} /> Copy</button>
         </div>
         
         <div className="referral-stats premium-shadow">
@@ -318,7 +370,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
   const renderOffers = () => (
     <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="offers">
       <div className="dashboard-header orders-header">
-        <button className="back-btn-header" onClick={() => setView('dashboard')}><ChevronLeft size={24} /></button>
+        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
       </div>
       <div className="orders-page-content">
         <h1 className="page-main-title">Offers for You</h1>
@@ -327,7 +379,41 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
           <div className="offer-badge">FLAT 20% OFF</div>
           <h3>Monsoon VIP Discount</h3>
           <p>Use code <strong>MONSOON20</strong> at checkout on orders above ₹1499.</p>
-          <button className="btn-outline-premium">Copy Code</button>
+          <button className="btn-outline-premium" onClick={() => { navigator.clipboard.writeText('MONSOON20'); alert('Code MONSOON20 copied!'); }}>Copy Code</button>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderSavedStacks = () => (
+    <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="stacks">
+      <div className="dashboard-header orders-header">
+        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
+      </div>
+      <div className="orders-page-content">
+        <h1 className="page-main-title">Saved Stacks</h1>
+        <p className="premium-subtitle">Bundle your favorite supplements for 1-click checkout.</p>
+        
+        <div className="stack-card premium-shadow">
+          <div className="stack-header">
+            <h3>Glow & Radiance Stack</h3>
+            <span className="stack-price">₹1299</span>
+          </div>
+          <p className="stack-desc">L-Glutathione 1000mg + Collagen Peptides</p>
+          <button className="btn-primary stack-add-btn" onClick={() => alert('Stack added to cart!')}>
+            <Plus size={16} /> Add Stack to Cart
+          </button>
+        </div>
+
+        <div className="stack-card premium-shadow" style={{marginTop: 16}}>
+          <div className="stack-header">
+            <h3>Muscle Recovery Stack</h3>
+            <span className="stack-price">₹2899</span>
+          </div>
+          <p className="stack-desc">100% Whey Isolate + Ashwagandha KSM-66</p>
+          <button className="btn-primary stack-add-btn" onClick={() => alert('Stack added to cart!')}>
+            <Plus size={16} /> Add Stack to Cart
+          </button>
         </div>
       </div>
     </motion.div>
@@ -335,33 +421,88 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
 
   return (
     <div className="account-redesign-wrapper">
-      <AnimatePresence mode="wait">
-        {view === 'dashboard' && renderDashboard()}
-        {view === 'orders' && renderOrdersList()}
-        {view === 'routine' && renderRoutineTracker()}
-        {view === 'refer' && renderReferAndEarn()}
-        {view === 'offers' && renderOffers()}
+      
+      {/* Desktop Sidebar (hidden on mobile) */}
+      <div className="desktop-sidebar">
+        <div className="desktop-profile-card premium-shadow">
+          <div className="avatar-circle">
+            <User size={50} color="#333" strokeWidth={1.5} />
+          </div>
+          <h2>{displayUserName}</h2>
+        </div>
         
-        {(view === 'profile' || view === 'address' || view === 'wishlist' || view === 'stacks' || view === 'reviews') && (
-          <motion.div 
-            className="mobile-orders"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            key="placeholder"
-          >
-            <div className="dashboard-header orders-header">
-              <button className="back-btn-header" onClick={() => setView('dashboard')}>
-                <ChevronLeft size={24} />
-              </button>
+        <div className="premium-menu-list desktop-menu">
+          <div className={`menu-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => navigateTo('dashboard')}>
+            <div className="menu-left">
+              <div className="menu-icon"><Package size={20} color={view === 'dashboard' ? '#ff0055' : '#555'} /></div>
+              <span className="menu-text">Dashboard</span>
             </div>
-            <div className="orders-page-content" style={{textAlign: 'center', paddingTop: 60}}>
-              <h1 className="page-main-title">{view.charAt(0).toUpperCase() + view.slice(1)}</h1>
-              <p className="premium-subtitle">This premium feature is currently being tailored for you.</p>
+          </div>
+          <div className={`menu-item ${view === 'wishlist' ? 'active' : ''}`} onClick={() => navigateTo('wishlist')}>
+            <div className="menu-left">
+              <div className="menu-icon"><Heart size={20} color={view === 'wishlist' ? '#ff0055' : '#555'} /></div>
+              <span className="menu-text">Wishlist</span>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+          <div className="menu-item" onClick={() => alert('Redirecting to Customer Care...')}>
+            <div className="menu-left">
+              <div className="menu-icon"><Headphones size={20} color="#555" /></div>
+              <span className="menu-text">Customer Care</span>
+            </div>
+          </div>
+          <div className={`menu-item ${view === 'profile' ? 'active' : ''}`} onClick={() => navigateTo('profile')}>
+            <div className="menu-left">
+              <div className="menu-icon"><User size={20} color={view === 'profile' ? '#ff0055' : '#555'} /></div>
+              <span className="menu-text">Edit Profile</span>
+            </div>
+          </div>
+          <div className={`menu-item ${view === 'address' ? 'active' : ''}`} onClick={() => navigateTo('address')}>
+            <div className="menu-left">
+              <div className="menu-icon"><MapPin size={20} color={view === 'address' ? '#ff0055' : '#555'} /></div>
+              <span className="menu-text">Shipping Address</span>
+            </div>
+          </div>
+          <div className="menu-item" onClick={onSignOut}>
+            <div className="menu-left">
+              <div className="menu-icon"><LogOut size={20} color="#555" /></div>
+              <span className="menu-text">Logout</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area (Mobile gets everything, Desktop gets only the active view) */}
+      <div className="desktop-main-content">
+        <AnimatePresence mode="wait">
+          {view === 'dashboard' && renderDashboardGrid()}
+          {view === 'orders' && renderOrdersList()}
+          {view === 'routine' && renderRoutineTracker()}
+          {view === 'refer' && renderReferAndEarn()}
+          {view === 'offers' && renderOffers()}
+          {view === 'stacks' && renderSavedStacks()}
+          
+          {(view === 'profile' || view === 'address' || view === 'wishlist' || view === 'reviews') && (
+            <motion.div 
+              className="mobile-orders"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              key="placeholder"
+            >
+              <div className="dashboard-header orders-header">
+                <button className="back-btn-header" onClick={() => navigateTo('dashboard')}>
+                  <ChevronLeft size={24} />
+                </button>
+              </div>
+              <div className="orders-page-content" style={{textAlign: 'center', paddingTop: 60}}>
+                <h1 className="page-main-title">{view.charAt(0).toUpperCase() + view.slice(1)}</h1>
+                <p className="premium-subtitle">This premium feature is currently being tailored for you.</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
     </div>
   );
 };
