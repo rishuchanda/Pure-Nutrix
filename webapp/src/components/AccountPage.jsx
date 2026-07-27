@@ -336,9 +336,9 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                 <p>Placed on {formattedDate}</p>
               </div>
               <button 
-                className="btn-outline-premium" 
+                className="btn-outline-premium print-hide" 
                 style={{ width: 'auto', padding: '6px 12px', fontSize: '13px', borderRadius: '8px' }}
-                onClick={() => alert('Downloading Invoice...')}
+                onClick={() => window.print()}
               >
                 Invoice
               </button>
@@ -356,7 +356,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
             </div>
           </div>
 
-          <div className="tracking-container premium-shadow">
+          <div className="tracking-container premium-shadow print-hide">
             <h3 className="tracking-title">Track Order</h3>
             
             <div className="tracking-timeline">
@@ -456,7 +456,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
           </div>
 
           {isDelivered && (
-            <div className="order-address-box premium-shadow" style={{marginTop: 24}}>
+            <div className="order-address-box premium-shadow print-hide" style={{marginTop: 24}}>
               <h4>Rate this Product</h4>
               <p className="address-text" style={{marginBottom: 12}}>How was your experience with {activeOrder.product_name}?</p>
               <button 
@@ -470,7 +470,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
           )}
 
           {allProducts.length > 0 && (
-            <div className="order-address-box premium-shadow" style={{marginTop: 24, paddingBottom: 16}}>
+            <div className="order-address-box premium-shadow print-hide" style={{marginTop: 24, paddingBottom: 16}}>
               <h4>You might also like</h4>
               <div style={{display: 'flex', gap: 12, overflowX: 'auto', paddingTop: 8, paddingBottom: 8}}>
                 {allProducts.slice(0, 4).map(p => (

@@ -606,17 +606,14 @@ const AdminDashboard = ({ user }) => {
                   </div>
 
                   <div className="order-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                    {['pending', 'packing', 'shipped', 'delivered', 'cancelled'].map(status => (
+                    {['pending', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'].map(status => (
                       <button 
                         key={status}
                         onClick={() => setOrderFilter(status)}
                         className={`admin-btn ${orderFilter === status ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
                         style={{ textTransform: 'capitalize', padding: '8px 16px' }}
                       >
-                        {status} ({orders.filter(o => {
-                          const s = (o.status || 'pending').toLowerCase();
-                          return (s === 'processing' ? 'pending' : s === 'out_for_delivery' ? 'shipped' : s) === status;
-                        }).length})
+                        {status.replace('_', ' ')} ({orders.filter(o => (o.status || 'pending').toLowerCase() === status).length})
                       </button>
                     ))}
                   </div>
@@ -635,16 +632,10 @@ const AdminDashboard = ({ user }) => {
                       <tbody>
                         {loadingOrders ? (
                           <tr><td colSpan="5" style={{textAlign: 'center'}}>Loading live orders...</td></tr>
-                        ) : orders.filter(o => {
-                          const s = (o.status || 'pending').toLowerCase();
-                          return (s === 'processing' ? 'pending' : s === 'out_for_delivery' ? 'shipped' : s) === orderFilter;
-                        }).length === 0 ? (
-                          <tr><td colSpan="5" style={{textAlign: 'center'}}>No {orderFilter} orders found.</td></tr>
+                        ) : orders.filter(o => (o.status || 'pending').toLowerCase() === orderFilter).length === 0 ? (
+                          <tr><td colSpan="5" style={{textAlign: 'center'}}>No {orderFilter.replace('_', ' ')} orders found.</td></tr>
                         ) : (
-                          orders.filter(o => {
-                            const s = (o.status || 'pending').toLowerCase();
-                            return (s === 'processing' ? 'pending' : s === 'out_for_delivery' ? 'shipped' : s) === orderFilter;
-                          }).map(order => (
+                          orders.filter(o => (o.status || 'pending').toLowerCase() === orderFilter).map(order => (
                             <tr key={order.id}>
                               <td style={{fontFamily: 'monospace', color: 'var(--admin-text-muted)'}}>#{order.id.split('-')[0].toUpperCase()}</td>
                               <td>
@@ -663,17 +654,17 @@ const AdminDashboard = ({ user }) => {
                               <td style={{ color: 'var(--admin-text-muted)' }}>{new Date(order.created_at).toLocaleDateString('en-GB')}</td>
                               <td>
                                 {orderFilter === 'pending' && (
-                                  <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'packing')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
-                                      Accept Order
+                                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'processing')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
+                                      Accept & Process
                                     </button>
                                     <button className="admin-btn admin-btn-secondary" onClick={() => updateOrderStatus(order.id, 'cancelled')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', color: '#ef4444' }}>
                                       Cancel
                                     </button>
                                   </div>
                                 )}
-                                {orderFilter === 'packing' && (
-                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                {orderFilter === 'processing' && (
+                                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                     <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'shipped')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#3b82f6', borderColor: '#3b82f6' }}>
                                       Mark as Shipped
                                     </button>
@@ -683,15 +674,33 @@ const AdminDashboard = ({ user }) => {
                                   </div>
                                 )}
                                 {orderFilter === 'shipped' && (
-                                  <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'delivered')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#10b981', borderColor: '#10b981' }}>
-                                    Mark as Delivered
-                                  </button>
+                                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'out_for_delivery')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f59e0b', borderColor: '#f59e0b' }}>
+                                      Out for Delivery
+                                    </button>
+                                    <button className="admin-btn admin-btn-secondary" onClick={() => updateOrderStatus(order.id, 'returned')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', color: '#ef4444' }}>
+                                      Return
+                                    </button>
+                                  </div>
+                                )}
+                                {orderFilter === 'out_for_delivery' && (
+                                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    <button className="admin-btn admin-btn-primary" onClick={() => updateOrderStatus(order.id, 'delivered')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#10b981', borderColor: '#10b981' }}>
+                                      Mark as Delivered
+                                    </button>
+                                    <button className="admin-btn admin-btn-secondary" onClick={() => updateOrderStatus(order.id, 'returned')} disabled={adminRole === 'viewer'} style={{ padding: '6px 12px', fontSize: '0.85rem', color: '#ef4444' }}>
+                                      Return
+                                    </button>
+                                  </div>
                                 )}
                                 {orderFilter === 'delivered' && (
                                   <span className="admin-badge badge-success">Completed</span>
                                 )}
                                 {orderFilter === 'cancelled' && (
                                   <span className="admin-badge badge-error">Cancelled</span>
+                                )}
+                                {orderFilter === 'returned' && (
+                                  <span className="admin-badge badge-warning" style={{ background: '#ffedd5', color: '#ea580c' }}>Returned</span>
                                 )}
                               </td>
                             </tr>

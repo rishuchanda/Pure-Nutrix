@@ -859,3 +859,35 @@
     flex-direction: column;
   }
 }
+
+/* Print Styles for Invoice */
+@media print {
+  body {
+    background: #fff;
+  }
+  .Navbar, .Footer, .desktop-sidebar, .dashboard-header, .print-hide, .logout-wrapper, .wave-bg {
+    display: none !important;
+  }
+  .account-redesign-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    max-width: 100% !important;
+  }
+  .desktop-main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .mobile-orders {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .orders-page-content {
+    padding: 0 !important;
+  }
+  .order-detail-header, .order-address-box {
+    box-shadow: none !important;
+    border: 1px solid #eee;
+  }
+}
