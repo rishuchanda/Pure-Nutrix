@@ -264,9 +264,16 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                     <span className="order-date">{formattedDate}</span>
                   </div>
                   <div className="order-card-middle">
-                    <div className="tracking-row">
-                      <span className="label">Item:</span>
-                      <span className="value" style={{display: 'block', marginTop: 4}}>{order.product_name}</span>
+                    <div className="tracking-row" style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+                      {order.image ? (
+                        <img src={order.image} alt="product" style={{width: 56, height: 56, borderRadius: 12, objectFit: 'cover'}} />
+                      ) : (
+                        <div style={{width: 56, height: 56, borderRadius: 12, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Package size={24} color="#ccc" /></div>
+                      )}
+                      <div>
+                        <span className="label">Item:</span>
+                        <span className="value" style={{display: 'block', marginTop: 4, lineHeight: 1.3}}>{order.product_name}</span>
+                      </div>
                     </div>
                     <div className="qty-amount-row" style={{marginTop: 12}}>
                       <span className="label">Quantity: <span className="value">1</span></span>
@@ -294,10 +301,10 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
     const status = activeOrder.status.toLowerCase();
     
-    // Status Logic
     const isCancelled = status === 'cancelled';
     const isReturned = status === 'returned';
-    const isProcessing = !isCancelled && !isReturned; // Basic path
+    const isProcessing = status === 'processing' || status === 'shipped' || status === 'out_for_delivery' || status === 'delivered';
+    const isShipped = status === 'shipped' || status === 'out_for_delivery' || status === 'delivered';
     const isOutForDelivery = status === 'out_for_delivery' || status === 'delivered';
     const isDelivered = status === 'delivered';
 
@@ -336,9 +343,16 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                 Invoice
               </button>
             </div>
-            <div className="odh-item">
-              <p className="odh-name">{activeOrder.product_name}</p>
-              <p className="odh-price">₹{activeOrder.total_amount}</p>
+            <div className="odh-item" style={{display: 'flex', gap: 16, marginTop: 16}}>
+              {activeOrder.image ? (
+                <img src={activeOrder.image} alt="product" style={{width: 64, height: 64, borderRadius: 12, objectFit: 'cover'}} />
+              ) : (
+                <div style={{width: 64, height: 64, borderRadius: 12, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Package size={24} color="#ccc" /></div>
+              )}
+              <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+                <p className="odh-name">{activeOrder.product_name}</p>
+                <p className="odh-price">₹{activeOrder.total_amount}</p>
+              </div>
             </div>
           </div>
 
@@ -346,19 +360,31 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
             <h3 className="tracking-title">Track Order</h3>
             
             <div className="tracking-timeline">
-              {/* Step 1: Processing */}
+              {/* Step 1: Order Placed */}
+              <div className="tracking-step">
+                <div className={`t-icon active`}>
+                  <CheckCircle size={16} />
+                </div>
+                <div className="t-content">
+                  <h4>Order Placed</h4>
+                  <p>We have received your order</p>
+                </div>
+              </div>
+              <div className={`t-line ${isProcessing || isCancelled || isReturned ? 'active' : ''}`}></div>
+
+              {/* Step 2: Processing */}
               <div className="tracking-step">
                 <div className={`t-icon ${isProcessing || isCancelled || isReturned ? 'active' : ''}`}>
                   <CheckCircle size={16} />
                 </div>
                 <div className="t-content">
                   <h4>Order Processing</h4>
-                  <p>Order received and being prepared</p>
+                  <p>Your items are being prepared</p>
                 </div>
               </div>
-              <div className={`t-line ${isOutForDelivery || isCancelled || isReturned ? 'active' : ''}`}></div>
+              <div className={`t-line ${isShipped || isCancelled || isReturned ? 'active' : ''}`}></div>
 
-              {/* Step 2: Out for Delivery (or Cancelled/Returned indicator) */}
+              {/* Step 3: Shipped / Cancelled / Returned */}
               {isCancelled ? (
                 <div className="tracking-step">
                   <div className="t-icon active red">
@@ -382,6 +408,18 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
               ) : (
                 <>
                   <div className="tracking-step">
+                    <div className={`t-icon ${isShipped ? 'active' : ''}`}>
+                      <CheckCircle size={16} />
+                    </div>
+                    <div className="t-content">
+                      <h4>Shipped</h4>
+                      <p>Package handed to courier</p>
+                    </div>
+                  </div>
+                  <div className={`t-line ${isOutForDelivery ? 'active' : ''}`}></div>
+
+                  {/* Step 4: Out for Delivery */}
+                  <div className="tracking-step">
                     <div className={`t-icon ${isOutForDelivery ? 'active' : ''}`}>
                       <CheckCircle size={16} />
                     </div>
@@ -392,7 +430,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                   </div>
                   <div className={`t-line ${isDelivered ? 'active' : ''}`}></div>
 
-                  {/* Step 3: Delivered */}
+                  {/* Step 5: Delivered */}
                   <div className="tracking-step">
                     <div className={`t-icon ${isDelivered ? 'active' : ''}`}>
                       <CheckCircle size={16} />
