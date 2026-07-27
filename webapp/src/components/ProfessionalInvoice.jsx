@@ -79,8 +79,7 @@ const ProfessionalInvoice = ({ order, onClose }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #111', paddingBottom: '24px', marginBottom: '32px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <Activity size={28} color="#111" />
-                  <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', color: '#111' }}>PURE NUTRIX</h1>
+                  <img src="/pure-nutrix-logo.png" alt="Pure Nutrix Logo" style={{ height: '36px', objectFit: 'contain' }} />
                 </div>
                 <p style={{ margin: 0, fontSize: '11px', color: '#666', letterSpacing: '2px', textTransform: 'uppercase' }}>Science. Nature. Health.</p>
               </div>

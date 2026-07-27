@@ -789,6 +789,12 @@
     gap: 20px;
   }
   
+  .desktop-main-content {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
   .desktop-profile-card {
     background: #fff;
     border-radius: 24px;
@@ -833,7 +839,8 @@
   
   .desktop-main-content .mobile-dashboard, 
   .desktop-main-content .mobile-orders {
-    max-width: none;
+    max-width: 100%;
+    box-sizing: border-box;
     box-shadow: 0 10px 40px rgba(0,0,0,0.04);
     border-radius: 30px;
     margin: 0;
