@@ -639,6 +639,134 @@
   cursor: pointer;
 }
 
+/* Order Details */
+.order-detail-header {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.odh-top {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+.odh-top h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #111;
+}
+.odh-top p {
+  margin: 0;
+  color: #888;
+  font-size: 13px;
+}
+.odh-name {
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 4px;
+}
+.odh-price {
+  margin: 0;
+  color: #ff0055;
+  font-weight: 700;
+}
+
+/* Tracking Timeline */
+.tracking-container {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.tracking-title {
+  margin: 0 0 20px;
+  font-size: 18px;
+  color: #111;
+}
+.tracking-timeline {
+  display: flex;
+  flex-direction: column;
+}
+.tracking-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.t-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #eee;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.t-icon.active {
+  background: #00cc66;
+  color: #fff;
+}
+.t-icon.active.red {
+  background: #ff0055;
+}
+.t-icon.active.yellow {
+  background: #ffb700;
+}
+.t-content {
+  padding-top: 4px;
+}
+.t-content h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: #111;
+}
+.t-content h4.red-text { color: #ff0055; }
+.t-content h4.yellow-text { color: #ffb700; }
+.t-content p {
+  margin: 0;
+  font-size: 13px;
+  color: #888;
+}
+.t-line {
+  width: 2px;
+  height: 40px;
+  background: #eee;
+  margin-left: 15px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  transition: all 0.3s;
+}
+.t-line.active {
+  background: #00cc66;
+}
+
+.order-address-box {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+}
+.order-address-box h4 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #111;
+}
+.address-text {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+.tracking-id-box {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #333;
+}
+
 /* Desktop Media Query */
 @media (min-width: 768px) {
   .account-redesign-wrapper {

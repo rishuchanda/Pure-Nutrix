@@ -3,19 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, Search, Package, CheckCircle, Layers, 
   Tag, Gift, Star, Heart, Headphones, User, MapPin, 
-  ChevronRight, LogOut, Camera, Copy, Plus
+  ChevronRight, LogOut, Camera, Copy, Plus, XCircle
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import './AccountPage.css';
 
 const AccountPage = ({ user, onBack, onSignOut }) => {
-  const [view, setView] = useState('dashboard'); // dashboard, orders, routine, stacks, offers, refer, reviews, profile, address, wishlist
+  const [view, setView] = useState('dashboard');
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
-  const [orderFilter, setOrderFilter] = useState('All'); 
+  const [allProducts, setAllProducts] = useState([]);
+  const [activeOrder, setActiveOrder] = useState(null);
 
   // Persistent Routine State
-  const [routineChecked, setRoutineChecked] = useState({ morning: false, workout: false, night: false });
+  const [routineChecked, setRoutineChecked] = useState({});
 
   // Load routing from URL on mount and listen to popstate
   useEffect(() => {
@@ -25,17 +26,15 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
       
       if (mainView === 'account') {
         setView(subView || 'dashboard');
+        if (subView !== 'order-details') setActiveOrder(null);
       }
     };
 
-    // Initial check
     handlePopState();
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Update URL when view changes inside the dashboard
   const navigateTo = (newView) => {
     setView(newView);
     if (newView === 'dashboard') {
@@ -44,6 +43,11 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
       window.history.pushState({ view: 'account', subView: newView }, '', `#account/${newView}`);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOrderDetails = (order) => {
+    setActiveOrder(order);
+    navigateTo('order-details');
   };
 
   // Routine Persistence
@@ -64,48 +68,43 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     localStorage.setItem('purenutrix_routine', JSON.stringify(updated));
   };
 
-  // Orders
+  // Data Fetching
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchData = async () => {
       if (!user) return;
       try {
-        const { data, error } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-          
-        if (error) throw error;
-        setOrders(data);
+        const [ordersRes, productsRes] = await Promise.all([
+          supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('products').select('*')
+        ]);
+        if (ordersRes.error) throw ordersRes.error;
+        if (productsRes.error) throw productsRes.error;
+        
+        setOrders(ordersRes.data || []);
+        setAllProducts(productsRes.data || []);
       } catch (error) {
-        console.error('Error fetching orders:', error.message);
+        console.error('Error fetching data:', error.message);
       } finally {
         setLoadingOrders(false);
       }
     };
-    fetchOrders();
+    fetchData();
   }, [user]);
 
   const userEmail = user?.email || 'premium.member@purenutrix.com';
   const userName = userEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ') || 'Valued Member';
   const displayUserName = userName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 
-  const navigateToOrders = (filter = 'All') => {
-    setOrderFilter(filter);
-    navigateTo('orders');
-  };
-
-  const getFilteredOrders = () => {
-    if (orderFilter === 'All') return orders;
-    let filterTerm = orderFilter.toLowerCase();
-    if (filterTerm === 'pending payment') filterTerm = 'pending';
-    return orders.filter(o => o.status.toLowerCase().includes(filterTerm));
-  };
-
   const handleCopyReferral = () => {
     const code = `NUTRIX-${user?.id?.substring(0,6).toUpperCase() || 'VIP26'}`;
     navigator.clipboard.writeText(code);
     alert('Referral Code Copied: ' + code);
+  };
+
+  // Extract unique products bought by user for the Routine
+  const getRoutineItems = () => {
+    const uniqueProductNames = [...new Set(orders.map(o => o.product_name))].filter(Boolean);
+    return uniqueProductNames;
   };
 
   const renderDashboardGrid = () => (
@@ -149,10 +148,8 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
       </div>
 
       <div className="dashboard-content premium-content">
-        
-        {/* 1:1 Square Grid for Core Features */}
         <div className="premium-grid">
-          <div className="premium-grid-card" onClick={() => navigateToOrders('All')}>
+          <div className="premium-grid-card" onClick={() => navigateTo('orders')}>
             <div className="grid-icon-wrap"><Package size={28} strokeWidth={1.5} color="#333" /></div>
             <span>My Orders</span>
           </div>
@@ -178,7 +175,6 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
           </div>
         </div>
 
-        {/* Vertical Menu List for Mobile (Hidden on Desktop) */}
         <div className="premium-menu-list mobile-only">
           <div className="menu-item" onClick={() => navigateTo('wishlist')}>
             <div className="menu-left">
@@ -220,78 +216,229 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     </motion.div>
   );
 
-  const renderOrdersList = () => {
-    const filteredOrders = getFilteredOrders();
+  const renderOrdersList = () => (
+    <motion.div 
+      className="mobile-orders"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      key="orders"
+    >
+      <div className="dashboard-header orders-header">
+        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}>
+          <ChevronLeft size={24} />
+        </button>
+        <button className="search-btn-header">
+          <Search size={24} />
+        </button>
+      </div>
+
+      <div className="orders-page-content">
+        <h1 className="page-main-title">All Orders</h1>
+        
+        <div className="orders-list-cards" style={{marginTop: 20}}>
+          {loadingOrders ? (
+            <p className="loading-text">Loading orders...</p>
+          ) : orders.length === 0 ? (
+            <div className="premium-empty-state">
+              <Package size={40} color="#ccc" />
+              <p>No orders found.</p>
+            </div>
+          ) : (
+            orders.map(order => {
+              const dateObj = new Date(order.created_at);
+              const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
+              const isDelivered = order.status.toLowerCase() === 'delivered';
+              const isCancelled = order.status.toLowerCase() === 'cancelled';
+              const isReturned = order.status.toLowerCase() === 'returned';
+              
+              let statusMsg = "Order Processing";
+              if (isDelivered) statusMsg = "Order Delivered";
+              else if (isCancelled) statusMsg = "Order Cancelled";
+              else if (isReturned) statusMsg = "Order Returned";
+              
+              return (
+                <div key={order.id} className="order-card-new premium-shadow">
+                  <div className="order-card-top">
+                    <span className="order-no">Order No: {order.id.split('-')[0].toUpperCase()}</span>
+                    <span className="order-date">{formattedDate}</span>
+                  </div>
+                  <div className="order-card-middle">
+                    <div className="tracking-row">
+                      <span className="label">Item:</span>
+                      <span className="value" style={{display: 'block', marginTop: 4}}>{order.product_name}</span>
+                    </div>
+                    <div className="qty-amount-row" style={{marginTop: 12}}>
+                      <span className="label">Quantity: <span className="value">1</span></span>
+                      <span className="label">Total: <span className="value bold">₹{order.total_amount}</span></span>
+                    </div>
+                  </div>
+                  <div className="order-card-bottom">
+                    <button className="details-btn" onClick={() => handleOrderDetails(order)}>Details</button>
+                    <span className={`status-text ${order.status.toLowerCase()}`}>
+                      {statusMsg}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderOrderDetails = () => {
+    if (!activeOrder) return null;
+    const dateObj = new Date(activeOrder.created_at);
+    const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
+    const status = activeOrder.status.toLowerCase();
     
+    // Status Logic
+    const isCancelled = status === 'cancelled';
+    const isReturned = status === 'returned';
+    const isProcessing = !isCancelled && !isReturned; // Basic path
+    const isOutForDelivery = status === 'out_for_delivery' || status === 'delivered';
+    const isDelivered = status === 'delivered';
+
     return (
       <motion.div 
         className="mobile-orders"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
-        key="orders"
+        key="order-details"
       >
         <div className="dashboard-header orders-header">
-          <button className="back-btn-header" onClick={() => navigateTo('dashboard')}>
+          <button className="back-btn-header" onClick={() => navigateTo('orders')}>
             <ChevronLeft size={24} />
           </button>
-          <button className="search-btn-header">
-            <Search size={24} />
-          </button>
+          <span className="header-title">Order Details</span>
+          <div style={{ width: 24 }}></div> 
         </div>
 
         <div className="orders-page-content">
-          <h1 className="page-main-title">Order History</h1>
-          
-          <div className="order-tabs-scroll">
-            {['All', 'Pending Payment', 'Processing', 'Delivered', 'Cancelled'].map(tab => (
-              <button 
-                key={tab}
-                className={`order-tab ${orderFilter === tab ? 'active' : ''}`}
-                onClick={() => setOrderFilter(tab)}
-              >
-                {tab}
-              </button>
-            ))}
+          <div className="order-detail-header premium-shadow">
+            <div className="odh-top">
+              <h3>Order ID: {activeOrder.id.split('-')[0].toUpperCase()}</h3>
+              <p>Placed on {formattedDate}</p>
+            </div>
+            <div className="odh-item">
+              <p className="odh-name">{activeOrder.product_name}</p>
+              <p className="odh-price">₹{activeOrder.total_amount}</p>
+            </div>
           </div>
 
-          <div className="orders-list-cards">
-            {loadingOrders ? (
-              <p className="loading-text">Loading orders...</p>
-            ) : filteredOrders.length === 0 ? (
-              <div className="premium-empty-state">
-                <Package size={40} color="#ccc" />
-                <p>No orders found in this category.</p>
+          <div className="tracking-container premium-shadow">
+            <h3 className="tracking-title">Track Order</h3>
+            
+            <div className="tracking-timeline">
+              {/* Step 1: Processing */}
+              <div className="tracking-step">
+                <div className={`t-icon ${isProcessing || isCancelled || isReturned ? 'active' : ''}`}>
+                  <CheckCircle size={16} />
+                </div>
+                <div className="t-content">
+                  <h4>Order Processing</h4>
+                  <p>Order received and being prepared</p>
+                </div>
               </div>
-            ) : (
-              filteredOrders.map(order => {
-                const dateObj = new Date(order.created_at);
-                const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
-                
-                return (
-                  <div key={order.id} className="order-card-new premium-shadow">
-                    <div className="order-card-top">
-                      <span className="order-no">Order No: {order.id.split('-')[0]}</span>
-                      <span className="order-date">{formattedDate}</span>
+              <div className={`t-line ${isOutForDelivery || isCancelled || isReturned ? 'active' : ''}`}></div>
+
+              {/* Step 2: Out for Delivery (or Cancelled/Returned indicator) */}
+              {isCancelled ? (
+                <div className="tracking-step">
+                  <div className="t-icon active red">
+                    <XCircle size={16} />
+                  </div>
+                  <div className="t-content">
+                    <h4 className="red-text">Order Cancelled</h4>
+                    <p>This order was cancelled.</p>
+                  </div>
+                </div>
+              ) : isReturned ? (
+                <div className="tracking-step">
+                  <div className="t-icon active yellow">
+                    <XCircle size={16} />
+                  </div>
+                  <div className="t-content">
+                    <h4 className="yellow-text">Order Returned</h4>
+                    <p>Order has been returned.</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="tracking-step">
+                    <div className={`t-icon ${isOutForDelivery ? 'active' : ''}`}>
+                      <CheckCircle size={16} />
                     </div>
-                    <div className="order-card-middle">
-                      <div className="tracking-row">
-                        <span className="label">Tracking:</span>
-                        <span className="value">{order.tracking_id || 'Pending'}</span>
-                      </div>
-                      <div className="qty-amount-row">
-                        <span className="label">Quantity: <span className="value">1</span></span>
-                        <span className="label">Total: <span className="value bold">₹{order.total_amount}</span></span>
-                      </div>
-                    </div>
-                    <div className="order-card-bottom">
-                      <button className="details-btn">Details</button>
-                      <span className={`status-text ${order.status.toLowerCase()}`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()}
-                      </span>
+                    <div className="t-content">
+                      <h4>Out for Delivery</h4>
+                      <p>Package is on the way</p>
                     </div>
                   </div>
-                );
+                  <div className={`t-line ${isDelivered ? 'active' : ''}`}></div>
+
+                  {/* Step 3: Delivered */}
+                  <div className="tracking-step">
+                    <div className={`t-icon ${isDelivered ? 'active' : ''}`}>
+                      <CheckCircle size={16} />
+                    </div>
+                    <div className="t-content">
+                      <h4>Delivered</h4>
+                      <p>Package handed to customer</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+          
+          <div className="order-address-box premium-shadow">
+            <h4>Shipping Information</h4>
+            <p className="address-text">{activeOrder.address || "No address provided"}</p>
+            {activeOrder.tracking_id && (
+              <div className="tracking-id-box">
+                <strong>Courier Tracking ID:</strong> {activeOrder.tracking_id}
+              </div>
+            )}
+          </div>
+
+        </div>
+      </motion.div>
+    );
+  };
+
+  const renderRoutineTracker = () => {
+    const routineItems = getRoutineItems();
+    
+    return (
+      <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="routine">
+        <div className="dashboard-header orders-header">
+          <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
+        </div>
+        <div className="orders-page-content">
+          <h1 className="page-main-title">Daily Routine</h1>
+          <p className="premium-subtitle">Track your actual supplement intake based on your past orders.</p>
+          
+          <div className="routine-list">
+            {routineItems.length === 0 ? (
+              <div className="premium-empty-state">
+                <CheckCircle size={40} color="#ccc" />
+                <p>Buy products to build your daily routine!</p>
+              </div>
+            ) : (
+              routineItems.map((item, idx) => {
+                const key = `routine_${idx}`;
+                return (
+                  <div key={idx} className={`routine-card premium-shadow ${routineChecked[key] ? 'completed' : ''}`} onClick={() => toggleRoutine(key)}>
+                    <div className="routine-info">
+                      <h3>Daily Dosage</h3>
+                      <p>{item}</p>
+                    </div>
+                    <div className="check-circle-ui">{routineChecked[key] && <CheckCircle size={20} color="#fff" />}</div>
+                  </div>
+                )
               })
             )}
           </div>
@@ -299,44 +446,6 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
       </motion.div>
     );
   };
-
-  const renderRoutineTracker = () => (
-    <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="routine">
-      <div className="dashboard-header orders-header">
-        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
-      </div>
-      <div className="orders-page-content">
-        <h1 className="page-main-title">Daily Routine</h1>
-        <p className="premium-subtitle">Track your supplement intake to stay consistent.</p>
-        
-        <div className="routine-list">
-          <div className={`routine-card premium-shadow ${routineChecked.morning ? 'completed' : ''}`} onClick={() => toggleRoutine('morning')}>
-            <div className="routine-info">
-              <h3>Morning Dosage</h3>
-              <p>L-Glutathione 1000mg + Vitamin C</p>
-            </div>
-            <div className="check-circle-ui">{routineChecked.morning && <CheckCircle size={20} color="#fff" />}</div>
-          </div>
-          
-          <div className={`routine-card premium-shadow ${routineChecked.workout ? 'completed' : ''}`} onClick={() => toggleRoutine('workout')}>
-            <div className="routine-info">
-              <h3>Post-Workout</h3>
-              <p>100% Whey Protein Isolate (1 Scoop)</p>
-            </div>
-            <div className="check-circle-ui">{routineChecked.workout && <CheckCircle size={20} color="#fff" />}</div>
-          </div>
-          
-          <div className={`routine-card premium-shadow ${routineChecked.night ? 'completed' : ''}`} onClick={() => toggleRoutine('night')}>
-            <div className="routine-info">
-              <h3>Night Recovery</h3>
-              <p>Ashwagandha KSM-66</p>
-            </div>
-            <div className="check-circle-ui">{routineChecked.night && <CheckCircle size={20} color="#fff" />}</div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
 
   const renderReferAndEarn = () => (
     <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="refer">
@@ -385,44 +494,61 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     </motion.div>
   );
 
-  const renderSavedStacks = () => (
-    <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="stacks">
-      <div className="dashboard-header orders-header">
-        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
-      </div>
-      <div className="orders-page-content">
-        <h1 className="page-main-title">Saved Stacks</h1>
-        <p className="premium-subtitle">Bundle your favorite supplements for 1-click checkout.</p>
-        
-        <div className="stack-card premium-shadow">
-          <div className="stack-header">
-            <h3>Glow & Radiance Stack</h3>
-            <span className="stack-price">₹1299</span>
-          </div>
-          <p className="stack-desc">L-Glutathione 1000mg + Collagen Peptides</p>
-          <button className="btn-primary stack-add-btn" onClick={() => alert('Stack added to cart!')}>
-            <Plus size={16} /> Add Stack to Cart
-          </button>
+  const renderSavedStacks = () => {
+    // Take real products from allProducts. 
+    // We will build a couple of mock stacks using actual names and prices from DB if they exist.
+    const product1 = allProducts[0];
+    const product2 = allProducts[1];
+    
+    return (
+      <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="stacks">
+        <div className="dashboard-header orders-header">
+          <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
         </div>
+        <div className="orders-page-content">
+          <h1 className="page-main-title">Saved Stacks</h1>
+          <p className="premium-subtitle">Bundle your favorite supplements for 1-click checkout.</p>
+          
+          <div className="orders-list-cards">
+            {product1 && (
+              <div className="stack-card premium-shadow">
+                <div className="stack-header">
+                  <h3>Essential Stack</h3>
+                  <span className="stack-price">₹{product1.price}</span>
+                </div>
+                <p className="stack-desc">{product1.name} - {product1.description?.substring(0, 50)}...</p>
+                <button className="btn-primary stack-add-btn" onClick={() => alert('Stack added to cart!')}>
+                  <Plus size={16} /> Add Stack to Cart
+                </button>
+              </div>
+            )}
 
-        <div className="stack-card premium-shadow" style={{marginTop: 16}}>
-          <div className="stack-header">
-            <h3>Muscle Recovery Stack</h3>
-            <span className="stack-price">₹2899</span>
+            {product2 && (
+              <div className="stack-card premium-shadow">
+                <div className="stack-header">
+                  <h3>Pro Performance Stack</h3>
+                  <span className="stack-price">₹{product2.price}</span>
+                </div>
+                <p className="stack-desc">{product2.name} - {product2.description?.substring(0, 50)}...</p>
+                <button className="btn-primary stack-add-btn" onClick={() => alert('Stack added to cart!')}>
+                  <Plus size={16} /> Add Stack to Cart
+                </button>
+              </div>
+            )}
+            
+            {!product1 && !product2 && (
+              <p className="loading-text">No active products to build stacks.</p>
+            )}
           </div>
-          <p className="stack-desc">100% Whey Isolate + Ashwagandha KSM-66</p>
-          <button className="btn-primary stack-add-btn" onClick={() => alert('Stack added to cart!')}>
-            <Plus size={16} /> Add Stack to Cart
-          </button>
         </div>
-      </div>
-    </motion.div>
-  );
+      </motion.div>
+    );
+  };
 
   return (
     <div className="account-redesign-wrapper">
       
-      {/* Desktop Sidebar (hidden on mobile) */}
+      {/* Desktop Sidebar */}
       <div className="desktop-sidebar">
         <div className="desktop-profile-card premium-shadow">
           <div className="avatar-circle">
@@ -471,11 +597,12 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
         </div>
       </div>
 
-      {/* Main Content Area (Mobile gets everything, Desktop gets only the active view) */}
+      {/* Main Content Area */}
       <div className="desktop-main-content">
         <AnimatePresence mode="wait">
           {view === 'dashboard' && renderDashboardGrid()}
           {view === 'orders' && renderOrdersList()}
+          {view === 'order-details' && renderOrderDetails()}
           {view === 'routine' && renderRoutineTracker()}
           {view === 'refer' && renderReferAndEarn()}
           {view === 'offers' && renderOffers()}
