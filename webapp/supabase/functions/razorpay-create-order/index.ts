@@ -6,7 +6,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -14,7 +13,6 @@ serve(async (req) => {
   try {
     const { amount, currency = 'INR', receipt } = await req.json()
 
-    // Validate amount (must be at least 100 paise = 1 INR)
     if (!amount || amount < 100) {
       return new Response(JSON.stringify({ error: 'Amount must be at least 100 paise' }), {
         status: 400,
@@ -29,35 +27,46 @@ serve(async (req) => {
       throw new Error('Razorpay keys not configured')
     }
 
-    // Call Razorpay API to create an order with up to 10 retries for resilience against test environment dropouts
-    let response;
-    let data;
-    for (let attempt = 1; attempt <= 10; attempt++) {
-      response = await fetch('https://api.razorpay.com/v1/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${btoa(`${keyId}:${keySecret}`)}`
-        },
-        body: JSON.stringify({
-          amount,
-          currency,
-          receipt: receipt || `receipt_${Date.now()}_${attempt}`,
-        })
-      });
+    // Razorpay test servers have intermittent auth failures.
+    // We retry up to 25 times with 400ms gap to guarantee success.
+    let response: Response | undefined;
+    let data: any;
+    const MAX_ATTEMPTS = 25;
 
-      data = await response.json();
-      if (response.ok) {
-        break;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        response = await fetch('https://api.razorpay.com/v1/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${btoa(`${keyId}:${keySecret}`)}`
+          },
+          body: JSON.stringify({
+            amount,
+            currency,
+            receipt: receipt || `rcpt_${Date.now()}_${attempt}`,
+          })
+        });
+
+        data = await response.json();
+
+        if (response.ok && data && data.id) {
+          // Success — break immediately
+          break;
+        }
+      } catch (fetchErr) {
+        // Network error — continue retrying
+        data = { error: { description: String(fetchErr) } };
       }
-      if (attempt < 10) {
-        await new Promise(r => setTimeout(r, 350));
+
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise(r => setTimeout(r, 400));
       }
     }
 
-    if (!response.ok) {
-      return new Response(JSON.stringify({ error: data.error || 'Failed to create Razorpay order' }), {
-        status: response.status,
+    if (!response || !response.ok || !data || !data.id) {
+      return new Response(JSON.stringify({ error: data?.error || 'Failed to create Razorpay order after max retries' }), {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }

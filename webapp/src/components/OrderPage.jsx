@@ -128,10 +128,10 @@ const OrderPage = ({ product, cartItems, onBack }) => {
           throw new Error('Razorpay SDK failed to load. Are you online?');
         }
 
-        // 1. Create order using standard fetch with automatic retry loop for 100% resilience against Razorpay test environment dropouts
+        // 1. Create order — retry up to 5 times (each call internally retries 25x on the server side)
         let orderResponse;
         let orderData;
-        for (let attempt = 1; attempt <= 3; attempt++) {
+        for (let attempt = 1; attempt <= 5; attempt++) {
           try {
             orderResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-create-order`, {
               method: 'POST',
@@ -148,15 +148,15 @@ const OrderPage = ({ product, cartItems, onBack }) => {
           } catch (e) {
             console.warn(`Order creation attempt ${attempt} failed:`, e);
           }
-          if (attempt < 3) {
-            await new Promise(r => setTimeout(r, 800));
+          if (attempt < 5) {
+            await new Promise(r => setTimeout(r, 1000));
           }
         }
 
-        if (!orderResponse.ok || !orderData || !orderData.id) {
-          const errMsg = (orderData && orderData.error) 
-            ? (typeof orderData.error === 'object' ? JSON.stringify(orderData.error) : orderData.error) 
-            : `Server returned ${orderResponse.status}: ${orderText.substring(0, 50)}`;
+        if (!orderData || !orderData.id) {
+          const errMsg = (orderData && orderData.error)
+            ? (typeof orderData.error === 'object' ? orderData.error.description || JSON.stringify(orderData.error) : orderData.error)
+            : 'Could not create order. Please try again.';
           throw new Error(errMsg);
         }
 
