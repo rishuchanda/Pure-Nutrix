@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp, Share2 } from 'lucide-react';
 import { getProductReviews, addCustomerReview } from '../utils/mockReviews';
 import { getProductDetails } from '../utils/productDetailsData';
 import { supabase } from '../supabaseClient';
@@ -245,7 +245,33 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
 
           {/* RIGHT COLUMN - PRODUCT INFO */}
           <div className="pdp-info-column">
-            <span className="pdp-badge-best-seller">Best Seller</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span className="pdp-badge-best-seller">Best Seller</span>
+              <button 
+                className="pdp-share-btn"
+                onClick={async () => {
+                  const shareData = {
+                    title: `Pure Nutrix - ${product.name}`,
+                    text: `Hey! Check out this amazing product from Pure Nutrix: ${product.name}. 🌿\n\nIt's a best-seller and highly rated!`,
+                    url: window.location.href,
+                  };
+                  try {
+                    if (navigator.share) {
+                      await navigator.share(shareData);
+                    } else {
+                      // Fallback for desktop
+                      await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
+                      alert("Link and message copied to clipboard! You can now paste and share it anywhere.");
+                    }
+                  } catch (err) {
+                    console.log('Error sharing:', err);
+                  }
+                }}
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+              >
+                <Share2 size={14} /> Share
+              </button>
+            </div>
 
             <h1 className="pdp-title">{product.name}</h1>
             <p className="pdp-subtitle">{details.subtitle}</p>
