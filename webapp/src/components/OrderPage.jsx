@@ -144,6 +144,16 @@ const OrderPage = ({ product, cartItems, onBack }) => {
           console.error('Failed to send confirmation messages:', commError);
         }
 
+        // Meta Pixel Purchase Event
+        if (window.fbq) {
+          window.fbq('track', 'Purchase', {
+            content_name: finalProductName,
+            content_type: 'product',
+            value: finalTotal,
+            currency: 'INR'
+          });
+        }
+
         setTimeout(() => {
           setIsProcessing(false);
           setIsSuccess(true);

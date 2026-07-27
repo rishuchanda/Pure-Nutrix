@@ -118,6 +118,18 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
       }
     };
     fetchOthers();
+    
+    // Meta Pixel ViewContent Event
+    if (window.fbq) {
+      window.fbq('track', 'ViewContent', {
+        content_name: product.name,
+        content_category: product.category,
+        content_ids: [product.id],
+        content_type: 'product',
+        value: product.price,
+        currency: 'INR'
+      });
+    }
   }, [product]);
 
   if (!product) return null;

@@ -149,6 +149,18 @@ function App() {
       }
       return [...prev, { product, quantity: 1 }];
     });
+    
+    // Meta Pixel AddToCart
+    if (window.fbq) {
+      window.fbq('track', 'AddToCart', {
+        content_name: product.name,
+        content_ids: [product.id],
+        content_type: 'product',
+        value: product.price,
+        currency: 'INR'
+      });
+    }
+
     // Visual feedback handled by alert for now, or just let them know
     alert('Added to cart!');
   };
@@ -179,6 +191,16 @@ function App() {
     const path = product.slug ? `#order/${product.slug}` : `#order/${product.id}`;
     window.history.pushState({ view: 'order', product }, '', path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Meta Pixel InitiateCheckout
+    if (window.fbq) {
+      window.fbq('track', 'InitiateCheckout', {
+        content_ids: [product.id],
+        content_name: product.name,
+        value: product.price,
+        currency: 'INR'
+      });
+    }
   };
 
   const handleOpenProducts = () => {
