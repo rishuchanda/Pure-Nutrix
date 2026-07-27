@@ -301,6 +301,10 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     const isOutForDelivery = status === 'out_for_delivery' || status === 'delivered';
     const isDelivered = status === 'delivered';
 
+    const orderAddress = activeOrder.shipping_address 
+      ? `${activeOrder.shipping_address}, ${activeOrder.city || ''}, ${activeOrder.state || ''} - ${activeOrder.pincode || ''}`
+      : "No address provided";
+
     return (
       <motion.div 
         className="mobile-orders"
@@ -319,9 +323,18 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
 
         <div className="orders-page-content">
           <div className="order-detail-header premium-shadow">
-            <div className="odh-top">
-              <h3>Order ID: {activeOrder.id.split('-')[0].toUpperCase()}</h3>
-              <p>Placed on {formattedDate}</p>
+            <div className="odh-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3>Order ID: {activeOrder.id.split('-')[0].toUpperCase()}</h3>
+                <p>Placed on {formattedDate}</p>
+              </div>
+              <button 
+                className="btn-outline-premium" 
+                style={{ width: 'auto', padding: '6px 12px', fontSize: '13px', borderRadius: '8px' }}
+                onClick={() => alert('Downloading Invoice...')}
+              >
+                Invoice
+              </button>
             </div>
             <div className="odh-item">
               <p className="odh-name">{activeOrder.product_name}</p>
@@ -396,13 +409,44 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
           
           <div className="order-address-box premium-shadow">
             <h4>Shipping Information</h4>
-            <p className="address-text">{activeOrder.address || "No address provided"}</p>
+            <p className="address-text">{orderAddress}</p>
             {activeOrder.tracking_id && (
               <div className="tracking-id-box">
                 <strong>Courier Tracking ID:</strong> {activeOrder.tracking_id}
               </div>
             )}
           </div>
+
+          {isDelivered && (
+            <div className="order-address-box premium-shadow" style={{marginTop: 24}}>
+              <h4>Rate this Product</h4>
+              <p className="address-text" style={{marginBottom: 12}}>How was your experience with {activeOrder.product_name}?</p>
+              <button 
+                className="btn-outline-premium" 
+                style={{ background: '#111', color: '#fff', border: 'none', padding: '12px' }}
+                onClick={() => alert('Review prompt opened!')}
+              >
+                Write a Review
+              </button>
+            </div>
+          )}
+
+          {allProducts.length > 0 && (
+            <div className="order-address-box premium-shadow" style={{marginTop: 24, paddingBottom: 16}}>
+              <h4>You might also like</h4>
+              <div style={{display: 'flex', gap: 12, overflowX: 'auto', paddingTop: 8, paddingBottom: 8}}>
+                {allProducts.slice(0, 4).map(p => (
+                  <div key={p.id} style={{minWidth: 120, border: '1px solid #eee', borderRadius: 12, padding: 8, cursor: 'pointer'}} onClick={() => alert('Redirect to product!')}>
+                    <div style={{height: 80, background: '#f8f9fa', borderRadius: 8, marginBottom: 8}}>
+                      {/* image placeholder */}
+                    </div>
+                    <p style={{margin: '0 0 4px', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{p.name}</p>
+                    <p style={{margin: 0, fontSize: 13, color: '#ff0055', fontWeight: 700}}>₹{p.price}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
       </motion.div>
