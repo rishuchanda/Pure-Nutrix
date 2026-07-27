@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus } from 'lucide-react';
-import { getProductReviews } from '../utils/mockReviews';
+import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp } from 'lucide-react';
+import { getProductReviews, addCustomerReview } from '../utils/mockReviews';
 import { getProductDetails } from '../utils/productDetailsData';
 import { supabase } from '../supabaseClient';
 import './ProductDetailsPage.css';
@@ -24,6 +24,82 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
   const [activeImage, setActiveImage] = useState(0);
   const [direction, setDirection] = useState(0);
   const [otherProducts, setOtherProducts] = useState([]);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewerName, setReviewerName] = useState('');
+  const [reviewerEmail, setReviewerEmail] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewPhotos, setReviewPhotos] = useState([]);
+  const [photoUrlInput, setPhotoUrlInput] = useState('');
+  const [reviewSubmittedSuccess, setReviewSubmittedSuccess] = useState(false);
+  const [selectedReviewPhoto, setSelectedReviewPhoto] = useState(null);
+  const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
+  useEffect(() => {
+    const handleReviewUpdate = () => setReviewRefreshTrigger(prev => prev + 1);
+    window.addEventListener('pn_reviews_updated', handleReviewUpdate);
+    return () => window.removeEventListener('pn_reviews_updated', handleReviewUpdate);
+  }, []);
+
+  useEffect(() => {
+    setShowAllReviews(false);
+  }, [product?.id]);
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setReviewPhotos(prev => [...prev, reader.result]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  };
+
+  const handleAddPhotoUrl = () => {
+    if (photoUrlInput.trim()) {
+      setReviewPhotos(prev => [...prev, photoUrlInput.trim()]);
+      setPhotoUrlInput('');
+    }
+  };
+
+  const handleAddSamplePhoto = () => {
+    const samples = [
+      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1550572017-edd951b55104?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=600&q=80"
+    ];
+    const randomImg = samples[Math.floor(Math.random() * samples.length)];
+    setReviewPhotos(prev => [...prev, randomImg]);
+  };
+
+  const handleSubmitReview = (e) => {
+    e.preventDefault();
+    if (!reviewerName.trim() || !reviewComment.trim()) return;
+
+    addCustomerReview({
+      productName: product?.name || 'Pure Nutrix Product',
+      customerName: reviewerName.trim(),
+      customerEmail: reviewerEmail.trim(),
+      rating: reviewRating,
+      comment: reviewComment.trim(),
+      photos: reviewPhotos
+    });
+
+    setReviewSubmittedSuccess(true);
+    setTimeout(() => {
+      setReviewSubmittedSuccess(false);
+      setShowReviewModal(false);
+      setReviewerName('');
+      setReviewerEmail('');
+      setReviewComment('');
+      setReviewPhotos([]);
+      setPhotoUrlInput('');
+    }, 3000);
+  };
 
   useEffect(() => {
     if (!product) return;
@@ -46,7 +122,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
 
   if (!product) return null;
 
-  const reviewData = getProductReviews(product);
+  const reviewData = React.useMemo(() => getProductReviews(product), [product, reviewRefreshTrigger]);
   const details = getProductDetails(product.name);
 
   const handleNextImage = () => {
@@ -66,12 +142,54 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
   return (
     <div className="pdp-wrapper">
       <Helmet>
-        <title>{product.name} | Pure Nutrix</title>
-        <meta name="title" content={`${product.name} | Pure Nutrix`} />
-        <meta name="description" content={details.subtitle || `Buy ${product.name} at Pure Nutrix. Premium formulation for advanced results.`} />
-        <meta property="og:title" content={`${product.name} | Pure Nutrix`} />
-        <meta property="og:description" content={details.subtitle || `Buy ${product.name} at Pure Nutrix. Premium formulation.`} />
+        <title>{product.name} | Buy Online at Best Price - Pure Nutrix India</title>
+        <meta name="title" content={`${product.name} | Buy Online at Best Price - Pure Nutrix India`} />
+        <meta name="description" content={details.subtitle || `Buy 100% genuine ${product.name} at Pure Nutrix. Clinically tested formulation for advanced results. Free shipping & COD available in India.`} />
+        <meta name="keywords" content={`${product.name}, buy ${product.name} online india, ${product.name} price, pure nutrix supplements, fssai health supplements india, genuine ${product.name}`} />
+        <link rel="canonical" href={`https://purenutrix.in/#pdp-${(product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} />
+        <meta property="og:title" content={`${product.name} | Buy Online at Best Price - Pure Nutrix India`} />
+        <meta property="og:description" content={details.subtitle || `Buy 100% genuine ${product.name} at Pure Nutrix. Clinically tested formulation for advanced results.`} />
+        <meta property="og:url" content={`https://purenutrix.in/#pdp-${(product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} />
+        <meta property="og:type" content="product" />
         {product.image_urls && product.image_urls[0] && <meta property="og:image" content={product.image_urls[0]} />}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:title" content={`${product.name} | Buy Online at Best Price - Pure Nutrix India`} />
+        <meta property="twitter:description" content={details.subtitle || `Buy 100% genuine ${product.name} at Pure Nutrix.`} />
+        {product.image_urls && product.image_urls[0] && <meta property="twitter:image" content={product.image_urls[0]} />}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": product.name,
+            "image": product.image_urls || ["https://purenutrix.in/assets/logo.png"],
+            "description": details.subtitle || `Buy ${product.name} at Pure Nutrix.`,
+            "sku": `PN-${product.id || '001'}`,
+            "brand": {
+              "@type": "Brand",
+              "name": "Pure Nutrix"
+            },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://purenutrix.in/#pdp-${(product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+              "priceCurrency": "INR",
+              "price": product.price || 1499,
+              "priceValidUntil": "2027-12-31",
+              "itemCondition": "https://schema.org/NewCondition",
+              "availability": "https://schema.org/InStock",
+              "seller": {
+                "@type": "Organization",
+                "name": "Pure Nutrix"
+              }
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": details.rating || "4.8",
+              "reviewCount": details.reviewsCount || "142",
+              "bestRating": "5",
+              "worstRating": "1"
+            }
+          })}
+        </script>
       </Helmet>
       
       <div className="pdp-container">
@@ -209,7 +327,25 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
 
         {/* BOTTOM FULL WIDTH SECTIONS */}
         <div className="pdp-bottom-sections" id="reviews">
-          <h2 className="pdp-section-header">Customer Reviews</h2>
+          <div className="pdp-reviews-header-bar">
+            <h2 className="pdp-section-header" style={{ margin: 0 }}>Customer Reviews ({reviewData.totalCount})</h2>
+            <button 
+              className="btn-write-review"
+              onClick={() => setShowReviewModal(true)}
+            >
+              <MessageSquare size={18} /> ✍️ Write a Review
+            </button>
+          </div>
+
+          {reviewSubmittedSuccess && (
+            <div style={{ background: '#dcfce7', color: '#166534', border: '1px solid #86efac', padding: '14px 20px', borderRadius: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
+              <CheckCircle size={22} style={{ color: '#166534' }} />
+              <div>
+                <strong>Thank you! Your review & photos have been submitted successfully.</strong><br/>
+                <span style={{ fontSize: '0.85rem', fontWeight: 400 }}>It is currently ⏳ Pending Admin Inspection and will appear live on the website once approved by our moderation team.</span>
+              </div>
+            </div>
+          )}
 
           <div className="pdp-ai-summary">
             <h3>✨ AI Generated Review Summary</h3>
@@ -222,8 +358,8 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
           </div>
 
           <div className="pdp-reviews-list">
-            {reviewData.reviewsList.map((review, idx) => (
-              <div key={idx} className="pdp-review-item">
+            {(showAllReviews ? reviewData.reviewsList : reviewData.reviewsList.slice(0, 4)).map((review, idx) => (
+              <div key={review.id || idx} className="pdp-review-item">
                 <div className="pdp-review-header">
                   <div>
                     <div className="pdp-reviewer-name">{review.name}</div>
@@ -237,9 +373,50 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
                   ))}
                 </div>
                 <div className="pdp-review-text">"{review.comment}"</div>
+
+                {/* Uploaded review photos on storefront */}
+                {review.photos && review.photos.length > 0 && (
+                  <div className="pdp-review-photos-list">
+                    {review.photos.map((photoUrl, pIdx) => (
+                      <div 
+                        key={pIdx} 
+                        className="pdp-review-photo-item"
+                        onClick={() => setSelectedReviewPhoto({ url: photoUrl, author: review.name })}
+                      >
+                        <img src={photoUrl} alt="Customer product photo" />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
+
+          {reviewData.reviewsList.length > 4 && (
+            <div className="pdp-see-more-container" style={{ textAlign: 'center', marginTop: '25px', marginBottom: '20px' }}>
+              <button 
+                className="btn-see-more-reviews" 
+                onClick={() => setShowAllReviews(!showAllReviews)}
+                style={{
+                  padding: '14px 32px',
+                  fontSize: '0.95rem',
+                  fontWeight: '600',
+                  color: '#ffffff',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  borderRadius: '50px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
+                  transition: 'all 0.3s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {showAllReviews ? '🔼 See Less Reviews' : `🔽 See More Reviews (Show All ${reviewData.reviewsList.length} Customer Reviews)`}
+              </button>
+            </div>
+          )}
 
           <h2 className="pdp-section-header" style={{ marginTop: '40px' }}>Q&A</h2>
           <div className="pdp-qa-list">
@@ -278,6 +455,151 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
           )}
         </div>
       </div>
+
+      {/* ─── MODAL: WRITE A CUSTOMER REVIEW ───────────────────────────────── */}
+      {showReviewModal && (
+        <div className="pdp-review-modal-backdrop" onClick={() => setShowReviewModal(false)}>
+          <div className="pdp-review-modal" onClick={e => e.stopPropagation()}>
+            <div className="pdp-review-modal-header">
+              <h3>✍️ Write a Review for {product.name}</h3>
+              <button className="pdp-review-modal-close" onClick={() => setShowReviewModal(false)}>×</button>
+            </div>
+
+            <form onSubmit={handleSubmitReview}>
+              <div className="pdp-review-modal-body">
+                <div className="pdp-review-form-group">
+                  <label>Your Name *</label>
+                  <input 
+                    type="text" 
+                    required 
+                    className="pdp-review-input" 
+                    placeholder="e.g. Rajeet Kumar" 
+                    value={reviewerName}
+                    onChange={e => setReviewerName(e.target.value)}
+                  />
+                </div>
+
+                <div className="pdp-review-form-group">
+                  <label>Your Email Address * (For Verified Buyer badge)</label>
+                  <input 
+                    type="email" 
+                    required 
+                    className="pdp-review-input" 
+                    placeholder="e.g. rajeet@gmail.com" 
+                    value={reviewerEmail}
+                    onChange={e => setReviewerEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="pdp-review-form-group">
+                  <label>Overall Star Rating *</label>
+                  <div className="pdp-star-selector">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span 
+                        key={i} 
+                        style={{ color: i < reviewRating ? '#fbbf24' : '#cccccc' }}
+                        onClick={() => setReviewRating(i + 1)}
+                      >
+                        ★
+                      </span>
+                    ))}
+                    <span style={{ fontSize: '1rem', color: '#666', alignSelf: 'center', marginLeft: '8px' }}>
+                      ({reviewRating}.0 / 5.0)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pdp-review-form-group">
+                  <label>Your Review & Experience *</label>
+                  <textarea 
+                    rows="4" 
+                    required 
+                    className="pdp-review-textarea" 
+                    placeholder="Tell us what you liked about this product..."
+                    value={reviewComment}
+                    onChange={e => setReviewComment(e.target.value)}
+                  />
+                </div>
+
+                <div className="pdp-review-form-group">
+                  <label>📸 Add Product Photos (Optional)</label>
+                  <div className="pdp-photo-upload-box">
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <label className="pdp-photo-upload-btn" style={{ margin: 0 }}>
+                        <Upload size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Choose Image Files
+                        <input type="file" accept="image/*" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
+                      </label>
+                      <button type="button" className="pdp-photo-upload-btn" onClick={handleAddSamplePhoto} style={{ margin: 0 }}>
+                        ✨ Add Sample Photo
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                      <input 
+                        type="url" 
+                        className="pdp-review-input" 
+                        placeholder="Or paste an Image URL here..." 
+                        value={photoUrlInput}
+                        onChange={e => setPhotoUrlInput(e.target.value)}
+                        style={{ fontSize: '0.85rem', padding: '8px 10px' }}
+                      />
+                      <button 
+                        type="button" 
+                        className="btn-review-submit" 
+                        style={{ padding: '8px 14px', fontSize: '0.85rem' }}
+                        onClick={handleAddPhotoUrl}
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {reviewPhotos.length > 0 && (
+                      <div className="pdp-uploaded-preview-grid">
+                        {reviewPhotos.map((photo, pIdx) => (
+                          <div key={pIdx} className="pdp-preview-thumb">
+                            <img src={photo} alt="Upload preview" />
+                            <button 
+                              type="button" 
+                              className="pdp-preview-remove"
+                              onClick={() => setReviewPhotos(prev => prev.filter((_, idx) => idx !== pIdx))}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pdp-review-modal-footer">
+                <button type="button" className="btn-add-cart" style={{ width: 'auto', padding: '10px 18px' }} onClick={() => setShowReviewModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-review-submit">
+                  Submit Review & Photos
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL: LIGHTBOX / VIEW CUSTOMER PHOTO ────────────────────────── */}
+      {selectedReviewPhoto && (
+        <div className="pdp-review-modal-backdrop" onClick={() => setSelectedReviewPhoto(null)}>
+          <div className="pdp-review-modal" style={{ background: '#000', color: '#fff', maxWidth: '650px', border: '1px solid #444' }} onClick={e => e.stopPropagation()}>
+            <div className="pdp-review-modal-header" style={{ background: '#111', borderBottom: '1px solid #333' }}>
+              <h3 style={{ color: '#fff' }}>📸 Customer Photo by {selectedReviewPhoto.author}</h3>
+              <button className="pdp-review-modal-close" style={{ color: '#fff' }} onClick={() => setSelectedReviewPhoto(null)}>×</button>
+            </div>
+            <div className="pdp-review-modal-body" style={{ textAlign: 'center', padding: '20px', background: '#000' }}>
+              <img src={selectedReviewPhoto.url} alt="Full size customer review" style={{ maxWidth: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: '8px' }} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

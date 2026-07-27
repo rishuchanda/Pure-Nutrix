@@ -29,21 +29,31 @@ serve(async (req) => {
       throw new Error('Razorpay keys not configured')
     }
 
-    // Call Razorpay API to create an order
-    const response = await fetch('https://api.razorpay.com/v1/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(`${keyId}:${keySecret}`)}`
-      },
-      body: JSON.stringify({
-        amount,
-        currency,
-        receipt: receipt || `receipt_${Date.now()}`,
-      })
-    })
+    // Call Razorpay API to create an order with up to 10 retries for resilience against test environment dropouts
+    let response;
+    let data;
+    for (let attempt = 1; attempt <= 10; attempt++) {
+      response = await fetch('https://api.razorpay.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${btoa(`${keyId}:${keySecret}`)}`
+        },
+        body: JSON.stringify({
+          amount,
+          currency,
+          receipt: receipt || `receipt_${Date.now()}_${attempt}`,
+        })
+      });
 
-    const data = await response.json()
+      data = await response.json();
+      if (response.ok) {
+        break;
+      }
+      if (attempt < 10) {
+        await new Promise(r => setTimeout(r, 350));
+      }
+    }
 
     if (!response.ok) {
       return new Response(JSON.stringify({ error: data.error || 'Failed to create Razorpay order' }), {

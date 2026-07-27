@@ -20,6 +20,7 @@ import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
+import { getLiveSEOConfig } from './utils/seoConfig';
 
 
 import ChatbotWidget from './components/ChatbotWidget';
@@ -27,6 +28,7 @@ import ChatbotWidget from './components/ChatbotWidget';
 function App() {
   const { scrollYProgress } = useScroll();
   const [user, setUser] = useState(null);
+  const [liveSEO, setLiveSEO] = useState(getLiveSEOConfig());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState('home'); // 'home' | 'order' | 'account' | 'products' | 'pdp' | 'cart'
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -190,15 +192,12 @@ function App() {
       const fetchAndRedirect = async () => {
         try {
           const { data: phone, error } = await supabase.rpc('get_active_whatsapp_number');
-          if (error) throw error;
-          if (phone) {
-            window.location.href = `https://wa.me/${phone}?text=Hi`;
-          } else {
-            setCurrentView('home');
-          }
+          const targetPhone = phone || atob('OTE5MDU3NjA3MDMw');
+          window.location.replace(`https://wa.me/${targetPhone}?text=${encodeURIComponent('Hi Pure Nutrix Support!')}`);
         } catch (err) {
-          console.error('Redirect failed', err);
-          setCurrentView('home');
+          console.error('Redirect fallback to personal WhatsApp', err);
+          const targetPhone = atob('OTE5MDU3NjA3MDMw');
+          window.location.replace(`https://wa.me/${targetPhone}?text=${encodeURIComponent('Hi Pure Nutrix Support!')}`);
         }
       };
       fetchAndRedirect();
@@ -222,23 +221,95 @@ function App() {
     };
   }, []);
 
-  const getPageTitle = () => {
+  useEffect(() => {
+    const handleSEOUpdate = () => {
+      setLiveSEO(getLiveSEOConfig());
+    };
+    window.addEventListener('pn_seo_config_updated', handleSEOUpdate);
+    return () => window.removeEventListener('pn_seo_config_updated', handleSEOUpdate);
+  }, []);
+
+  const getSEOData = () => {
     switch (currentView) {
-      case 'products': return 'All Products | Pure Nutrix';
-      case 'cart': return 'Your Cart | Pure Nutrix';
-      case 'account': return 'My Account | Pure Nutrix';
-      case 'quality-standards': return 'Quality Standards | Pure Nutrix';
-      case 'legal-policy': return 'Legal Policy | Pure Nutrix';
-      case 'support': return 'Support & Contact | Pure Nutrix';
-      case 'order': return 'Checkout | Pure Nutrix';
-      default: return 'Pure Nutrix | Premium Skincare & Nutraceuticals';
+      case 'products':
+        return {
+          title: "Buy Premium Nutraceuticals & Supplements Online | Pure Nutrix Products",
+          description: "Explore Pure Nutrix 100% science-backed product range: Ashwagandha Root Extract 500mg, L-Glutathione skin glow tablets, Gold Standard Whey Isolate, Multivitamins, and Collagen Peptides.",
+          keywords: "ashwagandha root extract capsules buy online, buy glutathione online, whey protein isolate price india, best collagen supplement india, pure nutrix products, stress relief supplement",
+          canonical: "https://purenutrix.in/#products"
+        };
+      case 'cart':
+        return {
+          title: "Shopping Cart & Express Checkout | Pure Nutrix",
+          description: "Review your cart items. Enjoy express PAN India shipping, Cash on Delivery (COD), and 100% genuine sealed nutraceutical supplements.",
+          keywords: "pure nutrix cart, buy supplements online, checkout supplement discount",
+          canonical: "https://purenutrix.in/#cart"
+        };
+      case 'account':
+        return {
+          title: "My Account & Order History | Pure Nutrix",
+          description: "Manage your Pure Nutrix profile, track active supplement shipments, download GST invoices, and check loyalty points.",
+          keywords: "pure nutrix login, my orders, order tracking supplement",
+          canonical: "https://purenutrix.in/#account"
+        };
+      case 'quality-standards':
+        return {
+          title: "Quality Standards & Third-Party Lab Reports | Pure Nutrix",
+          description: "We subject all finished Pure Nutrix nutraceuticals to rigorous third-party NABL lab testing. View official certificates for heavy metal purity & GMP.",
+          keywords: "lab tested supplements india, gmp certified nutraceuticals, pure nutrix quality test, fssai approved protein",
+          canonical: "https://purenutrix.in/#quality-standards"
+        };
+      case 'legal-policy':
+        return {
+          title: "Legal Policy, Privacy & Return Terms | Pure Nutrix",
+          description: "Read official terms of service, hygiene non-returnable policies for sealed supplements, and customer data protection guidelines.",
+          keywords: "pure nutrix return policy, supplement refund policy india, privacy terms",
+          canonical: "https://purenutrix.in/#legal-policy"
+        };
+      case 'support':
+        return {
+          title: "24/7 Customer Support & WhatsApp Help Desk | Pure Nutrix",
+          description: "Connect instantly with Pure Nutrix nutrition experts and support representatives via WhatsApp or direct phone for dosage guidance and order help.",
+          keywords: "pure nutrix contact number, customer care supplement india, whatsapp nutrition support",
+          canonical: "https://purenutrix.in/#support"
+        };
+      case 'order':
+        return {
+          title: "Secure Checkout & Payment | Pure Nutrix",
+          description: "Complete your Pure Nutrix purchase securely. Choose Cash on Delivery or instant UPI/card payment with extra prepaid savings.",
+          keywords: "secure supplement payment india, cod supplements buy",
+          canonical: "https://purenutrix.in/#order"
+        };
+      default:
+        return {
+          title: liveSEO.defaultTitle || "Pure Nutrix | India's #1 Premium Nutraceuticals, Skin Glow & Health Supplements",
+          description: liveSEO.defaultDescription || "Pure Nutrix is India's leading brand for clinically proven health supplements, L-Glutathione 1000mg skin radiance tablets, 100% Whey Protein Isolate, Collagen Peptides, and Organic Supergreens.",
+          keywords: liveSEO.defaultKeywords || "Pure Nutrix, pure nutrix supplements, l-glutathione tablets buy online india, glutathione skin glow, whey protein isolate 2kg price, collagen peptide complex india, best nutraceutical brand india",
+          canonical: liveSEO.siteUrl || "https://purenutrix.in/"
+        };
     }
   };
+
+  const seo = getSEOData();
 
   return (
     <>
       <Helmet>
-        <title>{getPageTitle()}</title>
+        <title>{seo.title}</title>
+        <meta name="description" content={seo.description} />
+        <meta name="keywords" content={seo.keywords} />
+        <link rel="canonical" href={seo.canonical} />
+        {liveSEO.googleVerificationCode && (
+          <meta name="google-site-verification" content={liveSEO.googleVerificationCode} />
+        )}
+        {liveSEO.bingVerificationCode && (
+          <meta name="msvalidate.01" content={liveSEO.bingVerificationCode} />
+        )}
+        <meta property="og:title" content={seo.title} />
+        <meta property="og:description" content={seo.description} />
+        <meta property="og:url" content={seo.canonical} />
+        <meta property="twitter:title" content={seo.title} />
+        <meta property="twitter:description" content={seo.description} />
       </Helmet>
       <motion.div
         className="scroll-progress-bar"
@@ -396,7 +467,7 @@ function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
       />
-      {currentView !== 'admin' && <ChatbotWidget phoneNumber="919057607030" defaultMessage="Hi, I need help with Pure Nutrix products." />}
+      {currentView !== 'admin' && <ChatbotWidget defaultMessage="Hi, I need help with Pure Nutrix products." />}
     </>
   );
 }

@@ -17,7 +17,7 @@ const SearchPopup = ({ isOpen, onClose, onProductClick }) => {
           const { data, error } = await supabase
             .from('products')
             .select('*')
-            .limit(3);
+            .limit(6);
           if (!error && data) {
             setTopProducts(data);
           }

@@ -1,2 +1,4 @@
 .DS_Store
 rain.gif
+.env
+*.env*

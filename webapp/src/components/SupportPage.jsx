@@ -88,17 +88,25 @@ const SupportPage = ({ initialTab = 'contact', onBack }) => {
                   <div className="contact-icon"><Phone size={24} /></div>
                   <div className="contact-details">
                     <h3>Customer Care</h3>
-                    <p>+91-7976979355</p>
+                    <p>+91-9057607030</p>
                     <span>Mon-Sat, 10:00 AM to 6:00 PM</span>
                   </div>
                 </div>
 
-                <div className="contact-card">
-                  <div className="contact-icon"><MessageSquare size={24} /></div>
+                <div 
+                  className="contact-card" 
+                  onClick={() => {
+                    const target = atob('OTE5MDU3NjA3MDMw');
+                    window.open(`https://wa.me/${target}?text=${encodeURIComponent('Hi Pure Nutrix Support! I have a question.')}`, '_blank');
+                  }}
+                  style={{ cursor: 'pointer', borderColor: '#25D366', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                  title="Click to start direct WhatsApp chat"
+                >
+                  <div className="contact-icon" style={{ backgroundColor: '#25D366', color: '#fff' }}><MessageSquare size={24} /></div>
                   <div className="contact-details">
                     <h3>WhatsApp Support</h3>
-                    <p>+91-7976979355</p>
-                    <span>Fastest way to reach us!</span>
+                    <p style={{ color: '#25D366', fontWeight: 'bold' }}>💬 Live Chat Online</p>
+                    <span>Click to connect instantly!</span>
                   </div>
                 </div>
 

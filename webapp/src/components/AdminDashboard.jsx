@@ -4,11 +4,14 @@ import {
   Users, Package, Truck, BarChart2, ShieldCheck, Lock,
   Moon, Sun, LogOut, Search, ChevronRight, ShoppingBag, 
   Upload, Trash2, Image as ImageIcon, Bell, Settings, Edit,
-  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus, Save, Menu, X, MessageCircle
+  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus, Save, Menu, X, MessageCircle, FileText, Star, Globe
 } from 'lucide-react';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../supabaseClient';
 import { createClient } from '@supabase/supabase-js';
 import CRMTab from './CRMTab';
+import GSTModule from './GSTModule';
+import ReviewsTab from './ReviewsTab';
+import SEOTab from './SEOTab';
 import './AdminDashboard.css';
 
 const AdminDashboard = ({ user }) => {
@@ -143,8 +146,8 @@ const AdminDashboard = ({ user }) => {
   };
 
   useEffect(() => {
-    if (activeTab === 'dashboard' || activeTab === 'orders') fetchOrders();
-    if (activeTab === 'catalog') fetchProducts();
+    if (activeTab === 'dashboard' || activeTab === 'orders' || activeTab === 'gst') fetchOrders();
+    if (activeTab === 'catalog' || activeTab === 'gst') fetchProducts();
     if (activeTab === 'inventory') fetchInventory();
     if (activeTab === 'users') fetchUsers();
   }, [activeTab]);
@@ -339,6 +342,9 @@ const AdminDashboard = ({ user }) => {
     { id: 'inventory', label: 'Inventory', icon: Package },
     { id: 'users', label: 'Registered Users', icon: Users },
     { id: 'crm', label: 'WhatsApp CRM', icon: MessageCircle },
+    { id: 'gst', label: 'GST & Tax Module', icon: FileText },
+    { id: 'reviews', label: 'Product Reviews & Ratings', icon: Star },
+    { id: 'seo', label: 'Google SEO & Rankings', icon: Globe },
   ];
 
   if (adminRole === 'super_admin') {
@@ -360,8 +366,13 @@ const AdminDashboard = ({ user }) => {
         <CRMTab onBack={() => setActiveTab('dashboard')} />
       )}
 
+      {/* Standalone Fullscreen GST Tab */}
+      {activeTab === 'gst' && (
+        <GSTModule orders={orders} products={products} onBack={() => setActiveTab('dashboard')} />
+      )}
+
       {/* Standard Admin Layout */}
-      {activeTab !== 'crm' && (
+      {activeTab !== 'crm' && activeTab !== 'gst' && (
         <>
           {/* Sidebar */}
           <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
@@ -862,6 +873,16 @@ const AdminDashboard = ({ user }) => {
                     </table>
                   </div>
                 </div>
+              )}
+
+              {/* === REVIEWS & RATINGS MODERATION TAB === */}
+              {activeTab === 'reviews' && (
+                <ReviewsTab showNotification={(msg) => alert(msg)} />
+              )}
+
+              {/* === GOOGLE SEO & RANKINGS TAB === */}
+              {activeTab === 'seo' && (
+                <SEOTab showNotification={(msg) => alert(msg)} />
               )}
             </motion.div>
           </AnimatePresence>

@@ -166,8 +166,51 @@ export const getProductDetails = (productName) => {
       },
       faq: [
         { q: "What does it taste like?", a: "It has a naturally tart and tangy flavor, characteristic of pure Sea Buckthorn berries. We recommend diluting it in water or juice." },
-        { q: "Can I drink it without diluting?", a: "Because it is a highly concentrated natural extract, we strongly recommend diluting 15-20ml in a full glass of water." },
         { q: "Is it safe for children?", a: "While natural, we recommend consulting a pediatrician before introducing concentrated nutritional supplements to children under 12." }
+      ]
+    };
+  }
+  // Match Ashwagandha
+  else if (name.includes('ashwagandha')) {
+    details = {
+      subtitle: "NATURAL STRESS RELIEF, ENERGY & IMMUNITY SUPPORT: Clinically proven adaptogen to lower cortisol & boost vitality.",
+      tags: ["✨ Stress Relief", "🌱 100% Pure Root Extract", "🔬 Clinically Proven", "⚡ Energy Booster"],
+      whatMakesItSpecial: {
+        description: "Formulated with 500mg of 100% pure, root-derived ashwagandha per capsule, this clinically proven adaptogen helps your body naturally adapt to physical and mental stress without causing drowsiness.",
+        bullets: [
+          "Potent 500mg Strength: Delivers a concentrated dose of 100% pure root-derived extract for maximum absorption and efficacy.",
+          "Natural Stress & Anxiety Relief: Acts as a powerful adaptogen to lower cortisol levels, promoting emotional balance and daily calmness.",
+          "Energy & Vitality Booster: Helps fight persistent fatigue, supporting improved stamina, endurance, and physical performance.",
+          "Immunity & Wellness Support: Rich in natural antioxidants to reinforce your body's immune system and overall health."
+        ]
+      },
+      howToUse: {
+        steps: [
+          { title: "Step 1", desc: "Take 1 capsule daily after a meal." },
+          { title: "Step 2", desc: "Consume with a full glass of lukewarm water or milk." },
+          { title: "Step 3", desc: "For optimal sleep and relaxation benefits, take in the evening before bed." }
+        ],
+        note: "Safe, reliable, and packaged in a convenient 30-capsule bottle for a full month of daily support."
+      },
+      scienceAndIngredients: {
+        keyIngredients: "100% Pure Ashwagandha Root Extract (500mg)",
+        description: "Formulated exclusively from pure root-derived extract rather than leaves, ensuring maximum concentration of bioactive withanolides. This clinically tested adaptogen calms the nervous system while simultaneously revitalizing cellular energy production."
+      },
+      specs: {
+        form: "Capsules",
+        quantity: "30 Capsules",
+        packOf: "1",
+        shelfLife: "24 months from manufacturing"
+      },
+      aiSummary: {
+        text: "Customers highly value this Ashwagandha root extract for daily workplace stress relief, mood calmness, and improved mental clarity. Active gym-goers report enhanced muscle recovery and physical endurance, while many users experience deeper, more restorative sleep and consistent year-round immune defense without any daytime drowsiness.",
+        topics: ["Workplace Stress Relief", "Physical Endurance", "Sleep Quality", "Immune Defense"]
+      },
+      faq: [
+        { q: "Will this make me drowsy during the daytime?", a: "No, Pure Nutrix Ashwagandha is an adaptogen that calms the nervous system without acting as a sedative or causing daytime drowsiness." },
+        { q: "How long before I see noticeable results?", a: "Most users notice enhanced calmness, focus, and energy within 2-3 weeks of consistent daily supplementation." },
+        { q: "Can fitness athletes and gym-goers take this?", a: "Yes! Active individuals take it daily to support muscle recovery, stamina, endurance, and physical vitality." },
+        { q: "Is this safe for long-term daily use?", a: "Yes, 100% pure root-derived ashwagandha is safe and non-habit forming for daily, long-term wellness support." }
       ]
     };
   }

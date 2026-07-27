@@ -147,7 +147,7 @@ const ProductShowcase = ({ onOrder, onProductClick, onAddToCart }) => {
           .from('products')
           .select('*')
           .order('created_at', { ascending: true })
-          .limit(3);
+          .limit(6);
 
         if (error) throw error;
         setProducts(data || []);

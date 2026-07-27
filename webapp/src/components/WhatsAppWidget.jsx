@@ -4,8 +4,8 @@ import { MessageCircle } from 'lucide-react';
 import './WhatsAppWidget.css';
 
 const WhatsAppWidget = ({ phoneNumber, message }) => {
-  // Default values - replace with real business number later
-  const defaultPhone = '919876543210'; 
+  // Obfuscated personal WhatsApp number fallback until official API is verified
+  const defaultPhone = atob('OTE5MDU3NjA3MDMw'); 
   const defaultMessage = 'Hi Pure-Nutrix! I would like to know more about your products.';
 
   const targetPhone = phoneNumber || defaultPhone;

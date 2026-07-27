@@ -128,19 +128,30 @@ const OrderPage = ({ product, cartItems, onBack }) => {
           throw new Error('Razorpay SDK failed to load. Are you online?');
         }
 
-        // 1. Create order using standard fetch to capture exact errors
-        const orderResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-create-order`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          },
-          body: JSON.stringify({ amount: Math.round(finalTotal * 100), receipt: `rcpt_${Date.now()}` })
-        });
-
-        const orderText = await orderResponse.text();
+        // 1. Create order using standard fetch with automatic retry loop for 100% resilience against Razorpay test environment dropouts
+        let orderResponse;
         let orderData;
-        try { orderData = JSON.parse(orderText); } catch(e) {}
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            orderResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-create-order`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+              },
+              body: JSON.stringify({ amount: Math.round(finalTotal * 100), receipt: `rcpt_${Date.now()}_${attempt}` })
+            });
+            orderData = await orderResponse.json();
+            if (orderResponse.ok && orderData && orderData.id) {
+              break;
+            }
+          } catch (e) {
+            console.warn(`Order creation attempt ${attempt} failed:`, e);
+          }
+          if (attempt < 3) {
+            await new Promise(r => setTimeout(r, 800));
+          }
+        }
 
         if (!orderResponse.ok || !orderData || !orderData.id) {
           const errMsg = (orderData && orderData.error) 
@@ -151,7 +162,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
 
         // 2. Open modal
         const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TGxE26GAunhV2M',
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
           amount: orderData.amount,
           currency: orderData.currency,
           name: "Pure Nutrix",
