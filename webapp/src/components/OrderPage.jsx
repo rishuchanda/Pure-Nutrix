@@ -162,7 +162,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
 
         // 2. Open modal
         const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TIX7LEtvaUL7xC',
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TIXMV4IReJlC2K',
           amount: orderData.amount,
           currency: orderData.currency,
           name: "Pure Nutrix",
