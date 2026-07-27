@@ -280,9 +280,16 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                       <span className="label">Total: <span className="value bold">₹{order.price || order.total_amount || '0'}</span></span>
                     </div>
                   </div>
-                  <div className="order-card-bottom">
+                  <div className="order-card-bottom" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button className="details-btn" onClick={() => handleOrderDetails(order)}>Details</button>
-                    <span className={`status-text ${order.status.toLowerCase()}`}>
+                    <button 
+                      className="details-btn" 
+                      style={{ background: '#f8f9fa', color: '#111', border: '1px solid #ddd' }}
+                      onClick={(e) => { e.stopPropagation(); window.print(); }}
+                    >
+                      Invoice
+                    </button>
+                    <span className={`status-text ${order.status.toLowerCase()}`} style={{ marginLeft: 'auto' }}>
                       {statusMsg}
                     </span>
                   </div>
@@ -485,6 +492,15 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
               </div>
             </div>
           )}
+
+          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }} className="print-hide">
+            <button 
+              style={{ padding: '14px 32px', fontSize: '15px', borderRadius: '12px', background: '#111', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
+              onClick={() => window.print()}
+            >
+              📄 Download Full Invoice
+            </button>
+          </div>
 
         </div>
       </motion.div>
