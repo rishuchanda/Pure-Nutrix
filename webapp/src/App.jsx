@@ -34,7 +34,9 @@ function App() {
     const isPathAdmin = window.location.pathname === '/admin';
     if (isPathAdmin) return 'admin';
     const hashPath = window.location.hash.replace('#', '');
-    const [view] = hashPath.split('/');
+    let [view] = hashPath.split('/');
+    if (hashPath.startsWith('pdp-')) view = 'pdp';
+    if (hashPath.startsWith('order-')) view = 'order';
     const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
     if (validViews.includes(view) && view !== 'home') {
       return view;
@@ -52,7 +54,14 @@ function App() {
         if (state.product) setSelectedProduct(state.product);
       } else {
         const hashPath = window.location.hash.replace('#', '');
-        const [view, productSlug] = hashPath.split('/');
+        let [view, productSlug] = hashPath.split('/');
+        if (hashPath.startsWith('pdp-')) {
+          view = 'pdp';
+          productSlug = hashPath.replace('pdp-', '');
+        } else if (hashPath.startsWith('order-')) {
+          view = 'order';
+          productSlug = hashPath.replace('order-', '');
+        }
         
         const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
         
@@ -98,7 +107,14 @@ function App() {
     // Initial load
     const isPathAdmin = window.location.pathname === '/admin';
     const initialHashPath = window.location.hash.replace('#', '');
-    const [initialView, initialSlug] = initialHashPath.split('/');
+    let [initialView, initialSlug] = initialHashPath.split('/');
+    if (initialHashPath.startsWith('pdp-')) {
+      initialView = 'pdp';
+      initialSlug = initialHashPath.replace('pdp-', '');
+    } else if (initialHashPath.startsWith('order-')) {
+      initialView = 'order';
+      initialSlug = initialHashPath.replace('order-', '');
+    }
     const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
 
     if (isPathAdmin) {
