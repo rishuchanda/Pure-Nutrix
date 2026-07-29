@@ -30,7 +30,17 @@ function App() {
   const [user, setUser] = useState(null);
   const [liveSEO, setLiveSEO] = useState(getLiveSEOConfig());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'order' | 'account' | 'products' | 'pdp' | 'cart'
+  const [currentView, setCurrentView] = useState(() => {
+    const isPathAdmin = window.location.pathname === '/admin';
+    if (isPathAdmin) return 'admin';
+    const hashPath = window.location.hash.replace('#', '');
+    const [view] = hashPath.split('/');
+    const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
+    if (validViews.includes(view) && view !== 'home') {
+      return view;
+    }
+    return 'home';
+  });
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cartItems, setCartItems] = useState([]);
 
@@ -437,7 +447,14 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <OrderPage product={selectedProduct} cartItems={currentView === 'order' && !selectedProduct ? cartItems : null} onBack={handleBackToHome} />
+            {!selectedProduct && (!cartItems || cartItems.length === 0) ? (
+              <div style={{ height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                <div className="spinning" style={{ width: '40px', height: '40px', border: '4px solid #D4AF37', borderTopColor: 'transparent', borderRadius: '50%', marginBottom: '1rem' }}></div>
+                <p>Loading Order Details...</p>
+              </div>
+            ) : (
+              <OrderPage product={selectedProduct} cartItems={currentView === 'order' && !selectedProduct ? cartItems : null} onBack={handleBackToHome} />
+            )}
           </motion.div>
         ) : currentView === 'cart' ? (
           <motion.div
@@ -497,7 +514,14 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} onProductClick={handleOpenProductDetails} />
+            {!selectedProduct ? (
+              <div style={{ height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                <div className="spinning" style={{ width: '40px', height: '40px', border: '4px solid #D4AF37', borderTopColor: 'transparent', borderRadius: '50%', marginBottom: '1rem' }}></div>
+                <p>Loading Product Details...</p>
+              </div>
+            ) : (
+              <ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} onProductClick={handleOpenProductDetails} />
+            )}
           </motion.div>
         ) : currentView === 'quality-standards' ? (
           <motion.div
