@@ -67,6 +67,20 @@ if (preg_match('#^/(?:product|buy|pdp)/([a-zA-Z0-9-]+)/?$#', $path, $matches)) {
             $html = preg_replace('/<meta property="twitter:title" content="[^"]*">/is', '<meta property="twitter:title" content="Pure Nutrix | ' . $name . '">', $html);
             $html = preg_replace('/<meta property="twitter:description" content="[^"]*">/is', '<meta property="twitter:description" content="' . $description . '">', $html);
             $html = preg_replace('/<meta property="twitter:image" content="[^"]*">/is', '<meta property="twitter:image" content="' . $image . '">', $html);
+            
+            // Generate semantic HTML for ad bots / crawlers that don't execute JS
+            $price = isset($product['price']) ? $product['price'] : '';
+            $botHtml = '<div id="seo-bot-content" style="display:none;" aria-hidden="true">';
+            $botHtml .= '<h1>' . $name . '</h1>';
+            if ($price) {
+                $botHtml .= '<h2>Price: ₹' . htmlspecialchars($price, ENT_QUOTES, 'UTF-8') . '</h2>';
+            }
+            $botHtml .= '<p>' . htmlspecialchars(strip_tags($product['description'] ?? ''), ENT_QUOTES, 'UTF-8') . '</p>';
+            $botHtml .= '<img src="' . $image . '" alt="' . $name . '" />';
+            $botHtml .= '</div>';
+            
+            // Inject bot HTML right after the opening <body> tag
+            $html = preg_replace('/<body[^>]*>/i', '$0' . "\n" . $botHtml, $html);
         }
     }
 }
