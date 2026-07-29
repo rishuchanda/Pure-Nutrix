@@ -6,7 +6,7 @@ const Footer = ({ onOpenQuality, onOpenLegalPolicy, onOpenSupport }) => {
     <footer className="footer glass">
       <div className="container footer-content">
         <div className="footer-brand">
-          <img src="./assets/logo.png" alt="Pure Nutrix" className="footer-logo" />
+          <img src="/assets/logo.png" alt="Pure Nutrix" className="footer-logo" />
           <h2 className="text-gold">PURE NUTRIX</h2>
           <p className="footer-desc">Premium skin and hair care nutraceuticals formulated for advanced cellular radiance.</p>
           <div className="footer-company-info" style={{ marginTop: '15px', fontSize: '0.85rem', color: '#a0a0a0', lineHeight: '1.4' }}>

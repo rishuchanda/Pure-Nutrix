@@ -26,7 +26,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
     >
       <div className="navbar-container container">
         <div className="navbar-logo" onClick={onGoHome} style={{ cursor: 'pointer' }}>
-          <img src="./assets/logo.png" alt="Pure Nutrix Logo" className="logo-img" />
+          <img src="/assets/logo.png" alt="Pure Nutrix Logo" className="logo-img" />
         </div>
 
         <div className="navbar-links">
