@@ -845,13 +845,13 @@ const CRMTab = ({ onBack }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'flex-start' }}>
                   <div style={{ background: '#fff', padding: '10px', borderRadius: '12px', display: 'inline-block' }}>
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(window.location.origin + '/#whatsapp')}`} 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(window.location.origin + '/whatsapp')}`} 
                       alt="WhatsApp Dynamic QR Code" 
                       style={{ display: 'block' }}
                     />
                   </div>
                   <a 
-                    href={`https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(window.location.origin + '/#whatsapp')}`} 
+                    href={`https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(window.location.origin + '/whatsapp')}`} 
                     target="_blank" 
                     rel="noreferrer" 
                     className="admin-btn admin-btn-secondary"

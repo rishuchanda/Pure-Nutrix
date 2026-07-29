@@ -158,10 +158,10 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
         <meta name="title" content={`${product.name} | Buy Online at Best Price - Pure Nutrix India`} />
         <meta name="description" content={details.subtitle || `Buy 100% genuine ${product.name} at Pure Nutrix. Clinically tested formulation for advanced results. Free shipping & COD available in India.`} />
         <meta name="keywords" content={`${product.name}, buy ${product.name} online india, ${product.name} price, pure nutrix supplements, fssai health supplements india, genuine ${product.name}`} />
-        <link rel="canonical" href={`https://purenutrix.in/#pdp-${(product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} />
+        <link rel="canonical" href={`https://purenutrix.in/product/${(product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} />
         <meta property="og:title" content={`${product.name} | Buy Online at Best Price - Pure Nutrix India`} />
         <meta property="og:description" content={details.subtitle || `Buy 100% genuine ${product.name} at Pure Nutrix. Clinically tested formulation for advanced results.`} />
-        <meta property="og:url" content={`https://purenutrix.in/#pdp-${(product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} />
+        <meta property="og:url" content={`https://purenutrix.in/product/${(product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} />
         <meta property="og:type" content="product" />
         {product.image_urls && product.image_urls[0] && <meta property="og:image" content={product.image_urls[0]} />}
         <meta property="twitter:card" content="summary_large_image" />
@@ -182,7 +182,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
             },
             "offers": {
               "@type": "Offer",
-              "url": `https://purenutrix.in/#pdp-${(product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+              "url": `https://purenutrix.in/product/${(product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
               "priceCurrency": "INR",
               "price": product.price || 1499,
               "priceValidUntil": "2027-12-31",

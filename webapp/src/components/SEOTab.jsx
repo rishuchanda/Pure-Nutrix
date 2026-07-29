@@ -77,7 +77,7 @@ const SEOTab = ({ showNotification = (msg) => alert(msg) }) => {
           const slug = (p.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
           productUrlsXml += `
   <url>
-    <loc>${config.siteUrl}/#pdp-${slug}</loc>
+    <loc>${config.siteUrl}/product/${slug}</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>

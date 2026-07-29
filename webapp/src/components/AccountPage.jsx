@@ -24,7 +24,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
   // Load routing from URL on mount and listen to popstate
   useEffect(() => {
     const handlePopState = () => {
-      const hashPath = window.location.hash.replace('#', '');
+      const hashPath = window.location.pathname.replace('/', '');
       const [mainView, subView] = hashPath.split('/');
       
       if (mainView === 'account') {

@@ -21,6 +21,7 @@ import Lenis from 'lenis';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { getLiveSEOConfig } from './utils/seoConfig';
+import { parsePath, getPathForView } from './parsePath';
 
 
 import ChatbotWidget from './components/ChatbotWidget';
@@ -33,15 +34,8 @@ function App() {
   const [currentView, setCurrentView] = useState(() => {
     const isPathAdmin = window.location.pathname === '/admin';
     if (isPathAdmin) return 'admin';
-    const hashPath = window.location.hash.replace('#', '');
-    let [view] = hashPath.split('/');
-    if (hashPath.startsWith('pdp-')) view = 'pdp';
-    if (hashPath.startsWith('order-')) view = 'order';
-    const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
-    if (validViews.includes(view) && view !== 'home') {
-      return view;
-    }
-    return 'home';
+    const { view } = parsePath(window.location.pathname);
+    return view;
   });
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cartItems, setCartItems] = useState([]);
@@ -53,21 +47,11 @@ function App() {
         setCurrentView(state.view);
         if (state.product) setSelectedProduct(state.product);
       } else {
-        const hashPath = window.location.hash.replace('#', '');
-        let [view, productSlug] = hashPath.split('/');
-        if (hashPath.startsWith('pdp-')) {
-          view = 'pdp';
-          productSlug = hashPath.replace('pdp-', '');
-        } else if (hashPath.startsWith('order-')) {
-          view = 'order';
-          productSlug = hashPath.replace('order-', '');
-        }
-        
+        const { view, slug: productSlug } = parsePath(window.location.pathname);
         const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
         
         if (validViews.includes(view)) {
           if ((view === 'pdp' || view === 'order') && productSlug) {
-            // Fetch product by slug or id
             try {
               const { data, error } = await supabase
                 .from('products')
@@ -79,19 +63,18 @@ function App() {
                 setSelectedProduct(data);
                 setCurrentView(view);
               } else {
-                // fallback to ID search if slug fails (backward compatibility)
                 const { data: idData } = await supabase.from('products').select('*').eq('id', productSlug).single();
                 if (idData) {
                   setSelectedProduct(idData);
                   setCurrentView(view);
                 } else {
                   setCurrentView('products');
-                  window.history.replaceState({ view: 'products' }, '', '#products');
+                  window.history.replaceState({ view: 'products' }, '', getPathForView('products'));
                 }
               }
             } catch (err) {
               setCurrentView('products');
-              window.history.replaceState({ view: 'products' }, '', '#products');
+              window.history.replaceState({ view: 'products' }, '', getPathForView('products'));
             }
           } else {
             setCurrentView(view);
@@ -106,15 +89,7 @@ function App() {
 
     // Initial load
     const isPathAdmin = window.location.pathname === '/admin';
-    const initialHashPath = window.location.hash.replace('#', '');
-    let [initialView, initialSlug] = initialHashPath.split('/');
-    if (initialHashPath.startsWith('pdp-')) {
-      initialView = 'pdp';
-      initialSlug = initialHashPath.replace('pdp-', '');
-    } else if (initialHashPath.startsWith('order-')) {
-      initialView = 'order';
-      initialSlug = initialHashPath.replace('order-', '');
-    }
+    const { view: initialView, slug: initialSlug } = parsePath(window.location.pathname);
     const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
 
     if (isPathAdmin) {
@@ -147,21 +122,21 @@ function App() {
                setCurrentView(initialView);
              } else if (res && res.error) {
                setCurrentView('products');
-               window.history.replaceState({ view: 'products' }, '', '#products');
+               window.history.replaceState({ view: 'products' }, '', getPathForView('products'));
              }
           });
       } else if ((initialView === 'pdp' || initialView === 'order') && !initialSlug) {
         setCurrentView('products');
-        window.history.replaceState({ view: 'products' }, '', '#products');
+        window.history.replaceState({ view: 'products' }, '', getPathForView('products'));
       } else {
         setCurrentView(initialView);
         if (!state || !state.product) {
-          window.history.replaceState({ view: initialView }, '', '#' + initialView);
+          window.history.replaceState({ view: initialView }, '', getPathForView(initialView, initialSlug));
         }
       }
     } else {
       setCurrentView('home');
-      window.history.replaceState({ view: 'home' }, '', window.location.pathname);
+      window.history.replaceState({ view: 'home' }, '', getPathForView('home'));
     }
 
     return () => window.removeEventListener('popstate', handlePopState);
@@ -201,20 +176,20 @@ function App() {
 
   const handleOpenCart = () => {
     setCurrentView('cart');
-    window.history.pushState({ view: 'cart' }, '', '#cart');
+    window.history.pushState({ view: 'cart' }, '', getPathForView('cart'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenAccount = () => {
     setCurrentView('account');
-    window.history.pushState({ view: 'account' }, '', '#account');
+    window.history.pushState({ view: 'account' }, '', getPathForView('account'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOrder = (product) => {
     setSelectedProduct(product);
     setCurrentView('order');
-    const path = product.slug ? `#order/${product.slug}` : `#order/${product.id}`;
+    const path = getPathForView('order', product.slug || product.id);
     window.history.pushState({ view: 'order', product }, '', path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
@@ -231,32 +206,32 @@ function App() {
 
   const handleOpenProducts = () => {
     setCurrentView('products');
-    window.history.pushState({ view: 'products' }, '', '#products');
+    window.history.pushState({ view: 'products' }, '', getPathForView('products'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenQuality = () => {
     setCurrentView('quality-standards');
-    window.history.pushState({ view: 'quality-standards' }, '', '#quality-standards');
+    window.history.pushState({ view: 'quality-standards' }, '', getPathForView('quality-standards'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenLegalPolicy = () => {
     setCurrentView('legal-policy');
-    window.history.pushState({ view: 'legal-policy' }, '', '#legal-policy');
+    window.history.pushState({ view: 'legal-policy' }, '', getPathForView('legal-policy'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenSupport = () => {
     setCurrentView('support');
-    window.history.pushState({ view: 'support' }, '', '#support');
+    window.history.pushState({ view: 'support' }, '', getPathForView('support'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenProductDetails = (product) => {
     setSelectedProduct(product);
     setCurrentView('pdp');
-    const path = product.slug ? `#pdp/${product.slug}` : `#pdp/${product.id}`;
+    const path = getPathForView('pdp', product.slug || product.id);
     window.history.pushState({ view: 'pdp', product }, '', path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
