@@ -172,7 +172,7 @@ export const getProductReviews = (product) => {
 
   // Dedicated review sets for each product type (Real, natural conversational phrasing without fake stock photos)
   const glutaReviews = [
-    { comment: "Been using this for around 3 weeks now. My skin looks noticeably clearer and less dull in the mornings. Very happy with the purchase!", photos: [], rating: 5 },
+    { comment: "I've struggled with dark spots for a while, but this glutathione has really helped even out my skin tone. Plus, it gives a nice natural glow!", photos: [], rating: 5 },
     { comment: "Good quality glutathione. I take 1 tablet daily after lunch. My forehead tanning and dark spots have lightened quite a bit.", photos: [], rating: 5 },
     { comment: "Delivery was fast, got it in 2 days. Bottle came properly sealed with barcode. Taste is fine and no stomach discomfort so far.", photos: [], rating: 5 },
     { comment: "I had acne pigmentation on my cheeks for months. Started this 1000mg course last month and the marks are definitely fading now.", photos: [], rating: 5 },
@@ -187,7 +187,7 @@ export const getProductReviews = (product) => {
   ];
 
   const ashwaReviews = [
-    { comment: "I have a very stressful IT job and used to get severe headaches by evening. Since taking this 500mg root extract, my mind feels much calmer.", photos: [], rating: 5 },
+    { comment: "This ashwagandha is a lifesaver. My sleep schedule was messed up due to work stress, and this completely fixed my sleep cycle and anxiety.", photos: [], rating: 5 },
     { comment: "Best thing about this is sleep quality! I take one capsule with warm milk before going to bed. Falling asleep is so much easier now.", photos: [], rating: 5 },
     { comment: "Taking this for gym recovery and stamina. Muscle soreness after leg day has reduced and morning energy is great.", photos: [], rating: 5 },
     { comment: "Pure root extract, no weird smell or aftertaste. Doesn't make you feel drowsy or sleepy during day time office hours.", photos: [], rating: 5 },
@@ -202,7 +202,7 @@ export const getProductReviews = (product) => {
   ];
 
   const collagenReviews = [
-    { comment: "My hair fall has noticeably reduced after finishing one box, and my skin feels much smoother and plump. Really works!", photos: [], rating: 5 },
+    { comment: "Started taking this collagen a month ago. My skin feels so much more elastic and my joint pain has surprisingly reduced as well. Highly recommended.", photos: [], rating: 5 },
     { comment: "Hair fall has definitely reduced after 3 weeks! Also noticed my nails aren't breaking or chipping as easily as before.", photos: [], rating: 5 },
     { comment: "Best marine collagen I have tried. Easily dissolves in normal water and doesn't have that horrible fishy smell or taste.", photos: [], rating: 5 },
     { comment: "Skin feels plumper and hydrated. Fine lines around my eyes look softer now. Good combination with Biotin and Hyaluronic Acid.", photos: [], rating: 4 },
@@ -217,7 +217,7 @@ export const getProductReviews = (product) => {
   ];
 
   const seaBuckthornReviews = [
-    { comment: "Had severe acidity and bloating issues for years. Drinking 15ml of this berry juice with lukewarm water every morning has fixed my digestion!", photos: [], rating: 5 },
+    { comment: "Absolutely love this Sea Buckthorn juice. It has a great tangy flavor and I've noticed a significant boost in my immunity and digestion since I started taking it.", photos: [], rating: 5 },
     { comment: "Very natural tart and tangy taste. You can tell it is genuine Himalayan berry pulp without artificial sugar or colors.", photos: [], rating: 5 },
     { comment: "Omega 7 is really good for skin dryness. My skin feels naturally moisturized from inside and even dry eyes feel better.", photos: [], rating: 5 },
     { comment: "Great immunity booster! My family has been drinking this daily and we haven't caught any common colds or seasonal coughs.", photos: [], rating: 5 },
