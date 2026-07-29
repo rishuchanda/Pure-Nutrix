@@ -274,11 +274,11 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.3 + (idx * 0.1) }}
-                onClick={() => window.open(`./assets/certificates/${doc.file}`, '_blank')}
+                onClick={() => window.open(`/assets/certificates/${doc.file}`, '_blank')}
               >
                 <div className="pdf-image-container">
                   {doc.img ? (
-                    <img src={`./assets/certificates/${doc.img}`} alt={doc.name} className="pdf-preview-img" />
+                    <img src={`/assets/certificates/${doc.img}`} alt={doc.name} className="pdf-preview-img" />
                   ) : (
                     <div className="pdf-icon-fallback">
                       <FileText size={48} />

@@ -10,9 +10,9 @@ const Hero3D = ({ onOrder }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const slides = [
-    { src: './assets/hero-slider/1.jpg', keyword: 'sea buckthorn' },
-    { src: './assets/hero-slider/2.jpg', keyword: 'collagen' },
-    { src: './assets/hero-slider/3.jpg', keyword: 'glutathione' }
+    { src: '/assets/hero-slider/1.jpg', keyword: 'sea buckthorn' },
+    { src: '/assets/hero-slider/2.jpg', keyword: 'collagen' },
+    { src: '/assets/hero-slider/3.jpg', keyword: 'glutathione' }
   ];
 
   useEffect(() => {
