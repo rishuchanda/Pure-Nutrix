@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { phone_number, otp, full_name = 'Customer' } = await req.json()
+    const { phone_number, otp, full_name = 'Customer', email = null } = await req.json()
 
     if (!phone_number || !otp) {
       throw new Error('Phone number and OTP are required')
@@ -54,17 +54,17 @@ serve(async (req) => {
     }
 
     // OTP is valid. Now find or create a user.
-    const dummyEmail = `phone_${parsed_phone}@whatsapp.auth`;
+    const userEmail = email ? email : `phone_${parsed_phone}@whatsapp.auth`;
     const tempPassword = crypto.randomUUID(); // Secure random password
 
     // Check if user exists
     let { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-    let user = users?.find(u => u.email === dummyEmail);
+    let user = users?.find(u => u.email === userEmail || u.user_metadata?.phone_number === parsed_phone);
 
     if (!user) {
       // Create user
       const { data: createData, error: createError } = await supabase.auth.admin.createUser({
-        email: dummyEmail,
+        email: userEmail,
         password: tempPassword,
         email_confirm: true,
         user_metadata: { full_name, phone_number: parsed_phone }
@@ -110,7 +110,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        credentials: { email: dummyEmail, password: tempPassword },
+        credentials: { email: userEmail, password: tempPassword },
         user
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }

@@ -7,6 +7,10 @@ import './AuthModal.css';
 const AuthModal = ({ isOpen, onClose }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [identifier, setIdentifier] = useState('');
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpMobile, setSignUpMobile] = useState('');
+  const [signUpOtpMethod, setSignUpOtpMethod] = useState('whatsapp');
+  const [otpSentTo, setOtpSentTo] = useState('');
   const [otp, setOtp] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,22 +36,25 @@ const AuthModal = ({ isOpen, onClose }) => {
     setMessage(null);
 
     try {
-      const isEmail = identifier.includes('@');
-      const cleanMobile = identifier.replace(/\D/g, '').slice(0, 10);
+      const isEmail = isSignUp ? (signUpOtpMethod === 'email') : identifier.includes('@');
+      const finalEmail = isSignUp ? signUpEmail : (identifier.includes('@') ? identifier : '');
+      const finalMobile = isSignUp ? signUpMobile : identifier.replace(/\D/g, '').slice(0, 10);
       
+      setOtpSentTo(isEmail ? finalEmail : finalMobile);
+
       if (isEmail) {
         const { error } = await supabase.auth.signInWithOtp({
-          email: identifier,
+          email: finalEmail,
           options: {
-            data: isSignUp ? { full_name: fullName } : {},
+            data: isSignUp ? { full_name: fullName, phone_number: finalMobile } : {},
           }
         });
         if (error) throw error;
         setMessage('A 6-digit code has been sent to your email.');
       } else {
-        if (cleanMobile.length < 10) throw new Error('Please enter a valid 10-digit mobile number.');
+        if (finalMobile.length < 10) throw new Error('Please enter a valid 10-digit mobile number.');
         const res = await supabase.functions.invoke('send-whatsapp-otp', {
-          body: { phone_number: cleanMobile }
+          body: { phone_number: finalMobile }
         });
         if (res.error || !res.data?.success) {
           throw new Error(res.data?.error || res.error?.message || 'Failed to send WhatsApp OTP.');
@@ -70,19 +77,20 @@ const AuthModal = ({ isOpen, onClose }) => {
     setMessage(null);
 
     try {
-      const isEmail = identifier.includes('@');
-      const cleanMobile = identifier.replace(/\D/g, '').slice(0, 10);
+      const isEmail = isSignUp ? (signUpOtpMethod === 'email') : identifier.includes('@');
+      const finalEmail = isSignUp ? signUpEmail : (identifier.includes('@') ? identifier : '');
+      const finalMobile = isSignUp ? signUpMobile : identifier.replace(/\D/g, '').slice(0, 10);
 
       if (isEmail) {
         const { data, error } = await supabase.auth.verifyOtp({
-          email: identifier,
+          email: finalEmail,
           token: otp,
           type: 'email'
         });
         if (error) throw error;
       } else {
         const res = await supabase.functions.invoke('verify-whatsapp-otp', {
-          body: { phone_number: cleanMobile, otp, full_name: isSignUp ? fullName : undefined }
+          body: { phone_number: finalMobile, otp, full_name: isSignUp ? fullName : undefined, email: isSignUp ? finalEmail : undefined }
         });
         if (res.error || !res.data?.success) {
           throw new Error(res.data?.error || res.error?.message || 'Invalid WhatsApp OTP.');
@@ -143,38 +151,76 @@ const AuthModal = ({ isOpen, onClose }) => {
             {!isOtpSent ? (
               <form onSubmit={handleSendOtp} className="auth-form">
                 
-                {isSignUp && (
+                {isSignUp ? (
+                  <>
+                    <div className="input-group">
+                      <User size={18} className="input-icon" />
+                      <input
+                        type="text"
+                        placeholder="Full Name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="input-group">
+                      <Mail size={18} className="input-icon" />
+                      <input
+                        type="email"
+                        placeholder="Email Address"
+                        value={signUpEmail}
+                        onChange={(e) => setSignUpEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="input-group">
+                      <span className="input-icon" style={{ display: 'flex', alignItems: 'center' }}>+91</span>
+                      <input
+                        type="tel"
+                        placeholder="10-digit WhatsApp No."
+                        value={signUpMobile}
+                        onChange={(e) => setSignUpMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        required
+                        minLength={10}
+                        style={{ paddingLeft: '45px' }}
+                      />
+                    </div>
+                    
+                    <div style={{ margin: '15px 0', fontSize: '0.9rem', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
+                      <p style={{ marginBottom: '8px' }}>Send OTP to:</p>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <input type="radio" name="otp_method" checked={signUpOtpMethod === 'whatsapp'} onChange={() => setSignUpOtpMethod('whatsapp')} />
+                          WhatsApp
+                        </label>
+                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <input type="radio" name="otp_method" checked={signUpOtpMethod === 'email'} onChange={() => setSignUpOtpMethod('email')} />
+                          Email
+                        </label>
+                      </div>
+                    </div>
+                  </>
+                ) : (
                   <div className="input-group">
                     <User size={18} className="input-icon" />
                     <input
                       type="text"
-                      placeholder="Full Name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Email Address or WhatsApp No."
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
                       required
                     />
                   </div>
                 )}
-                
-                <div className="input-group">
-                  <User size={18} className="input-icon" />
-                  <input
-                    type="text"
-                    placeholder="Email Address or WhatsApp No."
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    required
-                  />
-                </div>
 
-                <button type="submit" className="btn-primary auth-submit-btn" disabled={loading || identifier.length < 5}>
+                <button type="submit" className="btn-primary auth-submit-btn" disabled={loading || (!isSignUp && identifier.length < 5) || (isSignUp && (!signUpEmail || signUpMobile.length < 10 || !fullName))}>
                   {loading ? <Loader2 className="spinner" size={20} /> : 'Send OTP'}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp} className="auth-form">
                 <p style={{ textAlign: 'center', marginBottom: '15px', color: 'var(--color-text-secondary)' }}>
-                  Enter the 6-digit code sent to <strong>{identifier}</strong>
+                  Enter the 6-digit code sent to <strong>{otpSentTo}</strong>
                 </p>
                 <div className="auth-input-group" style={{ background: '#f8f9fa', border: '2px solid #D4AF37', borderRadius: '8px', padding: '5px' }}>
                   <KeyRound className="auth-input-icon" size={20} />
