@@ -33,6 +33,7 @@ export const getPathForView = (view, slug = null) => {
     'account': '/account',
     'quality-standards': '/quality',
     'legal-policy': '/legal',
+    'privacy-policy': '/privacy-policy',
     'support': '/support',
     'whatsapp': '/whatsapp',
     'pdp': `/product/${slug}`,
