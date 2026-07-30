@@ -74,30 +74,6 @@ const LegalPolicyPage = ({ onBack }) => {
       )
     },
     {
-      id: 'privacy',
-      icon: <Lock size={24} />,
-      title: 'Privacy Policy',
-      content: (
-        <div className="policy-content">
-          <h3>Information We Collect</h3>
-          <p>When you purchase something from Pure Nutrix, as part of the buying and selling process, we collect personal information you give us, such as your name, address, phone number, and email address.</p>
-
-          <h3>How We Use Your Information</h3>
-          <ul>
-            <li>To process and fulfill your orders.</li>
-            <li>To communicate with you regarding your shipment or customer support queries.</li>
-            <li>To send promotional emails and exclusive offers (only if you have opted in).</li>
-          </ul>
-
-          <h3>Data Security</h3>
-          <p>We take reasonable precautions and follow industry best practices to make sure your data is not inappropriately lost, misused, accessed, disclosed, altered, or destroyed. Our payment gateways use encrypted, secure connections compliant with PCI-DSS standards. We do not store your credit/debit card details on our servers.</p>
-
-          <h3>Third-Party Services</h3>
-          <p>We may share your delivery details strictly with our trusted logistics and courier partners to ensure successful delivery of your orders. We do not sell your personal data to third-party marketing agencies.</p>
-        </div>
-      )
-    },
-    {
       id: 'terms',
       icon: <FileText size={24} />,
       title: 'Terms of Service',
