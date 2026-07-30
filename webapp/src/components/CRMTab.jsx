@@ -254,11 +254,26 @@ const CRMTab = ({ onBack }) => {
         last_message_at: new Date().toISOString()
       }, { onConflict: 'phone_number' });
 
+      let templateComponents = [];
+      if (templateName === 'order_confirmation') {
+        templateComponents = [
+          {
+            type: 'body',
+            parameters: [
+              { type: 'text', text: selectedContact.name || 'Customer' },
+              { type: 'text', text: 'Pure Nutrix Products' },
+              { type: 'text', text: 'Paid' }
+            ]
+          }
+        ];
+      }
+
       const { data, error } = await supabase.functions.invoke('send-whatsapp', {
         body: {
           phone_number: selectedContact.phone_number,
           type: 'template',
-          template_name: templateName
+          template_name: templateName,
+          template_components: templateComponents
         }
       });
       if (error || !data?.success) throw new Error(data?.error || error?.message || 'Template failed');
