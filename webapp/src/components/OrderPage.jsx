@@ -34,6 +34,8 @@ const OrderPage = ({ product, cartItems, onBack }) => {
 
   const [isCheckoutOtpSent, setIsCheckoutOtpSent] = useState(false);
   const [checkoutOtp, setCheckoutOtp] = useState('');
+  const [showOtpChoice, setShowOtpChoice] = useState(false);
+  const [otpMethod, setOtpMethod] = useState('email');
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -52,18 +54,37 @@ const OrderPage = ({ product, cartItems, onBack }) => {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  const handleResendOtp = async () => {
+  const sendOtp = async (method) => {
+    setOtpMethod(method);
+    setIsProcessing(true);
     setAuthError(null);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: formData.email,
-        options: { data: { full_name: formData.name } }
-      });
-      if (error) throw error;
+      if (method === 'email') {
+        const { error } = await supabase.auth.signInWithOtp({
+          email: formData.email,
+          options: { data: { full_name: formData.name } }
+        });
+        if (error) throw error;
+      } else {
+        const res = await supabase.functions.invoke('send-whatsapp-otp', {
+          body: { phone_number: formData.mobile }
+        });
+        if (res.error || !res.data?.success) {
+          throw new Error(res.data?.error || res.error?.message || 'Failed to send WhatsApp OTP.');
+        }
+      }
+      setIsCheckoutOtpSent(true);
+      setShowOtpChoice(false);
       setResendTimer(30);
     } catch (err) {
-      setAuthError(err.message || 'Failed to resend OTP.');
+      setAuthError(err.message || 'Failed to send OTP.');
+    } finally {
+      setIsProcessing(false);
     }
+  };
+
+  const handleResendOtp = async () => {
+    sendOtp(otpMethod);
   };
 
     // Normalization: if cartItems is provided, use it. Otherwise, use the single product with quantity state.
@@ -95,32 +116,47 @@ const OrderPage = ({ product, cartItems, onBack }) => {
       
       if (!user) {
         if (!isCheckoutOtpSent) {
-          const { error } = await supabase.auth.signInWithOtp({
-            email: formData.email,
-            options: { data: { full_name: formData.name } }
-          });
-          if (error) {
-            setAuthError(error.message || 'Failed to send OTP.');
+          if (!showOtpChoice) {
+            setShowOtpChoice(true);
             setIsProcessing(false);
             return;
           }
-          setIsCheckoutOtpSent(true);
-          setResendTimer(30);
-          setAuthError(null);
           setIsProcessing(false);
           return;
         } else {
-          const { data, error } = await supabase.auth.verifyOtp({
-            email: formData.email,
-            token: checkoutOtp,
-            type: 'email'
-          });
-          if (error) {
-            setAuthError('Invalid OTP. Please check the code sent to your email.');
-            setIsProcessing(false);
-            return;
+          if (otpMethod === 'email') {
+            const { data, error } = await supabase.auth.verifyOtp({
+              email: formData.email,
+              token: checkoutOtp,
+              type: 'email'
+            });
+            if (error) {
+              setAuthError('Invalid OTP. Please check the code sent to your email.');
+              setIsProcessing(false);
+              return;
+            }
+            user = data.user;
+          } else {
+            const res = await supabase.functions.invoke('verify-whatsapp-otp', {
+              body: { phone_number: formData.mobile, otp: checkoutOtp, full_name: formData.name }
+            });
+            if (res.error || !res.data?.success) {
+              setAuthError(res.data?.error || res.error?.message || 'Invalid WhatsApp OTP.');
+              setIsProcessing(false);
+              return;
+            }
+            const creds = res.data.credentials;
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: creds.email,
+              password: creds.password
+            });
+            if (error) {
+              setAuthError('Login failed after verification.');
+              setIsProcessing(false);
+              return;
+            }
+            user = data.user;
           }
-          user = data.user;
         }
       }
 
@@ -401,14 +437,36 @@ const OrderPage = ({ product, cartItems, onBack }) => {
 
                       {isCheckoutOtpSent && (
                         <div className="input-group" style={{ marginTop: '15px', background: '#fff', padding: '15px', borderRadius: '8px', border: '2px solid #D4AF37', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                          <label style={{ color: '#1a1a1a', fontWeight: 'bold' }}>Enter 6-Digit OTP sent to {formData.email}</label>
+                          <label style={{ color: '#1a1a1a', fontWeight: 'bold' }}>Enter 6-Digit OTP sent to {otpMethod === 'email' ? formData.email : 'WhatsApp'}</label>
                           <input type="text" value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value.replace(/\D/g, '').slice(0,6))} required maxLength="6" style={{ letterSpacing: '8px', textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold', background: '#f9f9f9', border: '1px solid #ccc' }} placeholder="------" />
                         </div>
                       )}
 
-                      <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing || (isCheckoutOtpSent && checkoutOtp.length < 6)} style={{ marginTop: '20px' }}>
-                        {isProcessing ? 'Processing Securely...' : (isCheckoutOtpSent ? 'Verify OTP & Place Order' : `Pay Online ₹${finalTotal}`)}
-                      </button>
+                      {!showOtpChoice && !isCheckoutOtpSent && (
+                        <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing} style={{ marginTop: '20px' }}>
+                          {isProcessing ? 'Processing...' : `Pay Online ₹${finalTotal}`}
+                        </button>
+                      )}
+
+                      {showOtpChoice && !isCheckoutOtpSent && (
+                        <div style={{ marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                          <p style={{ textAlign: 'center', marginBottom: '15px', fontWeight: 'bold', color: '#1e293b' }}>Where would you like to receive the verification OTP?</p>
+                          <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
+                            <button type="button" onClick={() => sendOtp('whatsapp')} className="btn-primary" style={{ background: '#25D366', color: '#fff', border: 'none', padding: '12px' }} disabled={isProcessing}>
+                              {isProcessing ? 'Sending...' : 'Send OTP to WhatsApp (Fast)'}
+                            </button>
+                            <button type="button" onClick={() => sendOtp('email')} className="btn-outline" style={{ padding: '12px' }} disabled={isProcessing}>
+                              {isProcessing ? 'Sending...' : 'Send OTP to Email'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {isCheckoutOtpSent && (
+                        <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing || checkoutOtp.length < 6} style={{ marginTop: '20px' }}>
+                          {isProcessing ? 'Processing Securely...' : 'Verify OTP & Place Order'}
+                        </button>
+                      )}
 
                       {isCheckoutOtpSent && (
                         <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
