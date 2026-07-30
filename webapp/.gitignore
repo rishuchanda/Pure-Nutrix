@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 
 .env
+*.mjs
+*.js.bak
+auth_config_dump.json
+test_*.js

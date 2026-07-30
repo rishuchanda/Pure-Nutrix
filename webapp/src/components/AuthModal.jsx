@@ -138,9 +138,9 @@ const AuthModal = ({ isOpen, onClose }) => {
             {!isOtpSent ? (
               <form onSubmit={handleSendOtp} className="auth-form">
                 
-                <div className="auth-method-toggle" style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                  <button type="button" className={`btn-outline ${authMethod === 'email' ? 'active' : ''}`} onClick={() => setAuthMethod('email')} style={{ flex: 1, padding: '8px', background: authMethod === 'email' ? 'rgba(255,255,255,0.1)' : 'transparent', border: authMethod === 'email' ? '1px solid #fff' : '1px solid rgba(255,255,255,0.2)' }}>Email</button>
-                  <button type="button" className={`btn-outline ${authMethod === 'whatsapp' ? 'active' : ''}`} onClick={() => setAuthMethod('whatsapp')} style={{ flex: 1, padding: '8px', background: authMethod === 'whatsapp' ? 'rgba(37,211,102,0.2)' : 'transparent', border: authMethod === 'whatsapp' ? '1px solid #25D366' : '1px solid rgba(255,255,255,0.2)', color: authMethod === 'whatsapp' ? '#25D366' : '#fff' }}>WhatsApp</button>
+                <div className="auth-method-toggle" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                  <button type="button" className={`btn-outline ${authMethod === 'email' ? 'active' : ''}`} onClick={() => setAuthMethod('email')} style={{ flex: 1, padding: '10px', borderRadius: '8px', fontWeight: 'bold', background: authMethod === 'email' ? '#000' : 'transparent', color: authMethod === 'email' ? '#fff' : '#000', border: '1px solid #000', cursor: 'pointer', transition: 'all 0.2s' }}>Email</button>
+                  <button type="button" className={`btn-outline ${authMethod === 'whatsapp' ? 'active' : ''}`} onClick={() => setAuthMethod('whatsapp')} style={{ flex: 1, padding: '10px', borderRadius: '8px', fontWeight: 'bold', background: authMethod === 'whatsapp' ? '#25D366' : 'transparent', color: authMethod === 'whatsapp' ? '#fff' : '#25D366', border: '1px solid #25D366', cursor: 'pointer', transition: 'all 0.2s' }}>WhatsApp</button>
                 </div>
 
                 {isSignUp && (
