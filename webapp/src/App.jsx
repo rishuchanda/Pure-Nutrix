@@ -223,6 +223,12 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleOpenPrivacyPolicy = () => {
+    setCurrentView('privacy-policy');
+    window.history.pushState({ view: 'privacy-policy' }, '', getPathForView('privacy-policy'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleOpenSupport = () => {
     setCurrentView('support');
     window.history.pushState({ view: 'support' }, '', getPathForView('support'));
@@ -429,7 +435,7 @@ function App() {
               <WhyChooseUs />
               <TrustSection />
             </main>
-            <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} onOpenSupport={handleOpenSupport} />
+            <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} onOpenPrivacyPolicy={handleOpenPrivacyPolicy} onOpenSupport={handleOpenSupport} />
           </motion.div>
         ) : currentView === 'order' ? (
           <motion.div
