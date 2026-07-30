@@ -48,8 +48,12 @@ const CRMTab = ({ onBack }) => {
   const [blastResult, setBlastResult] = useState(null);
 
   // Settings State
-  const [waSettings, setWaSettings] = useState({ business_phone_number: '', phone_number_id: '', access_token: '' });
+  const [waSettings, setWaSettings] = useState({});
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Template States
+  const [customInboxTemplate, setCustomInboxTemplate] = useState('hello_world');
+  const [campaignTemplate, setCampaignTemplate] = useState('');
 
   const messagesEndRef = useRef(null);
 
@@ -230,6 +234,52 @@ const CRMTab = ({ onBack }) => {
     }
   };
 
+  const handleSendTemplate = async () => {
+    const templateName = customInboxTemplate.trim() || 'hello_world';
+    if (!selectedContact || isSending) return;
+    setIsSending(true);
+    const optMsg = {
+      id: 'temp-' + Date.now(),
+      contact_phone: selectedContact.phone_number,
+      direction: 'outbound',
+      message_body: `[Template Sent: ${templateName}]`,
+      status: 'sending',
+      created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, optMsg]);
+    try {
+      await supabase.from('whatsapp_contacts').upsert({
+        phone_number: selectedContact.phone_number,
+        name: selectedContact.name || null,
+        last_message_at: new Date().toISOString()
+      }, { onConflict: 'phone_number' });
+
+      const { data, error } = await supabase.functions.invoke('send-whatsapp', {
+        body: {
+          phone_number: selectedContact.phone_number,
+          type: 'template',
+          template_name: templateName
+        }
+      });
+      if (error || !data?.success) throw new Error(data?.error || error?.message || 'Template failed');
+      const metaMsgId = data?.data?.messages?.[0]?.id || null;
+      const { data: insertedMsg } = await supabase.from('whatsapp_messages').insert({
+        contact_phone: selectedContact.phone_number,
+        direction: 'outbound',
+        message_body: `[Template Sent: ${templateName}]`,
+        status: 'sent',
+        meta_message_id: metaMsgId
+      }).select().single();
+      setMessages(prev => prev.map(m => m.id === optMsg.id ? { ...(insertedMsg || m), status: 'sent' } : m));
+    } catch (err) {
+      console.error('Send error:', err);
+      alert('Failed to send template: ' + err.message);
+      setMessages(prev => prev.map(m => m.id === optMsg.id ? { ...m, status: 'failed' } : m));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
 
   // ─── Add New Contact ──────────────────────────────────────────────────────
   const handleAddContact = async (e) => {
@@ -278,9 +328,19 @@ const CRMTab = ({ onBack }) => {
         let emailSuccess = true;
 
         if (campaignChannel === 'whatsapp' || campaignChannel === 'both') {
-          const { data } = await supabase.functions.invoke('send-whatsapp', {
-            body: { phone_number: contact.phone_number, message: messageText, type: 'text' }
-          });
+          // If a campaignTemplate is provided, send as template, else fallback to text
+          const payload = campaignTemplate.trim() ? {
+            phone_number: contact.phone_number,
+            type: 'template',
+            template_name: campaignTemplate.trim(),
+            template_language: 'en',
+            template_components: [] // You can add variable mapping logic here later if needed
+          } : {
+            phone_number: contact.phone_number,
+            message: messageText,
+            type: 'text'
+          };
+          const { data } = await supabase.functions.invoke('send-whatsapp', { body: payload });
           waSuccess = !!data?.success;
         }
         
@@ -548,6 +608,11 @@ const CRMTab = ({ onBack }) => {
                 </div>
 
                 {/* Input */}
+                <div style={{ padding: '0.5rem 1rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Custom Template (24h bypass):</span>
+                  <input type="text" value={customInboxTemplate} onChange={e => setCustomInboxTemplate(e.target.value)} placeholder="hello_world" style={{ padding: '4px 8px', fontSize: '0.75rem', border: '1px solid #cbd5e1', borderRadius: '4px', width: '120px' }} />
+                  <button onClick={handleSendTemplate} className="admin-btn" style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#fff', border: '1px solid #cbd5e1' }} disabled={isSending}>Send Template</button>
+                </div>
                 <form className="chat-input-area" onSubmit={handleSendMessage}>
                   <input
                     type="text"
@@ -745,10 +810,25 @@ const CRMTab = ({ onBack }) => {
                     />
                   )}
 
+                  {(campaignChannel === 'whatsapp' || campaignChannel === 'both') && (
+                    <div style={{ marginBottom: '15px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#555', marginBottom: '5px' }}>Meta Approved Template Name (Required for WhatsApp Offers)</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. monsoon_offer, new_deal"
+                        value={campaignTemplate}
+                        onChange={(e) => setCampaignTemplate(e.target.value)}
+                        style={{ marginBottom: '5px' }}
+                      />
+                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Note: If you leave this blank, it sends a standard text message (which fails if the customer hasn't messaged you in 24 hrs).</span>
+                    </div>
+                  )}
+
                   <textarea
                     className="admin-input campaign-textarea"
                     rows="8"
-                    placeholder={`Hi {{name}},\n\n🌿 Exciting news from Pure-Nutrix!\n\nWe have a special monsoon offer just for you...`}
+                    placeholder={`Hi {{name}},\n\n🌿 Exciting news from Pure-Nutrix!\n\nWe have a special monsoon offer just for you...\n\n(Note: WhatsApp will ignore this text if a Template Name is provided above. Emails will use this text.)`}
                     value={bulkMessage}
                     onChange={(e) => setBulkMessage(e.target.value)}
                   />

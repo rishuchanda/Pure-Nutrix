@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { phone_number, message, template_name, type = 'text' } = await req.json()
+    const { phone_number, message, template_name, template_language = "en_US", template_components = [], type = 'text' } = await req.json()
 
     // Fetch dynamic configuration from database
     const { data: settings, error: dbError } = await supabase.from('whatsapp_settings').select('*').eq('id', 1).single();
@@ -49,8 +49,9 @@ serve(async (req) => {
         template: {
           name: template_name,
           language: {
-            code: "en_US"
-          }
+            code: template_language
+          },
+          components: template_components
         }
       }
     } else {

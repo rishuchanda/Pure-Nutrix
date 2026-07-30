@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, CreditCard, Wallet, Truck, ShieldCheck } from 'lucide-react';
 import { supabase } from '../supabaseClient';
@@ -22,6 +22,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
 
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
     mobile: '',
     pincode: '',
     flat: '',
@@ -31,11 +32,39 @@ const OrderPage = ({ product, cartItems, onBack }) => {
     state: ''
   });
 
+  const [isCheckoutOtpSent, setIsCheckoutOtpSent] = useState(false);
+  const [checkoutOtp, setCheckoutOtp] = useState('');
+
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const [authError, setAuthError] = useState(null);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  const handleResendOtp = async () => {
+    setAuthError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: formData.email,
+        options: { data: { full_name: formData.name } }
+      });
+      if (error) throw error;
+      setResendTimer(30);
+    } catch (err) {
+      setAuthError(err.message || 'Failed to resend OTP.');
+    }
+  };
 
     // Normalization: if cartItems is provided, use it. Otherwise, use the single product with quantity state.
     const [singleProductQty, setSingleProductQty] = useState(1);
@@ -62,12 +91,37 @@ const OrderPage = ({ product, cartItems, onBack }) => {
     
     try {
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      let { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        setAuthError('You must be logged in to place an order.');
-        setIsProcessing(false);
-        return;
+        if (!isCheckoutOtpSent) {
+          const { error } = await supabase.auth.signInWithOtp({
+            email: formData.email,
+            options: { data: { full_name: formData.name } }
+          });
+          if (error) {
+            setAuthError(error.message || 'Failed to send OTP.');
+            setIsProcessing(false);
+            return;
+          }
+          setIsCheckoutOtpSent(true);
+          setResendTimer(30);
+          setAuthError(null);
+          setIsProcessing(false);
+          return;
+        } else {
+          const { data, error } = await supabase.auth.verifyOtp({
+            email: formData.email,
+            token: checkoutOtp,
+            type: 'email'
+          });
+          if (error) {
+            setAuthError('Invalid OTP. Please check the code sent to your email.');
+            setIsProcessing(false);
+            return;
+          }
+          user = data.user;
+        }
       }
 
       // Prepare order data
@@ -111,8 +165,19 @@ const OrderPage = ({ product, cartItems, onBack }) => {
           await supabase.functions.invoke('send-whatsapp', {
             body: {
               phone_number: '91' + formData.mobile.replace(/[^0-9]/g, ''),
-              message: `Hi ${formData.name},\n\nYour order for ${finalProductName} has been confirmed! Total: ₹${finalTotal}.\n\nThank you for choosing Pure-Nutrix.`,
-              type: 'text'
+              type: 'template',
+              template_name: 'order_confirmation',
+              template_language: 'en',
+              template_components: [
+                {
+                  type: "body",
+                  parameters: [
+                    { type: "text", text: formData.name },
+                    { type: "text", text: finalProductName },
+                    { type: "text", text: finalTotal.toString() }
+                  ]
+                }
+              ]
             }
           });
           
@@ -297,8 +362,12 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                         <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="Raman Sharma" />
                       </div>
                       <div className="input-group">
+                        <label>Email Address</label>
+                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required placeholder="raman@example.com" disabled={isCheckoutOtpSent} />
+                      </div>
+                      <div className="input-group">
                         <label>Mobile Number</label>
-                        <input type="tel" name="mobile" value={formData.mobile} onChange={handleInputChange} required placeholder="10-digit mobile number" maxLength="10" />
+                        <input type="tel" name="mobile" value={formData.mobile} onChange={handleInputChange} required placeholder="10-digit mobile number" maxLength="10" disabled={isCheckoutOtpSent} />
                       </div>
                       <div className="input-row">
                         <div className="input-group">
@@ -330,9 +399,27 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                       </div>
                       {authError && <div className="error-message" style={{ color: 'red', margin: '15px 0' }}>{authError}</div>}
 
-                      <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing} style={{ marginTop: '20px' }}>
-                        {isProcessing ? 'Processing Securely...' : `Pay Online ₹${finalTotal}`}
+                      {isCheckoutOtpSent && (
+                        <div className="input-group" style={{ marginTop: '15px', background: '#fff', padding: '15px', borderRadius: '8px', border: '2px solid #D4AF37', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                          <label style={{ color: '#1a1a1a', fontWeight: 'bold' }}>Enter 6-Digit OTP sent to {formData.email}</label>
+                          <input type="text" value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value.replace(/\D/g, '').slice(0,6))} required maxLength="6" style={{ letterSpacing: '8px', textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold', background: '#f9f9f9', border: '1px solid #ccc' }} placeholder="------" />
+                        </div>
+                      )}
+
+                      <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing || (isCheckoutOtpSent && checkoutOtp.length < 6)} style={{ marginTop: '20px' }}>
+                        {isProcessing ? 'Processing Securely...' : (isCheckoutOtpSent ? 'Verify OTP & Place Order' : `Pay Online ₹${finalTotal}`)}
                       </button>
+
+                      {isCheckoutOtpSent && (
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                          <button type="button" className="btn-outline" onClick={() => setIsCheckoutOtpSent(false)} style={{ flex: 1 }} disabled={isProcessing}>
+                            Change Details
+                          </button>
+                          <button type="button" className="btn-outline" onClick={handleResendOtp} style={{ flex: 1, opacity: resendTimer > 0 ? 0.6 : 1 }} disabled={isProcessing || resendTimer > 0}>
+                            {resendTimer > 0 ? `Resend OTP (${resendTimer}s)` : 'Resend OTP'}
+                          </button>
+                        </div>
+                      )}
 
                       <div className="secure-badge" style={{ marginTop: '15px', justifyContent: 'center' }}>
                         <ShieldCheck size={16} />

@@ -12,6 +12,7 @@ export const parsePath = (path) => {
     'account': 'account',
     'quality': 'quality-standards',
     'legal': 'legal-policy',
+    'privacy-policy': 'legal-policy',
     'support': 'support',
     'whatsapp': 'whatsapp'
   };
