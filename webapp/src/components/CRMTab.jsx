@@ -52,7 +52,7 @@ const CRMTab = ({ onBack }) => {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Template States
-  const [customInboxTemplate, setCustomInboxTemplate] = useState('hello_world');
+  const [customInboxTemplate, setCustomInboxTemplate] = useState('monsoon_offer');
   const [campaignTemplate, setCampaignTemplate] = useState('');
 
   const messagesEndRef = useRef(null);
@@ -609,9 +609,17 @@ const CRMTab = ({ onBack }) => {
 
                 {/* Input */}
                 <div style={{ padding: '0.5rem 1rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Custom Template (24h bypass):</span>
-                  <input type="text" value={customInboxTemplate} onChange={e => setCustomInboxTemplate(e.target.value)} placeholder="hello_world" style={{ padding: '4px 8px', fontSize: '0.75rem', border: '1px solid #cbd5e1', borderRadius: '4px', width: '120px' }} />
-                  <button onClick={handleSendTemplate} className="admin-btn" style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#fff', border: '1px solid #cbd5e1' }} disabled={isSending}>Send Template</button>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Select Template (24h bypass):</span>
+                  <select 
+                    value={customInboxTemplate} 
+                    onChange={e => setCustomInboxTemplate(e.target.value)} 
+                    style={{ padding: '4px 8px', fontSize: '0.75rem', border: '1px solid #cbd5e1', borderRadius: '4px', width: '180px' }}
+                  >
+                    <option value="monsoon_offer">monsoon_offer</option>
+                    <option value="order_confirmation">order_confirmation</option>
+                    <option value="hello_world">hello_world</option>
+                  </select>
+                  <button onClick={handleSendTemplate} className="admin-btn admin-btn-primary" style={{ padding: '4px 10px', fontSize: '0.75rem' }} disabled={isSending}>Send Template</button>
                 </div>
                 <form className="chat-input-area" onSubmit={handleSendMessage}>
                   <input
