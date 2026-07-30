@@ -14,6 +14,7 @@ import ProductDetailsPage from './components/ProductDetailsPage';
 import CartPage from './components/CartPage';
 import QualityStandardsPage from './components/QualityStandardsPage';
 import LegalPolicyPage from './components/LegalPolicyPage';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 import SupportPage from './components/SupportPage';
 import { supabase } from './supabaseClient';
 import { requestPushPermissionAndSubscribe } from './pushNotifications';
@@ -48,7 +49,7 @@ function App() {
         if (state.product) setSelectedProduct(state.product);
       } else {
         const { view, slug: productSlug } = parsePath(window.location.pathname);
-        const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
+        const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'privacy-policy', 'support', 'whatsapp'];
         
         if (validViews.includes(view)) {
           if ((view === 'pdp' || view === 'order') && productSlug) {
@@ -90,7 +91,7 @@ function App() {
     // Initial load
     const isPathAdmin = window.location.pathname === '/admin';
     const { view: initialView, slug: initialSlug } = parsePath(window.location.pathname);
-    const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'support', 'whatsapp'];
+    const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'privacy-policy', 'support', 'whatsapp'];
 
     if (isPathAdmin) {
       // Do nothing to the hash if we are on the admin page
@@ -533,6 +534,16 @@ function App() {
             transition={{ duration: 0.5 }}
           >
             <LegalPolicyPage onBack={handleBackToHome} />
+          </motion.div>
+        ) : currentView === 'privacy-policy' ? (
+          <motion.div
+            key="privacy-policy"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <PrivacyPolicyPage onBack={handleBackToHome} />
           </motion.div>
         ) : currentView === 'support' ? (
           <motion.div
