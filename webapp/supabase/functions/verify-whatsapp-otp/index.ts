@@ -71,6 +71,30 @@ serve(async (req) => {
       });
       if (createError) throw createError;
       user = createData.user;
+      
+      // Send Welcome Message via WhatsApp
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/send-whatsapp`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            phone_number: parsed_phone,
+            type: 'template',
+            template_name: 'welcome_message',
+            template_components: [
+              {
+                type: 'body',
+                parameters: [{ type: 'text', text: full_name || 'Customer' }]
+              }
+            ]
+          })
+        });
+      } catch (err) {
+        console.error('Failed to send welcome message:', err);
+      }
     } else {
       // Update password of existing user
       const { error: updateError } = await supabase.auth.admin.updateUserById(

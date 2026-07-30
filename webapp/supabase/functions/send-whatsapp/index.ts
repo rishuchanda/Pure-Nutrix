@@ -37,6 +37,11 @@ serve(async (req) => {
       throw new Error('Phone number is required')
     }
 
+    let parsed_phone = phone_number.replace(/\D/g, '');
+    if (parsed_phone.length === 10) {
+      parsed_phone = '91' + parsed_phone;
+    }
+
     const url = `https://graph.facebook.com/v17.0/${WHATSAPP_PHONE_ID}/messages`
 
     let payload = {}
@@ -44,7 +49,7 @@ serve(async (req) => {
     if (type === 'template') {
       payload = {
         messaging_product: "whatsapp",
-        to: phone_number,
+        to: parsed_phone,
         type: "template",
         template: {
           name: template_name,
@@ -57,7 +62,7 @@ serve(async (req) => {
     } else {
       payload = {
         messaging_product: "whatsapp",
-        to: phone_number,
+        to: parsed_phone,
         type: "text",
         text: {
           body: message

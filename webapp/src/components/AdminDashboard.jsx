@@ -193,8 +193,17 @@ const AdminDashboard = ({ user }) => {
             await supabase.functions.invoke('send-whatsapp', {
               body: {
                 phone_number: '91' + order.customer_mobile.replace(/[^0-9]/g, ''),
-                message: `Hi ${order.customer_name},\n\nYour order #${order.id ? String(order.id).substring(0,6) : ''} status has been updated to: ${newStatus.toUpperCase()}.\n\nThank you for shopping with Pure-Nutrix.`,
-                type: 'text'
+                type: 'template',
+                template_name: 'order_update',
+                template_components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      { type: "text", text: order.customer_name },
+                      { type: "text", text: newStatus.toUpperCase() }
+                    ]
+                  }
+                ]
               }
             });
           }

@@ -34,6 +34,9 @@ serve(async (req) => {
     try {
       const body = await req.json();
 
+      // Log raw payload for debugging
+      await supabase.from('webhook_logs').insert({ payload: body });
+
       // Check if it's a WhatsApp status update or message event
       if (body.object === 'whatsapp_business_account') {
         const entry = body.entry?.[0];

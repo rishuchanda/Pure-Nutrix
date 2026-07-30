@@ -7,7 +7,9 @@ import './AuthModal.css';
 const AuthModal = ({ isOpen, onClose }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
+  const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
+  const [authMethod, setAuthMethod] = useState('email'); // 'email' or 'whatsapp'
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -32,16 +34,26 @@ const AuthModal = ({ isOpen, onClose }) => {
     setMessage(null);
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          data: isSignUp ? { full_name: fullName } : {},
+      if (authMethod === 'email') {
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            data: isSignUp ? { full_name: fullName } : {},
+          }
+        });
+        if (error) throw error;
+        setMessage('A 6-digit code has been sent to your email.');
+      } else {
+        const res = await supabase.functions.invoke('send-whatsapp-otp', {
+          body: { phone_number: mobile }
+        });
+        if (res.error || !res.data?.success) {
+          throw new Error(res.data?.error || res.error?.message || 'Failed to send WhatsApp OTP.');
         }
-      });
-      if (error) throw error;
+        setMessage('A 6-digit code has been sent to your WhatsApp.');
+      }
       setIsOtpSent(true);
       setResendTimer(30);
-      setMessage('A 6-digit code has been sent to your email.');
     } catch (err) {
       setError(err.message || 'Failed to send OTP.');
     } finally {
@@ -56,12 +68,27 @@ const AuthModal = ({ isOpen, onClose }) => {
     setMessage(null);
 
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'email'
-      });
-      if (error) throw error;
+      if (authMethod === 'email') {
+        const { data, error } = await supabase.auth.verifyOtp({
+          email,
+          token: otp,
+          type: 'email'
+        });
+        if (error) throw error;
+      } else {
+        const res = await supabase.functions.invoke('verify-whatsapp-otp', {
+          body: { phone_number: mobile, otp, full_name: isSignUp ? fullName : undefined }
+        });
+        if (res.error || !res.data?.success) {
+          throw new Error(res.data?.error || res.error?.message || 'Invalid WhatsApp OTP.');
+        }
+        const creds = res.data.credentials;
+        const { error } = await supabase.auth.signInWithPassword({
+          email: creds.email,
+          password: creds.password
+        });
+        if (error) throw new Error('Login failed after WhatsApp verification.');
+      }
       onClose(); // Close modal on successful login
     } catch (err) {
       setError(err.message || 'Invalid OTP. Please try again.');
@@ -110,9 +137,15 @@ const AuthModal = ({ isOpen, onClose }) => {
 
             {!isOtpSent ? (
               <form onSubmit={handleSendOtp} className="auth-form">
+                
+                <div className="auth-method-toggle" style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                  <button type="button" className={`btn-outline ${authMethod === 'email' ? 'active' : ''}`} onClick={() => setAuthMethod('email')} style={{ flex: 1, padding: '8px', background: authMethod === 'email' ? 'rgba(255,255,255,0.1)' : 'transparent', border: authMethod === 'email' ? '1px solid #fff' : '1px solid rgba(255,255,255,0.2)' }}>Email</button>
+                  <button type="button" className={`btn-outline ${authMethod === 'whatsapp' ? 'active' : ''}`} onClick={() => setAuthMethod('whatsapp')} style={{ flex: 1, padding: '8px', background: authMethod === 'whatsapp' ? 'rgba(37,211,102,0.2)' : 'transparent', border: authMethod === 'whatsapp' ? '1px solid #25D366' : '1px solid rgba(255,255,255,0.2)', color: authMethod === 'whatsapp' ? '#25D366' : '#fff' }}>WhatsApp</button>
+                </div>
+
                 {isSignUp && (
-                  <div className="auth-input-group">
-                    <User className="auth-input-icon" size={20} />
+                  <div className="input-group">
+                    <User size={18} className="input-icon" />
                     <input
                       type="text"
                       placeholder="Full Name"
@@ -123,18 +156,33 @@ const AuthModal = ({ isOpen, onClose }) => {
                   </div>
                 )}
                 
-                <div className="auth-input-group">
-                  <Mail className="auth-input-icon" size={20} />
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
+                {authMethod === 'email' ? (
+                  <div className="input-group">
+                    <Mail size={18} className="input-icon" />
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                ) : (
+                  <div className="input-group">
+                    <span className="input-icon" style={{ display: 'flex', alignItems: 'center' }}>+91</span>
+                    <input
+                      type="tel"
+                      placeholder="10-digit Mobile Number"
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      required
+                      minLength={10}
+                      style={{ paddingLeft: '45px' }}
+                    />
+                  </div>
+                )}
 
-                <button type="submit" className="btn-primary auth-submit-btn" disabled={loading}>
+                <button type="submit" className="btn-primary auth-submit-btn" disabled={loading || (authMethod === 'email' ? !email : mobile.length < 10)}>
                   {loading ? <Loader2 className="spinner" size={20} /> : 'Send OTP'}
                 </button>
               </form>

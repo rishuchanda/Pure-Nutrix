@@ -203,7 +203,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
               phone_number: '91' + formData.mobile.replace(/[^0-9]/g, ''),
               type: 'template',
               template_name: 'order_confirmation',
-              template_language: 'en',
+              template_language: 'en_US',
               template_components: [
                 {
                   type: "body",
