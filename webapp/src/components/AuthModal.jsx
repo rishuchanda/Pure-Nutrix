@@ -157,7 +157,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                 )}
                 
                 <div className="input-group">
-                  <Mail size={18} className="input-icon" />
+                  <User size={18} className="input-icon" />
                   <input
                     type="text"
                     placeholder="Email Address or WhatsApp No."
