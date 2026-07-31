@@ -188,11 +188,12 @@ const CRMTab = ({ onBack }) => {
 
     try {
       // STEP 1: Ensure contact exists in whatsapp_contacts FIRST (FK dependency)
-      await supabase.from('whatsapp_contacts').upsert({
-        phone_number: selectedContact.phone_number,
-        name: selectedContact.name || null,
-        last_message_at: new Date().toISOString()
-      }, { onConflict: 'phone_number' });
+      const { data: ext1 } = await supabase.from('whatsapp_contacts').select('id').eq('phone_number', selectedContact.phone_number).maybeSingle();
+      if (!ext1) {
+         await supabase.from('whatsapp_contacts').insert({ phone_number: selectedContact.phone_number, name: selectedContact.name || null, last_message_at: new Date().toISOString() });
+      } else {
+         await supabase.from('whatsapp_contacts').update({ last_message_at: new Date().toISOString() }).eq('phone_number', selectedContact.phone_number);
+      }
 
       // STEP 2: Send via WhatsApp API
       const { data, error } = await supabase.functions.invoke('send-whatsapp', {
@@ -248,11 +249,12 @@ const CRMTab = ({ onBack }) => {
     };
     setMessages(prev => [...prev, optMsg]);
     try {
-      await supabase.from('whatsapp_contacts').upsert({
-        phone_number: selectedContact.phone_number,
-        name: selectedContact.name || null,
-        last_message_at: new Date().toISOString()
-      }, { onConflict: 'phone_number' });
+      const { data: ext1 } = await supabase.from('whatsapp_contacts').select('id').eq('phone_number', selectedContact.phone_number).maybeSingle();
+      if (!ext1) {
+         await supabase.from('whatsapp_contacts').insert({ phone_number: selectedContact.phone_number, name: selectedContact.name || null, last_message_at: new Date().toISOString() });
+      } else {
+         await supabase.from('whatsapp_contacts').update({ last_message_at: new Date().toISOString() }).eq('phone_number', selectedContact.phone_number);
+      }
 
       let templateComponents = [];
       if (templateName === 'order_confirmation') {

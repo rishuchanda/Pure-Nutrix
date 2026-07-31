@@ -201,11 +201,22 @@ const OrderPage = ({ product, cartItems, onBack }) => {
           const parsedMobile = '91' + formData.mobile.replace(/[^0-9]/g, '');
 
           // Ensure contact exists for CRM
-          const { error: contactError } = await supabase.from('whatsapp_contacts').upsert({
-            phone_number: parsedMobile,
-            name: formData.name,
-            last_message_at: new Date().toISOString()
-          }, { onConflict: 'phone_number' });
+          const { data: existing } = await supabase.from('whatsapp_contacts').select('id').eq('phone_number', parsedMobile).maybeSingle();
+          let contactError = null;
+          if (!existing) {
+             const res = await supabase.from('whatsapp_contacts').insert({
+               phone_number: parsedMobile,
+               name: formData.name,
+               last_message_at: new Date().toISOString()
+             });
+             contactError = res.error;
+          } else {
+             const res = await supabase.from('whatsapp_contacts').update({
+               name: formData.name,
+               last_message_at: new Date().toISOString()
+             }).eq('phone_number', parsedMobile);
+             contactError = res.error;
+          }
           
           if (contactError) {
              alert('CRM Contact Error: ' + JSON.stringify(contactError));
