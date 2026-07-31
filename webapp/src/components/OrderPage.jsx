@@ -64,7 +64,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
           email: formData.email,
           options: { data: { full_name: formData.name } }
         });
-        if (error) throw error;
+        if (error) { alert('DB Error: ' + JSON.stringify(error)); throw error; }
       } else {
         const res = await supabase.functions.invoke('send-whatsapp-otp', {
           body: { phone_number: formData.mobile }
@@ -261,7 +261,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
         }, 500);
       };
 
-      if (paymentMethod === 'razorpay') {
+      if (paymentMethod === 'razorpay' && !isTestOrder) {
         const res = await loadRazorpayScript();
         if (!res) {
           throw new Error('Razorpay SDK failed to load. Are you online?');
