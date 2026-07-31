@@ -32,6 +32,46 @@ const OrderPage = ({ product, cartItems, onBack }) => {
     state: ''
   });
 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('new');
+
+  useEffect(() => {
+    const fetchUserAndAddresses = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUser(user);
+        setFormData(prev => ({ ...prev, email: user.email }));
+        const { data } = await supabase.from('user_addresses').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+        if (data && data.length > 0) {
+          setSavedAddresses(data);
+          handleSelectSavedAddress(data[0]);
+        }
+      }
+    };
+    fetchUserAndAddresses();
+  }, []);
+
+  const handleSelectSavedAddress = (addr) => {
+    if (addr === 'new') {
+      setSelectedAddressId('new');
+      setFormData({ name: '', email: currentUser?.email || '', mobile: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' });
+    } else {
+      setSelectedAddressId(addr.id);
+      setFormData({
+        name: addr.name,
+        email: addr.email || currentUser?.email || '',
+        mobile: addr.mobile,
+        flat: addr.flat,
+        area: addr.area,
+        landmark: addr.landmark || '',
+        city: addr.city,
+        state: addr.state,
+        pincode: addr.pincode
+      });
+    }
+  };
+
   const [isCheckoutOtpSent, setIsCheckoutOtpSent] = useState(false);
   const [checkoutOtp, setCheckoutOtp] = useState('');
   const [showOtpChoice, setShowOtpChoice] = useState(false);
@@ -158,6 +198,23 @@ const OrderPage = ({ product, cartItems, onBack }) => {
             user = data.user;
           }
         }
+      }
+
+      // Save new address if applicable
+      if (user && selectedAddressId === 'new') {
+        const { error: addressError } = await supabase.from('user_addresses').insert([{
+          user_id: user.id,
+          name: formData.name,
+          mobile: formData.mobile,
+          email: formData.email,
+          flat: formData.flat,
+          area: formData.area,
+          landmark: formData.landmark,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode
+        }]);
+        if (addressError) console.error('Failed to save new address:', addressError.message);
       }
 
       // Prepare order data
@@ -431,47 +488,75 @@ const OrderPage = ({ product, cartItems, onBack }) => {
               <div className="checkout-form-section glass-card">
                 <form onSubmit={handlePayment}>
                   <div className="form-step">
-                    <h2 className="step-title">Shipping Details</h2>
-                      <div className="input-group">
-                        <label>Full Name</label>
-                        <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="Raman Sharma" />
-                      </div>
-                      <div className="input-group">
-                        <label>Email Address</label>
-                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required placeholder="raman@example.com" disabled={isCheckoutOtpSent} />
-                      </div>
-                      <div className="input-group">
-                        <label>Mobile Number</label>
-                        <input type="tel" name="mobile" value={formData.mobile} onChange={handleInputChange} required placeholder="10-digit mobile number" maxLength="10" disabled={isCheckoutOtpSent} />
-                      </div>
-                      <div className="input-row">
-                        <div className="input-group">
-                          <label>PIN Code</label>
-                          <input type="text" name="pincode" value={formData.pincode} onChange={handleInputChange} required placeholder="6 digits [0-9] PIN code" maxLength="6" />
-                        </div>
-                        <div className="input-group">
-                          <label>State</label>
-                          <input type="text" name="state" value={formData.state} onChange={handleInputChange} required placeholder="Maharashtra" />
-                        </div>
-                      </div>
-                      <div className="input-group">
-                        <label>Flat, House no., Building, Company, Apartment</label>
-                        <input type="text" name="flat" value={formData.flat} onChange={handleInputChange} required placeholder="Flat No. 402, Sai Apartment" />
-                      </div>
-                      <div className="input-group">
-                        <label>Area, Street, Sector, Village</label>
-                        <input type="text" name="area" value={formData.area} onChange={handleInputChange} required placeholder="Main Road, Andheri West" />
-                      </div>
-                      <div className="input-row">
-                        <div className="input-group">
-                          <label>Landmark</label>
-                          <input type="text" name="landmark" value={formData.landmark} onChange={handleInputChange} placeholder="E.g. near Apollo Hospital" />
-                        </div>
-                        <div className="input-group">
-                          <label>Town/City</label>
-                          <input type="text" name="city" value={formData.city} onChange={handleInputChange} required placeholder="Mumbai" />
+                    {savedAddresses.length > 0 && (
+                      <div className="saved-addresses-section" style={{ marginBottom: 24 }}>
+                        <h2 className="step-title" style={{ fontSize: '1.2rem', marginBottom: 12 }}>Select Delivery Address</h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {savedAddresses.map(addr => (
+                            <label key={addr.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', border: selectedAddressId === addr.id ? '2px solid #ff0055' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: selectedAddressId === addr.id ? '#fff9fa' : '#fff' }}>
+                              <input type="radio" name="selected_address" checked={selectedAddressId === addr.id} onChange={() => handleSelectSavedAddress(addr)} style={{ marginTop: '4px', accentColor: '#ff0055' }} />
+                              <div>
+                                <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>{addr.name}</h4>
+                                <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: '1.4' }}>
+                                  {addr.flat}, {addr.area}<br/>
+                                  {addr.landmark && <>{addr.landmark}<br/></>}
+                                  {addr.city}, {addr.state} - {addr.pincode}<br/>
+                                  📞 {addr.mobile}
+                                </p>
+                              </div>
+                            </label>
+                          ))}
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: selectedAddressId === 'new' ? '2px solid #ff0055' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: selectedAddressId === 'new' ? '#fff9fa' : '#fff' }}>
+                            <input type="radio" name="selected_address" checked={selectedAddressId === 'new'} onChange={() => handleSelectSavedAddress('new')} style={{ accentColor: '#ff0055' }} />
+                            <span style={{ fontWeight: 500 }}>Add a new address</span>
+                          </label>
                         </div>
                       </div>
+                    )}
+
+                    <div style={{ display: selectedAddressId === 'new' ? 'block' : 'none' }}>
+                      <h2 className="step-title">Shipping Details</h2>
+                        <div className="input-group">
+                          <label>Full Name</label>
+                          <input type="text" name="name" value={formData.name} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="Raman Sharma" />
+                        </div>
+                        <div className="input-group">
+                          <label>Email Address</label>
+                          <input type="email" name="email" value={formData.email} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="raman@example.com" disabled={isCheckoutOtpSent} />
+                        </div>
+                        <div className="input-group">
+                          <label>Mobile Number</label>
+                          <input type="tel" name="mobile" value={formData.mobile} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="10-digit mobile number" maxLength="10" disabled={isCheckoutOtpSent} />
+                        </div>
+                        <div className="input-row">
+                          <div className="input-group">
+                            <label>PIN Code</label>
+                            <input type="text" name="pincode" value={formData.pincode} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="6 digits [0-9] PIN code" maxLength="6" />
+                          </div>
+                          <div className="input-group">
+                            <label>State</label>
+                            <input type="text" name="state" value={formData.state} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="Maharashtra" />
+                          </div>
+                        </div>
+                        <div className="input-group">
+                          <label>Flat, House no., Building, Company, Apartment</label>
+                          <input type="text" name="flat" value={formData.flat} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="Flat No. 402, Sai Apartment" />
+                        </div>
+                        <div className="input-group">
+                          <label>Area, Street, Sector, Village</label>
+                          <input type="text" name="area" value={formData.area} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="Main Road, Andheri West" />
+                        </div>
+                        <div className="input-row">
+                          <div className="input-group">
+                            <label>Landmark</label>
+                            <input type="text" name="landmark" value={formData.landmark} onChange={handleInputChange} placeholder="E.g. near Apollo Hospital" />
+                          </div>
+                          <div className="input-group">
+                            <label>Town/City</label>
+                            <input type="text" name="city" value={formData.city} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="Mumbai" />
+                          </div>
+                        </div>
+                    </div>
                       {authError && <div className="error-message" style={{ color: 'red', margin: '15px 0' }}>{authError}</div>}
 
                       {isCheckoutOtpSent && (
