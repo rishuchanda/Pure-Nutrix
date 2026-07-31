@@ -201,11 +201,15 @@ const OrderPage = ({ product, cartItems, onBack }) => {
           const parsedMobile = '91' + formData.mobile.replace(/[^0-9]/g, '');
 
           // Ensure contact exists for CRM
-          await supabase.from('whatsapp_contacts').upsert({
+          const { error: contactError } = await supabase.from('whatsapp_contacts').upsert({
             phone_number: parsedMobile,
             name: formData.name,
             last_message_at: new Date().toISOString()
           }, { onConflict: 'phone_number' });
+          
+          if (contactError) {
+             alert('CRM Contact Error: ' + JSON.stringify(contactError));
+          }
 
           // WhatsApp Confirmation
           const { data: waData } = await supabase.functions.invoke('send-whatsapp', {
@@ -229,13 +233,17 @@ const OrderPage = ({ product, cartItems, onBack }) => {
 
           if (waData?.success) {
             const metaMsgId = waData?.data?.messages?.[0]?.id || null;
-            await supabase.from('whatsapp_messages').insert({
+            const { error: msgError } = await supabase.from('whatsapp_messages').insert({
               contact_phone: parsedMobile,
               direction: 'outbound',
               message_body: `[Template Sent: order_confirmation] Hi ${formData.name}, your order for ${finalProductName} (₹${finalTotal}) is confirmed.`,
               status: 'sent',
               meta_message_id: metaMsgId
             });
+            
+            if (msgError) {
+               alert('CRM Message Error: ' + JSON.stringify(msgError));
+            }
           }
 // Email Confirmation
           if (user.email) {
