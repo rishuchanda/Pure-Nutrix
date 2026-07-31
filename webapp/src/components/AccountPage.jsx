@@ -17,6 +17,11 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
   const [activeOrder, setActiveOrder] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const [showInvoiceForOrder, setShowInvoiceForOrder] = useState(null);
+  
+  const [addresses, setAddresses] = useState([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
+  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState({ name: '', mobile: '', email: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' });
 
   // Persistent Routine State
   const [routineChecked, setRoutineChecked] = useState({});
@@ -81,23 +86,62 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
     const fetchData = async () => {
       if (!user) return;
       try {
-        const [ordersRes, productsRes] = await Promise.all([
+        const [ordersRes, productsRes, addressesRes] = await Promise.all([
           supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-          supabase.from('products').select('*')
+          supabase.from('products').select('*'),
+          supabase.from('user_addresses').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
         ]);
         if (ordersRes.error) throw ordersRes.error;
         if (productsRes.error) throw productsRes.error;
+        if (addressesRes.error) throw addressesRes.error;
         
         setOrders(ordersRes.data || []);
         setAllProducts(productsRes.data || []);
+        setAddresses(addressesRes.data || []);
       } catch (error) {
         console.error('Error fetching data:', error.message);
       } finally {
         setLoadingOrders(false);
+        setLoadingAddresses(false);
       }
     };
     fetchData();
   }, [user]);
+
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await supabase.from('user_addresses').insert([{
+        user_id: user.id,
+        ...newAddress
+      }]).select();
+      
+      if (error) throw error;
+      setAddresses([data[0], ...addresses]);
+      setIsAddingAddress(false);
+      setNewAddress({ name: '', mobile: '', email: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' });
+      alert('Address saved successfully!');
+    } catch (error) {
+      console.error('Error saving address:', error.message);
+      alert('Failed to save address.');
+    }
+  };
+
+  const handleDeleteAddress = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this address?')) return;
+    try {
+      const { error } = await supabase.from('user_addresses').delete().eq('id', id);
+      if (error) throw error;
+      setAddresses(addresses.filter(a => a.id !== id));
+    } catch (error) {
+      console.error('Error deleting address:', error.message);
+      alert('Failed to delete address.');
+    }
+  };
+
+  const handleAddressChange = (e) => {
+    setNewAddress({ ...newAddress, [e.target.name]: e.target.value });
+  };
 
   const userEmail = user?.email || 'premium.member@purenutrix.com';
   const userName = userEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ') || 'Valued Member';
@@ -191,13 +235,13 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
             </div>
             <ChevronRight size={20} color="#ccc" />
           </div>
-          <div className="menu-item" onClick={() => alert('Redirecting to Customer Care...')}>
+          {/* <div className="menu-item" onClick={() => alert('Redirecting to Customer Care...')}>
             <div className="menu-left">
               <div className="menu-icon"><Headphones size={20} color="#555" /></div>
               <span className="menu-text">Customer Care</span>
             </div>
             <ChevronRight size={20} color="#ccc" />
-          </div>
+          </div> */}
           <div className="menu-item" onClick={() => navigateTo('profile')}>
             <div className="menu-left">
               <div className="menu-icon"><User size={20} color="#555" /></div>
@@ -256,14 +300,17 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
             orders.map(order => {
               const dateObj = new Date(order.created_at);
               const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
-              const isDelivered = order.status.toLowerCase() === 'delivered';
-              const isCancelled = order.status.toLowerCase() === 'cancelled';
-              const isReturned = order.status.toLowerCase() === 'returned';
+              const statusStr = order.status.toLowerCase();
+              const isDelivered = statusStr === 'delivered';
+              const isCancelled = statusStr === 'cancelled';
+              const isReturned = statusStr === 'returned';
               
               let statusMsg = "Order Processing";
               if (isDelivered) statusMsg = "Order Delivered";
               else if (isCancelled) statusMsg = "Order Cancelled";
               else if (isReturned) statusMsg = "Order Returned";
+              else if (statusStr === 'shipped') statusMsg = "Order Shipped";
+              else if (statusStr === 'out_for_delivery') statusMsg = "Out for Delivery";
               
               return (
                 <div key={order.id} className="order-card-new premium-shadow">
@@ -676,12 +723,12 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
               <span className="menu-text">Wishlist</span>
             </div>
           </div>
-          <div className="menu-item" onClick={() => alert('Redirecting to Customer Care...')}>
+          {/* <div className="menu-item" onClick={() => alert('Redirecting to Customer Care...')}>
             <div className="menu-left">
               <div className="menu-icon"><Headphones size={20} color="#555" /></div>
               <span className="menu-text">Customer Care</span>
             </div>
-          </div>
+          </div> */}
           <div className={`menu-item ${view === 'profile' ? 'active' : ''}`} onClick={() => navigateTo('profile')}>
             <div className="menu-left">
               <div className="menu-icon"><User size={20} color={view === 'profile' ? '#ff0055' : '#555'} /></div>
@@ -714,7 +761,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
           {view === 'offers' && renderOffers()}
           {view === 'stacks' && renderSavedStacks()}
           
-          {(view === 'profile' || view === 'address' || view === 'wishlist' || view === 'reviews') && (
+          {(view === 'profile' || view === 'wishlist' || view === 'reviews') && (
             <motion.div 
               className="mobile-orders"
               initial={{ opacity: 0, x: 20 }}
@@ -730,6 +777,81 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
               <div className="orders-page-content" style={{textAlign: 'center', paddingTop: 60}}>
                 <h1 className="page-main-title">{view.charAt(0).toUpperCase() + view.slice(1)}</h1>
                 <p className="premium-subtitle">This premium feature is currently being tailored for you.</p>
+              </div>
+            </motion.div>
+          )}
+
+          {view === 'address' && (
+            <motion.div 
+              className="mobile-orders"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              key="address"
+            >
+              <div className="dashboard-header orders-header">
+                <button className="back-btn-header" onClick={() => navigateTo('dashboard')}>
+                  <ChevronLeft size={24} />
+                </button>
+                <div style={{ width: 24 }}></div>
+              </div>
+              <div className="orders-page-content">
+                <h1 className="page-main-title" style={{ marginBottom: 20 }}>Shipping Addresses</h1>
+                
+                {!isAddingAddress ? (
+                  <>
+                    <button className="gold-btn-solid" style={{ width: '100%', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => setIsAddingAddress(true)}>
+                      <Plus size={18} /> Add New Address
+                    </button>
+                    
+                    {loadingAddresses ? (
+                      <p style={{ textAlign: 'center' }}>Loading addresses...</p>
+                    ) : addresses.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '40px 20px', background: '#f9f9f9', borderRadius: '12px', border: '1px dashed #ccc' }}>
+                        <MapPin size={48} color="#ccc" style={{ marginBottom: 16, margin: '0 auto' }} />
+                        <p style={{ color: '#666' }}>No saved addresses found.</p>
+                      </div>
+                    ) : (
+                      <div className="addresses-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {addresses.map(addr => (
+                          <div key={addr.id} className="address-card premium-shadow" style={{ padding: '16px', borderRadius: '12px', background: '#fff', position: 'relative' }}>
+                            <button onClick={() => handleDeleteAddress(addr.id)} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: '#ff4d4f', cursor: 'pointer' }}>
+                              <XCircle size={20} />
+                            </button>
+                            <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem' }}>{addr.name}</h4>
+                            <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: '#555' }}>📞 {addr.mobile}</p>
+                            <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: '#555' }}>✉️ {addr.email || 'N/A'}</p>
+                            <p style={{ margin: '0', fontSize: '0.9rem', color: '#333', lineHeight: '1.4' }}>
+                              {addr.flat}, {addr.area}<br/>
+                              {addr.landmark && <>{addr.landmark}<br/></>}
+                              {addr.city}, {addr.state} - {addr.pincode}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="add-address-form premium-shadow" style={{ padding: '20px', borderRadius: '12px', background: '#fff' }}>
+                    <h3 style={{ marginBottom: 20 }}>Add New Address</h3>
+                    <form onSubmit={handleSaveAddress} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <input type="text" name="name" value={newAddress.name} onChange={handleAddressChange} placeholder="Full Name" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                      <input type="tel" name="mobile" value={newAddress.mobile} onChange={handleAddressChange} placeholder="Mobile Number" maxLength="10" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                      <input type="email" name="email" value={newAddress.email} onChange={handleAddressChange} placeholder="Email Address" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                      <input type="text" name="flat" value={newAddress.flat} onChange={handleAddressChange} placeholder="House/Flat/Office No." required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                      <input type="text" name="area" value={newAddress.area} onChange={handleAddressChange} placeholder="Area/Street" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                      <input type="text" name="landmark" value={newAddress.landmark} onChange={handleAddressChange} placeholder="Landmark (Optional)" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                      <input type="text" name="city" value={newAddress.city} onChange={handleAddressChange} placeholder="City" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                      <input type="text" name="state" value={newAddress.state} onChange={handleAddressChange} placeholder="State" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                      <input type="text" name="pincode" value={newAddress.pincode} onChange={handleAddressChange} placeholder="Pincode" maxLength="6" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                      
+                      <div style={{ display: 'flex', gap: '10px', marginTop: 10 }}>
+                        <button type="button" onClick={() => setIsAddingAddress(false)} style={{ flex: 1, padding: '12px', background: '#f1f1f1', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
+                        <button type="submit" className="gold-btn-solid" style={{ flex: 1 }}>Save Address</button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
