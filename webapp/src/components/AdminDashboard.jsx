@@ -174,7 +174,7 @@ const AdminDashboard = ({ user }) => {
       setIsAuthenticatedAdmin(true);
       setAdminRole(profile.role);
     } catch (error) {
-      setLoginError(error.message || 'Login failed.');
+      setLoginError(error.message || 'Login failed.'); alert('Login Failed: ' + (error.message || 'Login failed.'));
     }
   };
 
