@@ -195,12 +195,22 @@ const OrderPage = ({ product, cartItems, onBack }) => {
 
         if (error) throw error;
 
+        
         // Try sending WhatsApp and Email order confirmations asynchronously
         try {
+          const parsedMobile = '91' + formData.mobile.replace(/[^0-9]/g, '');
+
+          // Ensure contact exists for CRM
+          await supabase.from('whatsapp_contacts').upsert({
+            phone_number: parsedMobile,
+            name: formData.name,
+            last_message_at: new Date().toISOString()
+          }, { onConflict: 'phone_number' });
+
           // WhatsApp Confirmation
-          await supabase.functions.invoke('send-whatsapp', {
+          const { data: waData } = await supabase.functions.invoke('send-whatsapp', {
             body: {
-              phone_number: '91' + formData.mobile.replace(/[^0-9]/g, ''),
+              phone_number: parsedMobile,
               type: 'template',
               template_name: 'order_confirmation',
               template_language: 'en_US',
@@ -216,8 +226,18 @@ const OrderPage = ({ product, cartItems, onBack }) => {
               ]
             }
           });
-          
-          // Email Confirmation
+
+          if (waData?.success) {
+            const metaMsgId = waData?.data?.messages?.[0]?.id || null;
+            await supabase.from('whatsapp_messages').insert({
+              contact_phone: parsedMobile,
+              direction: 'outbound',
+              message_body: `[Template Sent: order_confirmation] Hi ${formData.name}, your order for ${finalProductName} (₹${finalTotal}) is confirmed.`,
+              status: 'sent',
+              meta_message_id: metaMsgId
+            });
+          }
+// Email Confirmation
           if (user.email) {
             await supabase.functions.invoke('send-email', {
               body: {
