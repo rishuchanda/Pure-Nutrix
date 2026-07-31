@@ -41,11 +41,37 @@ const OrderPage = ({ product, cartItems, onBack }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUser(user);
-        setFormData(prev => ({ ...prev, email: user.email }));
+        const cleanEmail = user.email && !user.email.includes('@whatsapp') ? user.email : '';
+        setFormData(prev => ({ ...prev, email: cleanEmail }));
+        
         const { data } = await supabase.from('user_addresses').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
         if (data && data.length > 0) {
           setSavedAddresses(data);
           handleSelectSavedAddress(data[0]);
+        } else {
+          // Check for previous orders if no explicit saved address exists
+          const { data: orderData } = await supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1);
+          if (orderData && orderData.length > 0) {
+            const lastOrder = orderData[0];
+            const addressParts = (lastOrder.shipping_address || '').split(', ');
+            const extractedFlat = addressParts[0] || '';
+            const extractedArea = addressParts.slice(1).join(', ') || '';
+            
+            const prevAddress = {
+              id: 'prev-order',
+              name: lastOrder.customer_name,
+              mobile: lastOrder.customer_mobile,
+              email: lastOrder.customer_email && !lastOrder.customer_email.includes('@whatsapp') ? lastOrder.customer_email : cleanEmail,
+              flat: extractedFlat,
+              area: extractedArea,
+              landmark: '',
+              city: lastOrder.city,
+              state: lastOrder.state,
+              pincode: lastOrder.pincode
+            };
+            setSavedAddresses([prevAddress]);
+            handleSelectSavedAddress(prevAddress);
+          }
         }
       }
     };
@@ -55,12 +81,14 @@ const OrderPage = ({ product, cartItems, onBack }) => {
   const handleSelectSavedAddress = (addr) => {
     if (addr === 'new') {
       setSelectedAddressId('new');
-      setFormData({ name: '', email: currentUser?.email || '', mobile: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' });
+      const cleanEmail = currentUser?.email && !currentUser.email.includes('@whatsapp') ? currentUser.email : '';
+      setFormData({ name: '', email: cleanEmail, mobile: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' });
     } else {
       setSelectedAddressId(addr.id);
+      const cleanEmail = addr.email && !addr.email.includes('@whatsapp') ? addr.email : (currentUser?.email && !currentUser.email.includes('@whatsapp') ? currentUser.email : '');
       setFormData({
         name: addr.name,
-        email: addr.email || currentUser?.email || '',
+        email: cleanEmail,
         mobile: addr.mobile,
         flat: addr.flat,
         area: addr.area,
