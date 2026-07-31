@@ -564,7 +564,7 @@ const AdminDashboard = ({ user }) => {
                         <tr>
                           <th>Order ID</th>
                           <th>Product Details</th>
-                          <th>Customer</th>
+                          <th>Customer & Delivery</th>
                           <th>Date</th>
                           <th>Payment</th>
                           <th>Status</th>
@@ -586,8 +586,16 @@ const AdminDashboard = ({ user }) => {
                               </div>
                             </td>
                             <td>
-                              <div style={{ fontWeight: 500 }}>{order.customer_name}</div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)' }}>{order.customer_mobile}</div>
+                              <div style={{ fontWeight: 500, marginBottom: '4px' }}>{order.customer_name}</div>
+                              <div style={{ fontSize: '0.85rem', marginBottom: '2px' }}>
+                                📞 {order.customer_mobile || 'N/A'}
+                              </div>
+                              <div style={{ fontSize: '0.85rem', marginBottom: '4px', color: 'var(--admin-text-muted)' }}>
+                                ✉️ {order.customer_email || 'N/A'}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', lineHeight: '1.4' }}>
+                                📍 {order.shipping_address}, {order.city}, {order.state} - {order.pincode}
+                              </div>
                             </td>
                             <td style={{ color: 'var(--admin-text-muted)' }}>{new Date(order.created_at).toLocaleDateString('en-GB')}</td>
                             <td><span className="admin-badge badge-success">Paid</span></td>
@@ -633,7 +641,7 @@ const AdminDashboard = ({ user }) => {
                         <tr>
                           <th>Order ID</th>
                           <th>Product Details</th>
-                          <th>Customer</th>
+                          <th>Customer & Delivery</th>
                           <th>Date</th>
                           <th>Status / Action</th>
                         </tr>
@@ -657,8 +665,16 @@ const AdminDashboard = ({ user }) => {
                                 </div>
                               </td>
                               <td>
-                                <div style={{ fontWeight: 500 }}>{order.customer_name}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)' }}>{order.city}</div>
+                                <div style={{ fontWeight: 500, marginBottom: '4px' }}>{order.customer_name}</div>
+                                <div style={{ fontSize: '0.85rem', marginBottom: '2px' }}>
+                                  📞 {order.customer_mobile || 'N/A'}
+                                </div>
+                                <div style={{ fontSize: '0.85rem', marginBottom: '4px', color: 'var(--admin-text-muted)' }}>
+                                  ✉️ {order.customer_email || 'N/A'}
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', lineHeight: '1.4' }}>
+                                  📍 {order.shipping_address}, {order.city}, {order.state} - {order.pincode}
+                                </div>
                               </td>
                               <td style={{ color: 'var(--admin-text-muted)' }}>{new Date(order.created_at).toLocaleDateString('en-GB')}</td>
                               <td>
