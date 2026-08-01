@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, CreditCard, Wallet, Truck, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, CreditCard, Wallet, Truck, ShieldCheck, XCircle } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import './OrderPage.css';
 
@@ -35,6 +35,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState('new');
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
 
   useEffect(() => {
     const fetchUserAndAddresses = async () => {
@@ -79,6 +80,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
   }, []);
 
   const handleSelectSavedAddress = (addr) => {
+    setIsEditingAddress(false);
     if (addr === 'new') {
       setSelectedAddressId('new');
       const cleanEmail = currentUser?.email && !currentUser.email.includes('@whatsapp') ? currentUser.email : '';
@@ -98,6 +100,30 @@ const OrderPage = ({ product, cartItems, onBack }) => {
         pincode: addr.pincode
       });
     }
+  };
+
+  const handleDeleteAddress = async (id, e) => {
+    e.preventDefault();
+    if (!window.confirm('Are you sure you want to delete this address?')) return;
+    if (id === 'prev-order') {
+       setSavedAddresses(savedAddresses.filter(a => a.id !== id));
+       if (selectedAddressId === id) handleSelectSavedAddress('new');
+       return;
+    }
+    try {
+      const { error } = await supabase.from('user_addresses').delete().eq('id', id);
+      if (error) throw error;
+      setSavedAddresses(savedAddresses.filter(a => a.id !== id));
+      if (selectedAddressId === id) handleSelectSavedAddress('new');
+    } catch (error) {
+      console.error('Error deleting address:', error.message);
+      alert('Failed to delete address.');
+    }
+  };
+
+  const handleEditClick = (e) => {
+    e.preventDefault();
+    setIsEditingAddress(true);
   };
 
   const [isCheckoutOtpSent, setIsCheckoutOtpSent] = useState(false);
@@ -228,21 +254,36 @@ const OrderPage = ({ product, cartItems, onBack }) => {
         }
       }
 
-      // Save new address if applicable
-      if (user && selectedAddressId === 'new') {
-        const { error: addressError } = await supabase.from('user_addresses').insert([{
-          user_id: user.id,
-          name: formData.name,
-          mobile: formData.mobile,
-          email: formData.email,
-          flat: formData.flat,
-          area: formData.area,
-          landmark: formData.landmark,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode
-        }]);
-        if (addressError) console.error('Failed to save new address:', addressError.message);
+      // Save or update address if applicable
+      if (user) {
+        if (selectedAddressId === 'new' || (isEditingAddress && selectedAddressId === 'prev-order')) {
+          const { error: addressError } = await supabase.from('user_addresses').insert([{
+            user_id: user.id,
+            name: formData.name,
+            mobile: formData.mobile,
+            email: formData.email,
+            flat: formData.flat,
+            area: formData.area,
+            landmark: formData.landmark,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode
+          }]);
+          if (addressError) console.error('Failed to save new address:', addressError.message);
+        } else if (isEditingAddress && selectedAddressId !== 'new') {
+          const { error: updateError } = await supabase.from('user_addresses').update({
+            name: formData.name,
+            mobile: formData.mobile,
+            email: formData.email,
+            flat: formData.flat,
+            area: formData.area,
+            landmark: formData.landmark,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode
+          }).eq('id', selectedAddressId);
+          if (updateError) console.error('Failed to update address:', updateError.message);
+        }
       }
 
       // Prepare order data
@@ -521,18 +562,30 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                         <h2 className="step-title" style={{ fontSize: '1.2rem', marginBottom: 12 }}>Select Delivery Address</h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {savedAddresses.map(addr => (
-                            <label key={addr.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', border: selectedAddressId === addr.id ? '2px solid #ff0055' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: selectedAddressId === addr.id ? '#fff9fa' : '#fff' }}>
-                              <input type="radio" name="selected_address" checked={selectedAddressId === addr.id} onChange={() => handleSelectSavedAddress(addr)} style={{ marginTop: '4px', accentColor: '#ff0055' }} />
-                              <div>
-                                <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>{addr.name}</h4>
-                                <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: '1.4' }}>
-                                  {addr.flat}, {addr.area}<br/>
-                                  {addr.landmark && <>{addr.landmark}<br/></>}
-                                  {addr.city}, {addr.state} - {addr.pincode}<br/>
-                                  📞 {addr.mobile}
-                                </p>
-                              </div>
-                            </label>
+                            <div key={addr.id} style={{ position: 'relative' }}>
+                              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', border: selectedAddressId === addr.id ? '2px solid #ff0055' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: selectedAddressId === addr.id ? '#fff9fa' : '#fff' }}>
+                                <input type="radio" name="selected_address" checked={selectedAddressId === addr.id} onChange={() => handleSelectSavedAddress(addr)} style={{ marginTop: '4px', accentColor: '#ff0055' }} />
+                                <div>
+                                  <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>{addr.name}</h4>
+                                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: '1.4' }}>
+                                    {addr.flat}, {addr.area}<br/>
+                                    {addr.landmark && <>{addr.landmark}<br/></>}
+                                    {addr.city}, {addr.state} - {addr.pincode}<br/>
+                                    📞 {addr.mobile}
+                                  </p>
+                                </div>
+                              </label>
+                              {selectedAddressId === addr.id && (
+                                <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: '8px' }}>
+                                  <button type="button" onClick={handleEditClick} style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', padding: 0 }} title="Edit Address">
+                                    <span style={{ fontSize: '1.2rem' }}>✎</span>
+                                  </button>
+                                  <button type="button" onClick={(e) => handleDeleteAddress(addr.id, e)} style={{ background: 'transparent', border: 'none', color: '#ff4d4f', cursor: 'pointer', padding: 0 }} title="Delete Address">
+                                    <XCircle size={20} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           ))}
                           <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: selectedAddressId === 'new' ? '2px solid #ff0055' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: selectedAddressId === 'new' ? '#fff9fa' : '#fff' }}>
                             <input type="radio" name="selected_address" checked={selectedAddressId === 'new'} onChange={() => handleSelectSavedAddress('new')} style={{ accentColor: '#ff0055' }} />
@@ -542,37 +595,37 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                       </div>
                     )}
 
-                    <div style={{ display: selectedAddressId === 'new' ? 'block' : 'none' }}>
-                      <h2 className="step-title">Shipping Details</h2>
+                    <div style={{ display: selectedAddressId === 'new' || isEditingAddress ? 'block' : 'none' }}>
+                      <h2 className="step-title">{isEditingAddress ? 'Edit Shipping Details' : 'Shipping Details'}</h2>
                         <div className="input-group">
                           <label>Full Name</label>
-                          <input type="text" name="name" value={formData.name} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="Raman Sharma" />
+                          <input type="text" name="name" value={formData.name} onChange={handleInputChange} required={selectedAddressId === 'new' || isEditingAddress} placeholder="Raman Sharma" />
                         </div>
                         <div className="input-group">
                           <label>Email Address</label>
-                          <input type="email" name="email" value={formData.email} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="raman@example.com" disabled={isCheckoutOtpSent} />
+                          <input type="email" name="email" value={formData.email} onChange={handleInputChange} required={selectedAddressId === 'new' || isEditingAddress} placeholder="raman@example.com" disabled={isCheckoutOtpSent} />
                         </div>
                         <div className="input-group">
                           <label>Mobile Number</label>
-                          <input type="tel" name="mobile" value={formData.mobile} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="10-digit mobile number" maxLength="10" disabled={isCheckoutOtpSent} />
+                          <input type="tel" name="mobile" value={formData.mobile} onChange={handleInputChange} required={selectedAddressId === 'new' || isEditingAddress} placeholder="10-digit mobile number" maxLength="10" disabled={isCheckoutOtpSent} />
                         </div>
                         <div className="input-row">
                           <div className="input-group">
                             <label>PIN Code</label>
-                            <input type="text" name="pincode" value={formData.pincode} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="6 digits [0-9] PIN code" maxLength="6" />
+                            <input type="text" name="pincode" value={formData.pincode} onChange={handleInputChange} required={selectedAddressId === 'new' || isEditingAddress} placeholder="6 digits [0-9] PIN code" maxLength="6" />
                           </div>
                           <div className="input-group">
                             <label>State</label>
-                            <input type="text" name="state" value={formData.state} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="Maharashtra" />
+                            <input type="text" name="state" value={formData.state} onChange={handleInputChange} required={selectedAddressId === 'new' || isEditingAddress} placeholder="Maharashtra" />
                           </div>
                         </div>
                         <div className="input-group">
                           <label>Flat, House no., Building, Company, Apartment</label>
-                          <input type="text" name="flat" value={formData.flat} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="Flat No. 402, Sai Apartment" />
+                          <input type="text" name="flat" value={formData.flat} onChange={handleInputChange} required={selectedAddressId === 'new' || isEditingAddress} placeholder="Flat No. 402, Sai Apartment" />
                         </div>
                         <div className="input-group">
                           <label>Area, Street, Sector, Village</label>
-                          <input type="text" name="area" value={formData.area} onChange={handleInputChange} required={selectedAddressId === 'new'} placeholder="Main Road, Andheri West" />
+                          <input type="text" name="area" value={formData.area} onChange={handleInputChange} required={selectedAddressId === 'new' || isEditingAddress} placeholder="Main Road, Andheri West" />
                         </div>
                         <div className="input-row">
                           <div className="input-group">

@@ -21,6 +21,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
   const [addresses, setAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState(null);
   const [newAddress, setNewAddress] = useState({ name: '', mobile: '', email: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' });
 
   // Persistent Routine State
@@ -111,20 +112,37 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
   const handleSaveAddress = async (e) => {
     e.preventDefault();
     try {
-      const { data, error } = await supabase.from('user_addresses').insert([{
-        user_id: user.id,
-        ...newAddress
-      }]).select();
-      
-      if (error) throw error;
-      setAddresses([data[0], ...addresses]);
+      if (editingAddressId) {
+        const { data, error } = await supabase.from('user_addresses').update(newAddress).eq('id', editingAddressId).select();
+        if (error) throw error;
+        setAddresses(addresses.map(a => a.id === editingAddressId ? data[0] : a));
+        alert('Address updated successfully!');
+      } else {
+        const { data, error } = await supabase.from('user_addresses').insert([{
+          user_id: user.id,
+          ...newAddress
+        }]).select();
+        if (error) throw error;
+        setAddresses([data[0], ...addresses]);
+        alert('Address saved successfully!');
+      }
       setIsAddingAddress(false);
+      setEditingAddressId(null);
       setNewAddress({ name: '', mobile: '', email: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' });
-      alert('Address saved successfully!');
     } catch (error) {
       console.error('Error saving address:', error.message);
       alert('Failed to save address.');
     }
+  };
+
+  const handleEditAddress = (addr) => {
+    setEditingAddressId(addr.id);
+    setNewAddress({
+      name: addr.name, mobile: addr.mobile, email: addr.email || '', 
+      flat: addr.flat, area: addr.area, landmark: addr.landmark || '', 
+      city: addr.city, state: addr.state, pincode: addr.pincode
+    });
+    setIsAddingAddress(true);
   };
 
   const handleDeleteAddress = async (id) => {
@@ -815,9 +833,14 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                       <div className="addresses-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {addresses.map(addr => (
                           <div key={addr.id} className="address-card premium-shadow" style={{ padding: '16px', borderRadius: '12px', background: '#fff', position: 'relative' }}>
-                            <button onClick={() => handleDeleteAddress(addr.id)} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: '#ff4d4f', cursor: 'pointer' }}>
-                              <XCircle size={20} />
-                            </button>
+                            <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: '8px' }}>
+                              <button onClick={() => handleEditAddress(addr)} style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', padding: 0 }} title="Edit Address">
+                                <span style={{ fontSize: '1.2rem' }}>✎</span>
+                              </button>
+                              <button onClick={() => handleDeleteAddress(addr.id)} style={{ background: 'transparent', border: 'none', color: '#ff4d4f', cursor: 'pointer', padding: 0 }} title="Delete Address">
+                                <XCircle size={20} />
+                              </button>
+                            </div>
                             <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem' }}>{addr.name}</h4>
                             <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: '#555' }}>📞 {addr.mobile}</p>
                             <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: '#555' }}>✉️ {addr.email || 'N/A'}</p>
@@ -833,7 +856,7 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                   </>
                 ) : (
                   <div className="add-address-form premium-shadow" style={{ padding: '20px', borderRadius: '12px', background: '#fff' }}>
-                    <h3 style={{ marginBottom: 20 }}>Add New Address</h3>
+                    <h3 style={{ marginBottom: 20 }}>{editingAddressId ? 'Edit Address' : 'Add New Address'}</h3>
                     <form onSubmit={handleSaveAddress} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <input type="text" name="name" value={newAddress.name} onChange={handleAddressChange} placeholder="Full Name" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
                       <input type="tel" name="mobile" value={newAddress.mobile} onChange={handleAddressChange} placeholder="Mobile Number" maxLength="10" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
@@ -846,8 +869,8 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                       <input type="text" name="pincode" value={newAddress.pincode} onChange={handleAddressChange} placeholder="Pincode" maxLength="6" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
                       
                       <div style={{ display: 'flex', gap: '10px', marginTop: 10 }}>
-                        <button type="button" onClick={() => setIsAddingAddress(false)} style={{ flex: 1, padding: '12px', background: '#f1f1f1', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
-                        <button type="submit" className="gold-btn-solid" style={{ flex: 1 }}>Save Address</button>
+                        <button type="button" onClick={() => { setIsAddingAddress(false); setEditingAddressId(null); setNewAddress({ name: '', mobile: '', email: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' }); }} style={{ flex: 1, padding: '12px', background: '#f1f1f1', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
+                        <button type="submit" className="gold-btn-solid" style={{ flex: 1 }}>{editingAddressId ? 'Update Address' : 'Save Address'}</button>
                       </div>
                     </form>
                   </div>
