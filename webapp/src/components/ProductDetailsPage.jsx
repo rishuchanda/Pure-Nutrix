@@ -128,7 +128,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
         content_category: product.category,
         content_ids: [product.id],
         content_type: 'product',
-        value: product.price,
+        value: typeof product.price === 'number' ? product.price : Number(String(product.price).replace(/[^0-9.-]+/g, "")),
         currency: 'INR'
       });
     }
