@@ -298,6 +298,7 @@ function App() {
       smoothTouch: true,
       lerp: 0.08
     });
+    window.lenis = lenis;
 
     function raf(time) {
       lenis.raf(time);
@@ -419,7 +420,7 @@ function App() {
           onProductClick={handleOpenProductDetails}
         />
       )}
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" onExitComplete={() => { window.scrollTo(0, 0); if (window.lenis) window.lenis.scrollTo(0, { immediate: true }); }}>
         {currentView === 'home' ? (
           <motion.div
             key="home"

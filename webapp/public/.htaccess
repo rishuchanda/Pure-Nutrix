@@ -1,6 +1,11 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Serve pre-rendered product HTML files if they exist
+  RewriteCond %{DOCUMENT_ROOT}/product/$1\.html -f
+  RewriteRule ^product/([^/]+)/?$ /product/$1.html [L]
+
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

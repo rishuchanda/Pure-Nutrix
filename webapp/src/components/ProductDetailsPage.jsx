@@ -45,6 +45,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
   useEffect(() => {
     setShowAllReviews(false);
     window.scrollTo(0, 0);
+    if (window.lenis) window.lenis.scrollTo(0, { immediate: true });
   }, [product?.id]);
 
   const handleFileUpload = (e) => {
