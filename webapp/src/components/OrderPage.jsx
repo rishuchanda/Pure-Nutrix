@@ -38,6 +38,10 @@ const OrderPage = ({ product, cartItems, onBack }) => {
   const [isEditingAddress, setIsEditingAddress] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     const fetchUserAndAddresses = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {

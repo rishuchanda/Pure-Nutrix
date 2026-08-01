@@ -44,6 +44,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
 
   useEffect(() => {
     setShowAllReviews(false);
+    window.scrollTo(0, 0);
   }, [product?.id]);
 
   const handleFileUpload = (e) => {

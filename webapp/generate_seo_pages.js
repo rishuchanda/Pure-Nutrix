@@ -69,6 +69,14 @@ async function generateSeoPages() {
     fs.mkdirSync(productDirId, { recursive: true });
     fs.writeFileSync(path.join(productDirId, 'index.html'), seoHtml);
 
+    // Also write explicit .html files for Vercel cleanUrls support
+    const productDir = path.join(distDir, 'product');
+    if (!fs.existsSync(productDir)) {
+      fs.mkdirSync(productDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(productDir, `${product.slug || product.id}.html`), seoHtml);
+    fs.writeFileSync(path.join(productDir, `${product.id}.html`), seoHtml);
+
     console.log(`Generated SEO page for: ${product.name} at /product/${product.slug || product.id}`);
   }
   
