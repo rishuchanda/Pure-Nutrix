@@ -197,11 +197,16 @@ function App() {
     // Meta Pixel InitiateCheckout
     if (window.fbq) {
       window.fbq('track', 'InitiateCheckout', {
-        content_ids: [product.id],
+        content_ids: [String(product.id || product.slug)],
         content_type: 'product',
         content_name: product.name,
         value: typeof product.price === 'number' ? product.price : Number(String(product.price).replace(/[^0-9.-]+/g, "")),
         currency: 'INR'
+      });
+      // Fallback custom event to guarantee it shows up
+      window.fbq('trackCustom', 'ClickedBuyNow', {
+        product: product.name,
+        url: window.location.href
       });
     }
   };
@@ -326,6 +331,11 @@ function App() {
       // Wait a moment for React Helmet to update the <head> tags (canonical URL)
       setTimeout(() => {
         window.fbq('track', 'PageView');
+        // Custom explicit event to guarantee the user sees the actual URL path in Meta
+        window.fbq('trackCustom', 'SPA_Page_View', { 
+          page_url: window.location.href, 
+          page_path: window.location.pathname 
+        });
       }, 200);
     }
   }, [currentView, selectedProduct]);
