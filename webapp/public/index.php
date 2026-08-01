@@ -38,7 +38,8 @@ if (preg_match('#^/(?:product|buy|pdp)/([a-zA-Z0-9-]+)/?$#', $path, $matches)) {
             // Extract product data
             $name = htmlspecialchars($product['name'] ?? 'Pure Nutrix Product', ENT_QUOTES, 'UTF-8');
             // Remove HTML tags for description
-            $description = strip_tags($product['description'] ?? '');
+            $descriptionRaw = $product['short_description'] ?? $product['description'] ?? '';
+            $description = strip_tags($descriptionRaw);
             // Limit description to ~150 chars
             if (strlen($description) > 150) {
                 $description = substr($description, 0, 147) . '...';
@@ -46,8 +47,14 @@ if (preg_match('#^/(?:product|buy|pdp)/([a-zA-Z0-9-]+)/?$#', $path, $matches)) {
             $description = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
             
             $image = 'https://purenutrix.in/assets/logo.png';
-            if (!empty($product['images']) && is_array($product['images']) && count($product['images']) > 0) {
-                $image = htmlspecialchars($product['images'][0], ENT_QUOTES, 'UTF-8');
+            $imageUrls = $product['image_urls'] ?? $product['images'] ?? [];
+            if (!empty($imageUrls) && is_array($imageUrls) && count($imageUrls) > 0) {
+                $firstImage = $imageUrls[0];
+                // Ensure absolute URL
+                if (strpos($firstImage, 'http') !== 0) {
+                    $firstImage = 'https://purenutrix.in' . $firstImage;
+                }
+                $image = htmlspecialchars($firstImage, ENT_QUOTES, 'UTF-8');
             }
             
             $currentUrl = "https://purenutrix.in" . htmlspecialchars($path, ENT_QUOTES, 'UTF-8');
