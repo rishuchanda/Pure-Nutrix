@@ -319,6 +319,13 @@ function App() {
     return () => window.removeEventListener('pn_seo_config_updated', handleSEOUpdate);
   }, []);
 
+  // Track Meta Pixel PageView on route changes (SPA)
+  useEffect(() => {
+    if (window.fbq) {
+      window.fbq('track', 'PageView');
+    }
+  }, [currentView, selectedProduct]);
+
   const getSEOData = () => {
     switch (currentView) {
       case 'products':
