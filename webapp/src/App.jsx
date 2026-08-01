@@ -198,6 +198,7 @@ function App() {
     if (window.fbq) {
       window.fbq('track', 'InitiateCheckout', {
         content_ids: [product.id],
+        content_type: 'product',
         content_name: product.name,
         value: typeof product.price === 'number' ? product.price : Number(String(product.price).replace(/[^0-9.-]+/g, "")),
         currency: 'INR'
@@ -322,7 +323,10 @@ function App() {
   // Track Meta Pixel PageView on route changes (SPA)
   useEffect(() => {
     if (window.fbq) {
-      window.fbq('track', 'PageView');
+      // Wait a moment for React Helmet to update the <head> tags (canonical URL)
+      setTimeout(() => {
+        window.fbq('track', 'PageView');
+      }, 200);
     }
   }, [currentView, selectedProduct]);
 
