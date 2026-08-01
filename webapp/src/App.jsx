@@ -333,49 +333,56 @@ function App() {
           title: "Buy Premium Nutraceuticals & Supplements Online | Pure Nutrix Products",
           description: "Explore Pure Nutrix 100% science-backed product range: Ashwagandha Root Extract 500mg, L-Glutathione skin glow tablets, Gold Standard Whey Isolate, Multivitamins, and Collagen Peptides.",
           keywords: "ashwagandha root extract capsules buy online, buy glutathione online, whey protein isolate price india, best collagen supplement india, pure nutrix products, stress relief supplement",
-          canonical: "https://purenutrix.in/#products"
+          canonical: "https://purenutrix.in/products"
+        };
+      case 'pdp':
+        return {
+          title: selectedProduct ? `${selectedProduct.name} | Pure Nutrix` : "Pure Nutrix Product",
+          description: selectedProduct ? selectedProduct.description : "Premium Pure Nutrix Supplement",
+          keywords: "pure nutrix product, buy supplement online",
+          canonical: selectedProduct ? `https://purenutrix.in/product/${selectedProduct.slug || selectedProduct.id}` : "https://purenutrix.in/"
         };
       case 'cart':
         return {
           title: "Shopping Cart & Express Checkout | Pure Nutrix",
           description: "Review your cart items. Enjoy express PAN India shipping, Cash on Delivery (COD), and 100% genuine sealed nutraceutical supplements.",
           keywords: "pure nutrix cart, buy supplements online, checkout supplement discount",
-          canonical: "https://purenutrix.in/#cart"
+          canonical: "https://purenutrix.in/cart"
         };
       case 'account':
         return {
           title: "My Account & Order History | Pure Nutrix",
           description: "Manage your Pure Nutrix profile, track active supplement shipments, download GST invoices, and check loyalty points.",
           keywords: "pure nutrix login, my orders, order tracking supplement",
-          canonical: "https://purenutrix.in/#account"
+          canonical: "https://purenutrix.in/account"
         };
       case 'quality-standards':
         return {
           title: "Quality Standards & Third-Party Lab Reports | Pure Nutrix",
           description: "We subject all finished Pure Nutrix nutraceuticals to rigorous third-party NABL lab testing. View official certificates for heavy metal purity & GMP.",
           keywords: "lab tested supplements india, gmp certified nutraceuticals, pure nutrix quality test, fssai approved protein",
-          canonical: "https://purenutrix.in/#quality-standards"
+          canonical: "https://purenutrix.in/quality"
         };
       case 'legal-policy':
         return {
           title: "Legal Policy, Privacy & Return Terms | Pure Nutrix",
           description: "Read official terms of service, hygiene non-returnable policies for sealed supplements, and customer data protection guidelines.",
           keywords: "pure nutrix return policy, supplement refund policy india, privacy terms",
-          canonical: "https://purenutrix.in/#legal-policy"
+          canonical: "https://purenutrix.in/legal"
         };
       case 'support':
         return {
           title: "24/7 Customer Support & WhatsApp Help Desk | Pure Nutrix",
           description: "Connect instantly with Pure Nutrix nutrition experts and support representatives via WhatsApp or direct phone for dosage guidance and order help.",
           keywords: "pure nutrix contact number, customer care supplement india, whatsapp nutrition support",
-          canonical: "https://purenutrix.in/#support"
+          canonical: "https://purenutrix.in/support"
         };
       case 'order':
         return {
           title: "Secure Checkout & Payment | Pure Nutrix",
           description: "Complete your Pure Nutrix purchase securely. Choose Cash on Delivery or instant UPI/card payment with extra prepaid savings.",
           keywords: "secure supplement payment india, cod supplements buy",
-          canonical: "https://purenutrix.in/#order"
+          canonical: selectedProduct ? `https://purenutrix.in/buy/${selectedProduct.slug || selectedProduct.id}` : "https://purenutrix.in/buy"
         };
       default:
         return {
