@@ -1,77 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Real, crawlable URLs only.
+  The previous version listed "#" fragment URLs (e.g. /#pdp-l-glutathione-skin-glow).
+  Google discards everything after "#", so all ten entries resolved to the homepage
+  and the sitemap told Google nothing. It also listed three products that do not
+  exist on the site (Whey Isolate, Multivitamin, Organic Supergreens).
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-  <!-- Homepage / Brand Root -->
+
+  <!-- Homepage -->
   <url>
     <loc>https://purenutrix.in/</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
+    <lastmod>2026-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://purenutrix.in/assets/logo.png</image:loc>
       <image:title>Pure Nutrix Official Brand Logo</image:title>
-      <image:caption>Pure Nutrix - Premium Nutraceuticals and Skin Radiance Supplements</image:caption>
     </image:image>
   </url>
-  <!-- Products Catalog -->
+
+  <!-- Product collection -->
   <url>
-    <loc>https://purenutrix.in/#products</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
+    <loc>https://purenutrix.in/products</loc>
+    <lastmod>2026-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-  <!-- Quality Standards & Lab Test Reports -->
+
+  <!-- Product detail pages -->
   <url>
-    <loc>https://purenutrix.in/#quality-standards</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
+    <loc>https://purenutrix.in/product/ultra-l-glutathione-500mg-with-vitamin-c</loc>
+    <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://purenutrix.in/assets/products/glutathione/1.png</image:loc>
+      <image:title>Ultra L-Glutathione 500mg with Vitamin C</image:title>
+    </image:image>
   </url>
-  <!-- Customer Support & Contact -->
   <url>
-    <loc>https://purenutrix.in/#support</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
+    <loc>https://purenutrix.in/product/advanced-collagen-biotin-with-hyaluronic-acid-vitamin-c-zinc</loc>
+    <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://purenutrix.in/assets/products/collagen/collagen%201.jpg</image:loc>
+      <image:title>Advanced Collagen &amp; Biotin with Hyaluronic Acid, Vitamin C &amp; Zinc</image:title>
+    </image:image>
   </url>
-  <!-- Legal Policy & Terms -->
   <url>
-    <loc>https://purenutrix.in/#legal-policy</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
+    <loc>https://purenutrix.in/product/pure-nutrix-himalayan-sea-buckthorn-juice-500-ml-supports-immunity-glowing-skin-gut-health-with-omega-3-6-7-9</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://purenutrix.in/assets/products/sea_buckthorn/1.png</image:loc>
+      <image:title>Pure Nutrix Himalayan Sea Buckthorn Juice 500 ml</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://purenutrix.in/product/pure-nutrix-ashwagandha-root-extract-capsules-500mg-natural-stress-relief-energy-immunity-support-30-capsules</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://purenutrix.in/assets/products/ashwagandha/1.jpg</image:loc>
+      <image:title>Pure Nutrix Ashwagandha Root Extract Capsules 500mg</image:title>
+    </image:image>
+  </url>
+
+  <!-- Trust &amp; policy pages -->
+  <url>
+    <loc>https://purenutrix.in/quality</loc>
+    <lastmod>2026-09-14</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <!-- Top Products (Direct Indexing Links) -->
-  <url>
-    <loc>https://purenutrix.in/#pdp-ashwagandha-root-extract-capsules</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://purenutrix.in/#pdp-l-glutathione-skin-glow</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
+    <loc>https://purenutrix.in/support</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://purenutrix.in/#pdp-100-gold-standard-whey-isolate</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
+    <loc>https://purenutrix.in/legal</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://purenutrix.in/#pdp-advanced-multivitamin-minerals</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.90</priority>
+    <loc>https://purenutrix.in/privacy-policy</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
-  <url>
-    <loc>https://purenutrix.in/#pdp-organic-supergreens-powder</loc>
-    <lastmod>2026-07-27T00:00:00+05:30</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.90</priority>
-  </url>
+
 </urlset>
