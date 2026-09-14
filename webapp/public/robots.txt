@@ -1,27 +1,51 @@
-# Pure Nutrix Official Search Engine Crawler Directives (100% Optimized)
-# Allows Googlebot, Bingbot, Applebot, and other major search engines to crawl all pages and assets.
+# Pure Nutrix — crawler directives
+#
+# Note: a crawler obeys ONLY the most specific user-agent block that matches it.
+# The previous file gave Googlebot and Bingbot their own blocks with "Allow: /"
+# and no Disallow lines, so those two crawlers ignored the Disallow rules in the
+# "*" block entirely and were free to crawl /admin, /cart and /account.
+# Every block below therefore repeats the same private paths.
 
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /checkout
 Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /buy/
+Disallow: /order/
+Disallow: /whatsapp
 
-# Explicit rules for major search crawlers
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 1
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /buy/
+Disallow: /order/
+Disallow: /whatsapp
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /buy/
+Disallow: /order/
+Disallow: /whatsapp
 
 User-agent: Googlebot-Image
 Allow: /assets/
 Allow: /images/
 
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
-
 User-agent: Applebot
 Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
 
-# XML Sitemap reference
+# XML Sitemap
 Sitemap: https://purenutrix.in/sitemap.xml
