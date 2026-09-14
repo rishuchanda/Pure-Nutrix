@@ -90,7 +90,21 @@ const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
                   </div>
 
                   <div className="product-item-details">
-                    <h2 className="product-item-title">{product.name}</h2>
+                    <h2 className="product-item-title">
+                      {/* Real href so Google can crawl from /products into each
+                          product page. The click handler keeps the SPA feel. */}
+                      <a
+                        href={`/product/${product.slug || product.id}`}
+                        onClick={(e) => {
+                          if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onProductClick(product);
+                        }}
+                      >
+                        {product.name}
+                      </a>
+                    </h2>
                     <p className="product-item-subtitle">{dynamicDetails.subtitle}</p>
 
                     <div className="product-item-stars">
