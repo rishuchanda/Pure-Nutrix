@@ -100,7 +100,21 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
       </div>
 
       <div className="product-details">
-        <h2 className="product-name-minimal">{product.name}</h2>
+        <h2 className="product-name-minimal">
+          {/* Real href so Google can crawl from the homepage into each product
+              page. The click handler keeps the SPA feel. */}
+          <a
+            href={`/product/${product.slug || product.id}`}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+              e.preventDefault();
+              e.stopPropagation();
+              onProductClick && onProductClick(product);
+            }}
+          >
+            {product.name}
+          </a>
+        </h2>
 
         <p className="product-desc-minimal">
           {product.description || 'Premium formulation for maximum efficacy.'}

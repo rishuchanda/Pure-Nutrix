@@ -340,6 +340,16 @@ function App() {
     }
   }, [currentView, selectedProduct]);
 
+  // Canonical always reflects the URL the visitor is actually on.
+  // Never fall back to the homepage: while a product is still loading from
+  // Supabase, a "/" canonical tells Google the product page is a duplicate
+  // of the homepage - which is what de-indexed every non-home page.
+  const SITE_ORIGIN = 'https://purenutrix.in';
+  const canonicalForCurrentPath = () => {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '/';
+    return SITE_ORIGIN + (path === '/' ? '/' : path.replace(/\/+$/, ''));
+  };
+
   const getSEOData = () => {
     switch (currentView) {
       case 'products':
@@ -354,7 +364,7 @@ function App() {
           title: selectedProduct ? `${selectedProduct.name} | Pure Nutrix` : "Pure Nutrix Product",
           description: selectedProduct ? selectedProduct.description : "Premium Pure Nutrix Supplement",
           keywords: "pure nutrix product, buy supplement online",
-          canonical: selectedProduct ? `https://purenutrix.in/product/${selectedProduct.slug || selectedProduct.id}` : "https://purenutrix.in/"
+          canonical: selectedProduct ? `${SITE_ORIGIN}/product/${selectedProduct.slug || selectedProduct.id}` : canonicalForCurrentPath()
         };
       case 'cart':
         return {
@@ -396,14 +406,14 @@ function App() {
           title: "Secure Checkout & Payment | Pure Nutrix",
           description: "Complete your Pure Nutrix purchase securely. Choose Cash on Delivery or instant UPI/card payment with extra prepaid savings.",
           keywords: "secure supplement payment india, cod supplements buy",
-          canonical: selectedProduct ? `https://purenutrix.in/buy/${selectedProduct.slug || selectedProduct.id}` : "https://purenutrix.in/buy"
+          canonical: selectedProduct ? `${SITE_ORIGIN}/buy/${selectedProduct.slug || selectedProduct.id}` : canonicalForCurrentPath()
         };
       default:
         return {
           title: liveSEO.defaultTitle || "Pure Nutrix | India's #1 Premium Nutraceuticals, Skin Glow & Health Supplements",
           description: liveSEO.defaultDescription || "Pure Nutrix is India's leading brand for clinically proven health supplements, L-Glutathione 1000mg skin radiance tablets, 100% Whey Protein Isolate, Collagen Peptides, and Organic Supergreens.",
           keywords: liveSEO.defaultKeywords || "Pure Nutrix, pure nutrix supplements, l-glutathione tablets buy online india, glutathione skin glow, whey protein isolate 2kg price, collagen peptide complex india, best nutraceutical brand india",
-          canonical: liveSEO.siteUrl || "https://purenutrix.in/"
+          canonical: canonicalForCurrentPath()
         };
     }
   };
@@ -464,7 +474,7 @@ function App() {
               <WhyChooseUs />
               <TrustSection />
             </main>
-            <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} onOpenPrivacyPolicy={handleOpenPrivacyPolicy} onOpenSupport={handleOpenSupport} />
+            <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} onOpenPrivacyPolicy={handleOpenPrivacyPolicy} onOpenSupport={handleOpenSupport} onOpenProducts={handleOpenProducts} />
           </motion.div>
         ) : currentView === 'order' ? (
           <motion.div

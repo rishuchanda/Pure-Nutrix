@@ -226,3 +226,18 @@
     font-size: 0.9rem;
   }
 }
+
+/* Product title link: crawlable <a> that must look exactly like the old text. */
+.product-item-title a {
+  color: inherit;
+  text-decoration: none;
+  font: inherit;
+}
+.product-item-title a:hover {
+  text-decoration: underline;
+}
+.product-item-title a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
