@@ -39,7 +39,25 @@ function App() {
     return view;
   });
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [cartItems, setCartItems] = useState([]);
+  // The cart used to live only in memory, so a refresh - or coming back later -
+  // silently emptied it, and abandoned-cart recovery was impossible.
+  const CART_STORAGE_KEY = 'pn_cart';
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]');
+      return Array.isArray(saved) ? saved.filter(i => i && i.product && i.product.id) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    } catch {
+      // storage blocked (private window, full quota) - cart still works for this visit
+    }
+  }, [cartItems]);
 
   useEffect(() => {
     const handlePopState = async (event) => {
@@ -458,13 +476,12 @@ function App() {
           onProductClick={handleOpenProductDetails}
         />
       )}
-      <AnimatePresence mode="wait" onExitComplete={() => { window.scrollTo(0, 0); if (window.lenis) window.lenis.scrollTo(0, { immediate: true }); }}>
+      <AnimatePresence onExitComplete={() => { window.scrollTo(0, 0); if (window.lenis) window.lenis.scrollTo(0, { immediate: true }); }}>
         {currentView === 'home' ? (
           <motion.div
             key="home"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5 }}
           >
             <main>
@@ -481,7 +498,6 @@ function App() {
             key="order"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             {!selectedProduct && (!cartItems || cartItems.length === 0) ? (
@@ -498,7 +514,6 @@ function App() {
             key="cart"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             <CartPage
@@ -518,7 +533,6 @@ function App() {
             key="admin"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             <AdminDashboard user={user} onBack={handleBackToHome} />
@@ -528,7 +542,6 @@ function App() {
             key="account"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             <AccountPage user={user} onBack={handleBackToHome} onSignOut={() => supabase.auth.signOut()} />
@@ -538,7 +551,6 @@ function App() {
             key="products"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             <ProductsPage onProductClick={handleOpenProductDetails} onBack={handleBackToHome} onOrder={handleOrder} onAddToCart={handleAddToCart} />
@@ -548,7 +560,6 @@ function App() {
             key="pdp"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             {!selectedProduct ? (
@@ -565,7 +576,6 @@ function App() {
             key="quality-standards"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             <QualityStandardsPage onBack={handleBackToHome} onExplore={handleOpenProducts} />
@@ -575,7 +585,6 @@ function App() {
             key="legal-policy"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             <LegalPolicyPage onBack={handleBackToHome} />
@@ -585,7 +594,6 @@ function App() {
             key="privacy-policy"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             <PrivacyPolicyPage onBack={handleBackToHome} />
@@ -595,7 +603,6 @@ function App() {
             key="support"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
             <SupportPage onBack={handleBackToHome} />
@@ -605,7 +612,6 @@ function App() {
             key="whatsapp"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
             style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a', color: '#fff', flexDirection: 'column' }}
           >
