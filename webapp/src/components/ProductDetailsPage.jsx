@@ -186,14 +186,13 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
                 "@type": "Organization",
                 "name": "Pure Nutrix"
               }
-            },
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": details.rating || "4.8",
-              "reviewCount": details.reviewsCount || "142",
-              "bestRating": "5",
-              "worstRating": "1"
             }
+            // No aggregateRating here on purpose. The star rating and review
+            // count shown on the page are placeholder data, not verified
+            // customer reviews. Sending them to Google as structured data is
+            // what triggers a fake-review manual action, and it is what puts
+            // invented stars in search results. Add this block back only once
+            // the ratings come from real, verified orders.
           })}
         </script>
       </Helmet>
