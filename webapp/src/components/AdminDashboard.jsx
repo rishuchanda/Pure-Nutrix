@@ -599,7 +599,13 @@ const AdminDashboard = ({ user }) => {
                               </div>
                             </td>
                             <td style={{ color: 'var(--admin-text-muted)' }}>{new Date(order.created_at).toLocaleDateString('en-GB')}</td>
-                            <td><span className="admin-badge badge-success">Paid</span></td>
+                            <td>
+                              {(order.payment_method || 'Prepaid') === 'COD' ? (
+                                <span className="admin-badge badge-warning">COD · COLLECT ₹{order.price}</span>
+                              ) : (
+                                <span className="admin-badge badge-success">Paid</span>
+                              )}
+                            </td>
                             <td>
                               <span className={`admin-badge ${(order.status || 'pending').toLowerCase() === 'delivered' ? 'badge-success' : (order.status || 'pending').toLowerCase() === 'pending' ? 'badge-error' : 'badge-info'}`}>
                                 {(order.status || 'pending').toUpperCase()}

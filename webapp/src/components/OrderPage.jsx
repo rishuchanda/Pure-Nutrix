@@ -304,25 +304,30 @@ const OrderPage = ({ product, cartItems, onBack }) => {
       const firstProductImage = orderItems.length > 0 ? (orderItems[0].product.image_urls || orderItems[0].product.images || [])[0] || '' : '';
       
       const saveOrderToDB = async (user, addressString, finalProductName, firstProductImage) => {
-        const { error } = await supabase
+        const orderRow = {
+          user_id: user.id,
+          customer_name: formData.name,
+          customer_mobile: formData.mobile,
+          customer_email: user.email,
+          shipping_address: addressString,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          product_name: finalProductName,
+          price: finalTotal,
+          qty: totalQuantity,
+          image: firstProductImage,
+          status: 'Processing'
+        };
+
+        let { error } = await supabase
           .from('orders')
-          .insert([
-            {
-              user_id: user.id,
-              customer_name: formData.name,
-              customer_mobile: formData.mobile,
-              customer_email: user.email,
-              shipping_address: addressString,
-              city: formData.city,
-              state: formData.state,
-              pincode: formData.pincode,
-              product_name: finalProductName,
-              price: finalTotal,
-              qty: totalQuantity,
-              image: firstProductImage,
-              status: 'Processing'
-            }
-          ]);
+          .insert([{ ...orderRow, payment_method: paymentMethod === 'cod' ? 'COD' : 'Prepaid' }]);
+
+        if (error && (error.code === '42703' || /payment_method/i.test(error.message || ''))) {
+          console.warn('orders.payment_method column is missing, so this order was saved without it. Add a text column named payment_method to the orders table in Supabase to record COD vs Prepaid.');
+          ({ error } = await supabase.from('orders').insert([orderRow]));
+        }
 
         if (error) throw error;
 
@@ -653,9 +658,36 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                       )}
 
                       {!showOtpChoice && !isCheckoutOtpSent && (
-                        <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing} style={{ marginTop: '20px' }}>
-                          {isProcessing ? 'Processing...' : `Pay Online ₹${finalTotal}`}
-                        </button>
+                        <>
+                          <div className="payment-method-choice" style={{ marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                            <p style={{ marginBottom: '10px', fontWeight: 'bold', color: '#1e293b' }}>Payment Method</p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                <input
+                                  type="radio"
+                                  name="paymentMethod"
+                                  value="razorpay"
+                                  checked={paymentMethod === 'razorpay'}
+                                  onChange={(e) => setPaymentMethod(e.target.value)}
+                                />
+                                Pay Online (UPI, Card, Net Banking)
+                              </label>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                <input
+                                  type="radio"
+                                  name="paymentMethod"
+                                  value="cod"
+                                  checked={paymentMethod === 'cod'}
+                                  onChange={(e) => setPaymentMethod(e.target.value)}
+                                />
+                                Cash on Delivery (₹19 handling fee)
+                              </label>
+                            </div>
+                          </div>
+                          <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing} style={{ marginTop: '20px' }}>
+                            {isProcessing ? 'Processing...' : paymentMethod === 'cod' ? `Place Order · Pay ₹${finalTotal} on Delivery` : `Pay Online ₹${finalTotal}`}
+                          </button>
+                        </>
                       )}
 
                       {showOtpChoice && !isCheckoutOtpSent && (
