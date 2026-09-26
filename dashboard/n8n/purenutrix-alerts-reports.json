@@ -1,0 +1,353 @@
+{
+  "id": "pnAlertsReports1",
+  "name": "PureNutrix — alerts aur reports",
+  "nodes": [
+    {
+      "id": "55f001b8-73ac-5410-83a6-b2c2e9add359",
+      "name": "Har 3 ghante",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        200
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 */3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "45dfcb19-11d9-5bc0-844b-5eed69568d08",
+      "name": "Naye alerts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8765/api/agent/alerts",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pnDashboardTok1",
+          "name": "PureNutrix Dashboard"
+        }
+      }
+    },
+    {
+      "id": "61da012e-f8c8-50aa-8064-bd5d2c95d215",
+      "name": "Koi alert hai?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const a = $input.first().json;\nif (!a.count) return [];           // koi naya alert nahi -> kuch mat bhejo\nreturn [{ json: a }];"
+      }
+    },
+    {
+      "id": "324a0713-b648-5750-a554-312eb7c5ec5c",
+      "name": "Alert bhejo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1020,
+        200
+      ],
+      "parameters": {
+        "chatId": "APNA_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pnTelegramBot01",
+          "name": "PureNutrix Telegram Bot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "c818355a-5af7-545e-907e-af0fbdfee0b1",
+      "name": "Alerts bhej diye",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765/api/agent/alerts/sent",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ids: $('Koi alert hai?').first().json.ids }) }}"
+      },
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pnDashboardTok1",
+          "name": "PureNutrix Dashboard"
+        }
+      }
+    },
+    {
+      "id": "451caf98-87d4-5e35-8aaa-b96a118bfbca",
+      "name": "Somvaar subah 9",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        420
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d049fc54-f3da-5304-8263-41f760c71fd8",
+      "name": "Hafte ki report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        420
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8765/api/agent/report?kind=week",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pnDashboardTok1",
+          "name": "PureNutrix Dashboard"
+        }
+      }
+    },
+    {
+      "id": "5bedf016-fe22-5e35-bcb5-181603f2ff21",
+      "name": "Hafte ki report bhejo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        420
+      ],
+      "parameters": {
+        "chatId": "APNA_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pnTelegramBot01",
+          "name": "PureNutrix Telegram Bot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "bba5bac0-98f0-5a80-b782-6b7218f82f03",
+      "name": "Mahine ki 1 tareekh",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        640
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 9 1 * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f52a3cbb-a061-5de4-969a-bd8077737df1",
+      "name": "Mahine ki report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        640
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8765/api/agent/report?kind=month",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pnDashboardTok1",
+          "name": "PureNutrix Dashboard"
+        }
+      }
+    },
+    {
+      "id": "c66507b9-6b3c-5aaa-8b55-65b6820a720f",
+      "name": "Mahine ki report bhejo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        640
+      ],
+      "parameters": {
+        "chatId": "APNA_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pnTelegramBot01",
+          "name": "PureNutrix Telegram Bot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Har 3 ghante": {
+      "main": [
+        [
+          {
+            "node": "Naye alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Naye alerts": {
+      "main": [
+        [
+          {
+            "node": "Koi alert hai?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Koi alert hai?": {
+      "main": [
+        [
+          {
+            "node": "Alert bhejo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert bhejo": {
+      "main": [
+        [
+          {
+            "node": "Alerts bhej diye",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Somvaar subah 9": {
+      "main": [
+        [
+          {
+            "node": "Hafte ki report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hafte ki report": {
+      "main": [
+        [
+          {
+            "node": "Hafte ki report bhejo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mahine ki 1 tareekh": {
+      "main": [
+        [
+          {
+            "node": "Mahine ki report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mahine ki report": {
+      "main": [
+        [
+          {
+            "node": "Mahine ki report bhejo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "saveManualExecutions": true
+  },
+  "pinData": {}
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="hi-Latn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PureNutrix Login</title>
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css?v=1">
+  <style>
+    .login { max-width: 380px; margin: 12vh auto 0; padding: 0 16px; }
+    .login h1 { font-size: 26px; margin: 0 0 4px; }
+    .login p { color: var(--muted); margin: 0 0 20px; }
+    .login input { width: 100%; font-size: 20px; padding: 14px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--card); }
+    .login .btn { width: 100%; margin-top: 12px; font-size: 18px; padding: 14px; }
+    .msg { color: var(--bad-ink); margin-top: 12px; min-height: 1.4em; }
+  </style>
+</head>
+<body>
+  <form class="login" method="post" action="/login">
+    <h1>PureNutrix</h1>
+    <p>Amazon · Flipkart · Meesho — ek jagah</p>
+    <input type="password" name="password" placeholder="Password" autocomplete="current-password" autofocus required aria-label="Password">
+    <button class="btn" type="submit">Login</button>
+    <div class="msg">{{MESSAGE}}</div>
+  </form>
+</body>
+</html>

@@ -1,6 +1,13 @@
 ---
 deployment:
   tasks:
+    # Website (purenutrix.in)
     - export DEPLOYPATH=/home/purenutr/public_html
     - /bin/cp -R webapp/dist/* $DEPLOYPATH/
     - /bin/cp webapp/dist/.htaccess $DEPLOYPATH/
+    # Marketplace dashboard (dashboard.purenutrix.in) - cPanel "Setup Python App", app root: purenutrix-dashboard
+    # Only code is copied; the server's .env (passwords) and data/ (orders) are never overwritten.
+    - export DASHPATH=/home/purenutr/purenutrix-dashboard
+    - /bin/mkdir -p $DASHPATH/tmp
+    - /bin/cp -R dashboard/app dashboard/static dashboard/passenger_wsgi.py dashboard/requirements.txt $DASHPATH/
+    - /bin/touch $DASHPATH/tmp/restart.txt

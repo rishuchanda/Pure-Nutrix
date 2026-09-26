@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="hi-Latn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PureNutrix Dashboard</title>
+  <meta name="theme-color" content="#14532d">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icon.svg">
+  <link rel="stylesheet" href="/static/style.css?v=2">
+</head>
+<body>
+  <header class="top">
+    <div class="top-row">
+      <div class="brand">PureNutrix <small>Dashboard</small></div>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="refresh" title="Refresh" aria-label="Refresh">↻</button>
+      <a class="icon-btn" href="/logout" title="Logout" aria-label="Logout" style="display:grid;place-items:center;text-decoration:none;color:inherit">⎋</a>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+  </header>
+  <main id="view" aria-live="polite"></main>
+  <script src="/static/app.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+.venv
+.env
+data
+tests
+__pycache__
+.pytest_cache
+.claude
+n8n/runtime
+panel-reader
+scripts
+archive
