@@ -1,0 +1,507 @@
+{
+  "id": "pnDailyPanelRun1",
+  "name": "PureNutrix — roz subah panel se data",
+  "nodes": [
+    {
+      "id": "4d10b4df-3f90-525e-9f13-3fc103154d7a",
+      "name": "Roz subah 6:30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 6 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a09d1f03-5665-596e-966e-781f4d2d5f7d",
+      "name": "Pages ki list",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Kal ka din (IST) aur har platform ke pages. URL badle to yahan theek karo.\nconst d = new Date(Date.now() + 5.5 * 3600 * 1000 - 24 * 3600 * 1000);\nconst day = d.toISOString().slice(0, 10);\nconst PAGES = {\n  \"amazon\": [\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/pending/easyship?page=1\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/unshipped/easyship?page=1\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/shipped/easyship/handover-ready?page=1\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/shipped/easyship/handover-done?page=1\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/shipped/easyship/handover-done?page=2\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/canceled/easyship?page=1\"\n    },\n    {\n      \"page_kind\": \"returns\",\n      \"url\": \"https://sellercentral.amazon.in/gp/returns/list/v2\"\n    },\n    {\n      \"page_kind\": \"payments\",\n      \"url\": \"https://sellercentral.amazon.in/payments/dashboard/index.html\"\n    }\n  ],\n  \"flipkart\": [\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://seller.flipkart.com/index.html#dashboard/active-orders?query=%7B%22activeShipmentTile%22%3A%22inTransit%22%7D\"\n    },\n    {\n      \"page_kind\": \"returns\",\n      \"url\": \"https://seller.flipkart.com/index.html#dashboard/returns\"\n    },\n    {\n      \"page_kind\": \"ads\",\n      \"url\": \"https://seller.flipkart.com/index.html#dashboard/ads/campaigns\"\n    }\n  ],\n  \"meesho\": [\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/pending\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/ready-to-ship\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/shipped\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/cancelled\"\n    },\n    {\n      \"page_kind\": \"returns\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/returns/overview\"\n    },\n    {\n      \"page_kind\": \"returns\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/returns/returnTracking-intransit\"\n    },\n    {\n      \"page_kind\": \"payments\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/payouts/jpsyo/payments\"\n    }\n  ]\n};\nconst out = { day };\nfor (const [platform, pages] of Object.entries(PAGES)) {\n  out[platform] = { platform, day, wait_ms: 3000, pages };\n}\nreturn [{ json: out }];"
+      }
+    },
+    {
+      "id": "7e573563-6e0c-58b9-83b7-d17b53a45cc9",
+      "name": "Dashboard: kya pehle se hai",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=http://127.0.0.1:8765/api/agent/snapshot?day={{ $json.day }}",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pnDashboardTok1",
+          "name": "PureNutrix Dashboard"
+        }
+      }
+    },
+    {
+      "id": "1d4a9dbe-632b-5acb-bb13-d9230b5667ce",
+      "name": "Listings jodo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Apni listing (rating) aur competitor (price) ke URL dashboard se aate hain.\nconst snap = $input.first().json;\nconst cfg = $('Pages ki list').first().json;\nconst pages = (snap.listings || []).filter(l => l.url).map(l => ({ page_kind: 'listing', url: l.url, listing_id: l.id }));\nreturn [{ json: { ...cfg, listings: { platform: 'listings', day: cfg.day, wait_ms: 2000, pages } } }];"
+      }
+    },
+    {
+      "id": "66038d0f-82e0-5cd2-8bd1-93b19f571e56",
+      "name": "Amazon padho",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3100/read",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ config: $('Listings jodo').first().json.amazon }) }}"
+      },
+      "executeOnce": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "pnAmazonLogin01",
+          "name": "Amazon login"
+        }
+      }
+    },
+    {
+      "id": "891eee30-f2d7-5b08-8ba5-5afe845d5a02",
+      "name": "Flipkart padho",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3100/read",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ config: $('Listings jodo').first().json.flipkart }) }}"
+      },
+      "executeOnce": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "pnFlipkartLogin",
+          "name": "Flipkart login"
+        }
+      }
+    },
+    {
+      "id": "ef570a66-8e35-564f-8757-7e8fc4a47775",
+      "name": "Meesho padho",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3100/read",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ config: $('Listings jodo').first().json.meesho }) }}"
+      },
+      "executeOnce": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "pnMeeshoLogin01",
+          "name": "Meesho login"
+        }
+      }
+    },
+    {
+      "id": "1fd62c1a-eaf3-50f4-851c-82c41f7d12cc",
+      "name": "Listings padho",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3100/read",
+        "options": {
+          "timeout": 600000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ config: $('Listings jodo').first().json.listings }) }}"
+      },
+      "executeOnce": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "f4f6614f-d71c-5267-be12-e268e32ccdf7",
+      "name": "Sab pages ek list me",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Chaaron readers ke pages ek list me. Reader fail hua to har page ke liye error bhejo.\nconst cfg = $('Listings jodo').first().json;\nconst readers = { amazon: 'Amazon padho', flipkart: 'Flipkart padho', meesho: 'Meesho padho', listings: 'Listings padho' };\nconst items = [];\nfor (const [platform, nodeName] of Object.entries(readers)) {\n  let res;\n  try { res = $(nodeName).first().json; } catch (e) { res = { error: 'reader did not run' }; }\n  if (res && Array.isArray(res.pages)) {\n    for (const p of res.pages) items.push({ json: p });\n  } else {\n    const msg = (res && (res.error && (res.error.message || res.error))) || 'panel-reader not reachable';\n    for (const p of cfg[platform].pages) items.push({ json: { ...p, platform, day: cfg.day, error: String(msg).slice(0, 300) } });\n  }\n}\nreturn items;"
+      }
+    },
+    {
+      "id": "1e8b7eaf-387f-5302-985a-1cef68def6e2",
+      "name": "Dashboard ko page bhejo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765/api/agent/page",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pnDashboardTok1",
+          "name": "PureNutrix Dashboard"
+        }
+      }
+    },
+    {
+      "id": "81afa2cf-e088-5ec5-a3a0-3a72ae3ea02a",
+      "name": "Jaanch khatam",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765/api/agent/finish",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ day: $('Pages ki list').first().json.day }) }}"
+      },
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pnDashboardTok1",
+          "name": "PureNutrix Dashboard"
+        }
+      }
+    },
+    {
+      "id": "9c87eee1-cfcf-5343-91f6-4f6c6fd4b5a9",
+      "name": "Message banao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst lines = ['🤖 PureNutrix — roz ki jaanch', r.summary || ''];\nif (r.alerts && r.alerts.count) lines.push('', r.alerts.text);\nreturn [{ json: { text: lines.join('\\n').slice(0, 4000), ids: (r.alerts && r.alerts.ids) || [] } }];"
+      }
+    },
+    {
+      "id": "0ae461a0-6668-53b0-8e14-8830c5454bdd",
+      "name": "Telegram bhejo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3120,
+        300
+      ],
+      "parameters": {
+        "chatId": "APNA_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pnTelegramBot01",
+          "name": "PureNutrix Telegram Bot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "c818355a-5af7-545e-907e-af0fbdfee0b1",
+      "name": "Alerts bhej diye",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3360,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765/api/agent/alerts/sent",
+        "options": {
+          "timeout": 600000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ids: $('Message banao').first().json.ids }) }}"
+      },
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pnDashboardTok1",
+          "name": "PureNutrix Dashboard"
+        }
+      }
+    },
+    {
+      "id": "f20d1643-a6ea-521a-b7b5-fcdf4c6d1c77",
+      "name": "Abhi chalao (test)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        520
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Roz subah 6:30": {
+      "main": [
+        [
+          {
+            "node": "Pages ki list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pages ki list": {
+      "main": [
+        [
+          {
+            "node": "Dashboard: kya pehle se hai",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dashboard: kya pehle se hai": {
+      "main": [
+        [
+          {
+            "node": "Listings jodo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listings jodo": {
+      "main": [
+        [
+          {
+            "node": "Amazon padho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Amazon padho": {
+      "main": [
+        [
+          {
+            "node": "Flipkart padho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flipkart padho": {
+      "main": [
+        [
+          {
+            "node": "Meesho padho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meesho padho": {
+      "main": [
+        [
+          {
+            "node": "Listings padho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listings padho": {
+      "main": [
+        [
+          {
+            "node": "Sab pages ek list me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sab pages ek list me": {
+      "main": [
+        [
+          {
+            "node": "Dashboard ko page bhejo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dashboard ko page bhejo": {
+      "main": [
+        [
+          {
+            "node": "Jaanch khatam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jaanch khatam": {
+      "main": [
+        [
+          {
+            "node": "Message banao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message banao": {
+      "main": [
+        [
+          {
+            "node": "Telegram bhejo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram bhejo": {
+      "main": [
+        [
+          {
+            "node": "Alerts bhej diye",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Abhi chalao (test)": {
+      "main": [
+        [
+          {
+            "node": "Pages ki list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "saveManualExecutions": true
+  },
+  "pinData": {}
+}

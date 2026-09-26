@@ -1,0 +1,39 @@
+# Render "Blueprint": New -> Blueprint -> pick this repo.
+# Needs a paid instance: free instances sleep (so the 6 AM pull would not run)
+# and cannot have a persistent disk (so data would be lost on every deploy).
+services:
+  - type: web
+    name: purenutrix-dashboard
+    runtime: docker
+    plan: starter
+    region: singapore
+    healthCheckPath: /healthz
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_PATH
+        value: /data/purenutrix.db
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DASHBOARD_PASSWORD
+        sync: false
+      - key: SKU_FILTER_REGEX
+        value: ^PN-
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: AMAZON_LWA_CLIENT_ID
+        sync: false
+      - key: AMAZON_LWA_CLIENT_SECRET
+        sync: false
+      - key: AMAZON_REFRESH_TOKEN
+        sync: false
+      - key: FLIPKART_APP_ID
+        sync: false
+      - key: FLIPKART_APP_SECRET
+        sync: false

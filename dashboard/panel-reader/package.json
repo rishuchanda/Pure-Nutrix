@@ -1,0 +1,12 @@
+{
+  "name": "purenutrix-panel-reader",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "login": "node open-login.mjs"
+  },
+  "dependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}

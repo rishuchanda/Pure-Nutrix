@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/
+.pytest_cache/
+n8n/runtime/
+panel-reader/node_modules/
+dist/
