@@ -14,7 +14,6 @@ from typing import Iterator
 from . import config
 
 SCHEMA = """
-PRAGMA journal_mode = WAL;
 
 -- Master product list. `sku` is YOUR sku; platform-specific skus map here via sku_aliases.
 CREATE TABLE IF NOT EXISTS products (
@@ -238,6 +237,9 @@ def connect() -> sqlite3.Connection:
     config.DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(config.DATABASE_PATH), timeout=30)
     conn.row_factory = sqlite3.Row
+    # WAL needs shared-memory locking that some shared-hosting file systems don't support (the app hangs);
+    # plain rollback-journal mode works everywhere and is plenty for one business.
+    conn.execute(f"PRAGMA journal_mode = {config.SQLITE_JOURNAL_MODE}")
     conn.execute("PRAGMA foreign_keys = ON")
     conn.create_function("REGEXP", 2, _regexp)
     return conn

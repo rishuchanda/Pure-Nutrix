@@ -7,3 +7,4 @@ data/
 n8n/runtime/
 panel-reader/node_modules/
 dist/
+tools/
