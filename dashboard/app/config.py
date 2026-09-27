@@ -52,6 +52,9 @@ def env_bool(name: str, default: bool = False) -> bool:
 DATABASE_PATH = Path(env("DATABASE_PATH", str(BASE_DIR / "data" / "purenutrix.db")))
 if not DATABASE_PATH.is_absolute():  # relative paths are relative to the project, not the server's cwd
     DATABASE_PATH = BASE_DIR / DATABASE_PATH
+SQLITE_JOURNAL_MODE = env("SQLITE_JOURNAL_MODE", "DELETE").upper()
+if SQLITE_JOURNAL_MODE not in ("DELETE", "WAL", "TRUNCATE", "PERSIST"):
+    SQLITE_JOURNAL_MODE = "DELETE"
 UPLOAD_DIR = Path(env("UPLOAD_DIR", str(DATABASE_PATH.parent / "uploads")))
 DASHBOARD_PASSWORD = env("DASHBOARD_PASSWORD")
 # If no key is set, use a random one: safe, but everyone is logged out on each restart.

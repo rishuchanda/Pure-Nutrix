@@ -46,7 +46,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "=http://127.0.0.1:8765/api/agent/snapshot?day={{ $json.day }}",
+        "url": "=https://dashboard.purenutrix.in/api/agent/snapshot?day={{ $json.day }}",
         "options": {
           "timeout": 600000
         },
@@ -214,7 +214,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8765/api/agent/page",
+        "url": "https://dashboard.purenutrix.in/api/agent/page",
         "options": {
           "timeout": 600000
         },
@@ -244,7 +244,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8765/api/agent/finish",
+        "url": "https://dashboard.purenutrix.in/api/agent/finish",
         "options": {
           "timeout": 600000
         },
@@ -310,7 +310,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8765/api/agent/alerts/sent",
+        "url": "https://dashboard.purenutrix.in/api/agent/alerts/sent",
         "options": {
           "timeout": 600000
         },

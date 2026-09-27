@@ -33,7 +33,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "http://127.0.0.1:8765/api/agent/alerts",
+        "url": "https://dashboard.purenutrix.in/api/agent/alerts",
         "options": {
           "timeout": 600000
         },
@@ -95,7 +95,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8765/api/agent/alerts/sent",
+        "url": "https://dashboard.purenutrix.in/api/agent/alerts/sent",
         "options": {
           "timeout": 600000
         },
@@ -144,7 +144,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "http://127.0.0.1:8765/api/agent/report?kind=week",
+        "url": "https://dashboard.purenutrix.in/api/agent/report?kind=week",
         "options": {
           "timeout": 600000
         },
@@ -213,7 +213,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "http://127.0.0.1:8765/api/agent/report?kind=month",
+        "url": "https://dashboard.purenutrix.in/api/agent/report?kind=month",
         "options": {
           "timeout": 600000
         },
