@@ -123,6 +123,18 @@ CREATE TABLE IF NOT EXISTS ad_summaries (
     PRIMARY KEY (platform, captured_on)
 );
 
+-- Today's running totals shown on a panel's home page (orders only reach the reports the next day).
+CREATE TABLE IF NOT EXISTS live_today (
+    platform    TEXT NOT NULL,
+    day         TEXT NOT NULL,
+    units       INTEGER,
+    sales       REAL,
+    new_orders  INTEGER,
+    returns     INTEGER,
+    captured_at TEXT NOT NULL,
+    PRIMARY KEY (platform, day)
+);
+
 -- Stock you bought. Remaining value is CALCULATED from sales, never typed in by hand.
 CREATE TABLE IF NOT EXISTS purchases (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,

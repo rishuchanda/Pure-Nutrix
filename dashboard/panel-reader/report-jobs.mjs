@@ -29,6 +29,7 @@ export function dailyJobs() {
     { key: 'flipkart-orders', platform: 'flipkart', run: (p) => flipkartReport(p, { group: 'Fulfilment Reports', name: 'Orders', from: daysAgo(10), to: daysAgo(0) }) },
     { key: 'flipkart-sales', platform: 'flipkart', run: (p) => flipkartReport(p, { group: 'Tax Reports', name: 'Sales Report', from: daysAgo(13), to: daysAgo(3) }) },
     { key: 'flipkart-returns', platform: 'flipkart', run: (p) => flipkartReport(p, { group: 'Fulfilment Reports', name: 'Returns', from: daysAgo(30), to: daysAgo(0) }) },
+    { key: 'flipkart-settled', platform: 'flipkart', run: (p) => flipkartReport(p, { group: 'Payment Reports', name: 'Settled Transactions', from: daysAgo(15), to: daysAgo(1) }) },
     { key: 'meesho-orders', platform: 'meesho', run: (p) => meeshoOrders(p, { from: daysAgo(10), to: daysAgo(0) }) },
   ];
 }
@@ -69,8 +70,11 @@ export async function runJobs(browser, jobs, { force = false, only = null } = {}
   const results = [];
   for (const job of jobs) {
     if (only && !only.includes(job.platform)) continue;
+    // history jobs run once; daily jobs refresh each run but not more than every 2 hours
     const doneKey = job.key.startsWith('bf-') ? job.key : `${today()}:${job.key}`;
-    if (!force && state[doneKey]) { results.push({ job: job.key, status: 'skipped', note: 'already done' }); continue; }
+    const last = state[doneKey] ? Date.parse(state[doneKey]) : 0;
+    const fresh = job.key.startsWith('bf-') ? !!last : Date.now() - last < 2 * 3600e3;
+    if (!force && fresh) { results.push({ job: job.key, status: 'skipped', note: 'recently done' }); continue; }
     const page = await browser.newPage();
     try {
       const file = await job.run(page);
@@ -82,8 +86,53 @@ export async function runJobs(browser, jobs, { force = false, only = null } = {}
       results.push({ job: job.key, status: 'error', note: String(e.message || e).slice(0, 300) });
     } finally {
       await page.close().catch(() => {});
-      fs.writeFileSync(STATE, JSON.stringify(state, null, 1));
+      // merge with what's on disk: another run (e.g. a backfill) may have written meanwhile
+      const merged = { ...loadState(), ...Object.fromEntries(Object.entries(state).filter(([k]) => k in state)) };
+      for (const [k, v] of Object.entries(state)) if (!merged[k] || merged[k] < v) merged[k] = v;
+      fs.writeFileSync(STATE, JSON.stringify(merged, null, 1));
     }
   }
   return results;
+}
+
+
+// ---------- live "today" counters from the panels' home pages ----------
+function flipkartToday(text) {
+  const num = (re) => { const m = text.match(re); return m ? m : null; };
+  const units = num(/Today.s Units\s*([\d,]+)/);
+  const sales = num(/Today.s Sales\s*₹\s*([\d.,]+)\s*([KkLl]?)/);
+  const neworders = num(/New Orders\s*([\d,]+)/);
+  const returns = num(/Today.s Returns\s*([\d,]+)/);
+  if (!units || !sales) return null;
+  const mult = { k: 1e3, K: 1e3, l: 1e5, L: 1e5 }[sales[2]] || 1;
+  return {
+    units: +units[1].replace(/,/g, ''),
+    sales: Math.round(parseFloat(sales[1].replace(/,/g, '')) * mult),
+    new_orders: neworders ? +neworders[1].replace(/,/g, '') : null,
+    returns: returns ? +returns[1].replace(/,/g, '') : null,
+  };
+}
+
+export async function liveToday(browser) {
+  const cfg = env();
+  const url = (process.env.REPORT_TARGET_URL || cfg.DASHBOARD_URL || 'http://127.0.0.1:8765').replace(/\/$/, '');
+  const page = await browser.newPage();
+  const out = [];
+  try {
+    await page.goto('about:blank');
+    await page.goto('https://seller.flipkart.com/index.html#dashboard/home-page', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await new Promise((r) => setTimeout(r, 12000));
+    const text = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' '));
+    const v = flipkartToday(text);
+    if (!v) throw new Error('Flipkart home: today counters not found (login?)');
+    const r = await fetch(`${url}/api/agent/live`, { method: 'POST', headers: { 'content-type': 'application/json', Authorization: `Bearer ${cfg.AUDIT_TOKEN}` },
+      body: JSON.stringify({ platform: 'flipkart', ...v }) });
+    if (!r.ok) throw new Error(`dashboard ${r.status}`);
+    out.push({ platform: 'flipkart', status: 'ok', ...v });
+  } catch (e) {
+    out.push({ platform: 'flipkart', status: 'error', note: String(e.message || e) });
+  } finally {
+    await page.close().catch(() => {});
+  }
+  return out;
 }

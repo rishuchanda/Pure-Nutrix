@@ -221,7 +221,9 @@
             <div class="plat-name"><span class="dot ${p}"></span>${PNAME[p]}</div>
             <div class="big">${num(f.orders)} <span style="font-size:15px;font-weight:600;color:var(--muted)">orders</span></div>
             <div class="kv"><span>Bikri</span><b>${inr(f.net_sale)}</b></div>
-            <div class="kv"><span>Munafa</span><b class="${f.profit < 0 ? "danger" : ""}">${inr(f.profit)}</b></div>
+            <div class="kv"><span>Munafa</span><b class="${f.profit < 0 ? "danger" : ""}">${f.live ? "kal report ke baad" : inr(f.profit)}</b></div>
+            ${f.live ? `<div class="stat-sub" style="margin-top:4px">📡 Panel par aaj: ${num(f.live.units)} units · ${inr(f.live.sales)} grahak wali keemat (${when(f.live.captured_at)})${f.live.new_orders != null ? " · " + num(f.live.new_orders) + " order bhejne baaki" : ""}. Bikri = jo aapko milega.</div>` : ""}
+            ${p === "flipkart" && !f.live && f.net_sale ? `<div class="stat-sub" style="margin-top:4px">Bikri = Flipkart ka Sale Amount (jo aapko milta hai). Panel ki "Sales" me Flipkart ki shipping bhi judi hoti hai, isliye wo zyada dikhti hai.</div>` : ""}
             <div class="kv"><span>Return/RTO${shortPeriod ? " (7 din)" : ""}</span><b>${pct(shortPeriod ? sp.recent : rr.rate)} ${sp.spike ? "🔴" : ""}</b></div>
           </div>`;
         }).join("")}

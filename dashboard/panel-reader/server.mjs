@@ -15,7 +15,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import puppeteer from 'puppeteer-core';
 import readPanel from './read-panel.js';
-import { backfillJobs, dailyJobs, runJobs } from './report-jobs.mjs';
+import { backfillJobs, dailyJobs, liveToday, runJobs } from './report-jobs.mjs';
 
 const PORT = Number(process.env.READER_PORT || 3100);
 const CHROME_PORT = Number(process.env.CHROME_DEBUG_PORT || 9222);
@@ -97,6 +97,14 @@ if (process.argv[1] && process.argv[1].endsWith('server.mjs')) {
     if (READER_TOKEN && req.headers.authorization !== `Bearer ${READER_TOKEN}`) return send(res, 401, { error: 'bad token' });
     if (req.method === 'GET' && req.url === '/health') {
       return chromeUp().then((chrome) => send(res, 200, { ok: true, chrome }));
+    }
+    if (req.method === 'POST' && req.url === '/live') {
+      queue = queue.then(async () => {
+        await startChrome();
+        const browser = await puppeteer.connect({ browserURL: `http://127.0.0.1:${CHROME_PORT}`, defaultViewport: null });
+        try { return await liveToday(browser); } finally { browser.disconnect(); }
+      }).then((out) => send(res, 200, { results: out })).catch((e) => send(res, 500, { error: String(e.message || e) }));
+      return;
     }
     if (req.method === 'POST' && req.url === '/reports') {
       let raw = '';

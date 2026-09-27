@@ -450,6 +450,29 @@ def agent_apply(page_id: int, data: dict = Body(...)):
     return result
 
 
+@app.post("/api/agent/live")
+def agent_live(data: dict = Body(...)):
+    """Today's running totals read off a panel's home page (see apply_live_today)."""
+    platform = str(data.get("platform") or "")
+    if platform not in config.PLATFORMS:
+        raise HTTPException(400, "platform?")
+    day = data.get("day") or metrics.today().isoformat()
+
+    def num(k, typ=float):
+        v = data.get(k)
+        return None if v in (None, "") else typ(v)
+
+    with db.session() as conn:
+        conn.execute(
+            """INSERT INTO live_today(platform, day, units, sales, new_orders, returns, captured_at) VALUES(?,?,?,?,?,?,?)
+               ON CONFLICT(platform, day) DO UPDATE SET units=excluded.units, sales=excluded.sales,
+               new_orders=excluded.new_orders, returns=excluded.returns, captured_at=excluded.captured_at""",
+            (platform, day, num("units", int), num("sales"), num("new_orders", int), num("returns", int), db.now_iso()))
+        conn.execute("INSERT INTO sync_runs(platform, job, started_at, finished_at, status, rows, message) "
+                     "VALUES(?, 'live', ?, ?, 'ok', 0, 'panel home counters')", (platform, db.now_iso(), db.now_iso()))
+    return {"ok": True}
+
+
 @app.post("/api/agent/finish")
 def agent_finish(data: dict = Body(default={})):
     """End of the n8n run: writes the audit record, returns the alert message for n8n to send."""

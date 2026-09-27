@@ -250,6 +250,47 @@
         }
       },
       "onError": "continueErrorOutput"
+    },
+    {
+      "id": "898700c7-6c98-53ee-b979-5440a5fc5d2f",
+      "name": "Har 30 min (8 AM - 11 PM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        860
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/30 8-23 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5735ffc2-0658-5121-b874-04a518468ea8",
+      "name": "Aaj ke live number",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        860
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3100/live",
+        "options": {
+          "timeout": 3600000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}"
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -336,6 +377,17 @@
         [
           {
             "node": "Mahine ki report bhejo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Har 30 min (8 AM - 11 PM)": {
+      "main": [
+        [
+          {
+            "node": "Aaj ke live number",
             "type": "main",
             "index": 0
           }

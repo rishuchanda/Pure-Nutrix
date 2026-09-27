@@ -184,15 +184,18 @@ return [{ json: a }];"""
         schedule("Mahine ki 1 tareekh", "30 9 1 * *"),
         http("Mahine ki report", "GET", DASH + "/api/agent/report?kind=month", cred="dash"),
         telegram("Mahine ki report bhejo", "={{ $json.text }}"),
+        schedule("Har 30 min (8 AM - 11 PM)", "*/30 8-23 * * *"),
+        http("Aaj ke live number", "POST", READER + "/live", "={{ JSON.stringify({}) }}", onError="continueRegularOutput"),
     ]
-    for i, n in enumerate(nodes):  # lay out the three flows as rows
-        row = 0 if i < 5 else 1 if i < 8 else 2
-        col = i if i < 5 else i - 5 if i < 8 else i - 8
+    for i, n in enumerate(nodes):  # lay out the flows as rows
+        row = 0 if i < 5 else 1 if i < 8 else 2 if i < 11 else 3
+        col = i if i < 5 else i - 5 if i < 8 else i - 8 if i < 11 else i - 11
         n["position"] = [240 + 260 * col, 200 + 220 * row]
     conns = {}
     conns.update(chain("Har 3 ghante", "Naye alerts", "Koi alert hai?", "Alert bhejo", "Alerts bhej diye"))
     conns.update(chain("Somvaar subah 9", "Hafte ki report", "Hafte ki report bhejo"))
     conns.update(chain("Mahine ki 1 tareekh", "Mahine ki report", "Mahine ki report bhejo"))
+    conns.update(chain("Har 30 min (8 AM - 11 PM)", "Aaj ke live number"))
     return workflow("pnAlertsReports1", "PureNutrix — alerts aur reports", nodes, conns)
 
 
