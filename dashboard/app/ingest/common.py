@@ -142,7 +142,7 @@ _STATUS_RANK = {"pending": 0, "shipped": 1, "delivered": 2, "cancelled": 3, "ret
 
 
 def save_order(conn, *, platform, order_id, item_id, order_date, platform_sku, qty,
-               sale_amount, status, product_name="", source="") -> None:
+               sale_amount, status, product_name="", source="", platform_item_id=None) -> None:
     sku = resolve_sku(conn, platform, platform_sku)
     if source.startswith("file:"):
         # Official reports are the source of truth: drop rows that were only read off a panel page
@@ -173,6 +173,9 @@ def save_order(conn, *, platform, order_id, item_id, order_date, platform_sku, q
         (platform, str(order_id), str(item_id or order_id), order_date, sku, platform_sku,
          product_name, qty, round(sale_amount, 2), status, source, db.now_iso()),
     )
+    if platform_item_id:
+        conn.execute("UPDATE orders SET platform_item_id=? WHERE platform=? AND order_id=? AND item_id=?",
+                     (platform_item_id, platform, str(order_id), str(item_id or order_id)))
 
 
 def save_return(conn, *, platform, order_id, item_id, return_date, platform_sku, qty,

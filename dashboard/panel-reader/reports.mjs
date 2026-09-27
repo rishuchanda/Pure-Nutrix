@@ -61,7 +61,7 @@ const fmt = (d) => d.toISOString().slice(0, 10);
 const daysAgo = (n) => new Date(Date.now() + 5.5 * 3600e3 - n * 86400e3);  // IST calendar day
 
 // ---------- Amazon: Order reports → All Orders (FBA + seller-fulfilled) ----------
-export async function amazonAllOrders(page, { basis = 'Last Updated Date', range = 'P3D' } = {}) {
+export async function amazonAllOrders(page, { basis = 'Last Updated Date', range = 'P3D', from = null, to = null } = {}) {
   await gotoFresh(page, 'https://sellercentral.amazon.in/order-reports-and-feeds/reports/allOrders', 9000);
   await page.evaluate((basis, range) => {
     const radio = [...document.querySelectorAll('input[type=radio]')].find((r) => (r.closest('label')?.innerText || '').trim().startsWith(basis));
@@ -69,7 +69,20 @@ export async function amazonAllOrders(page, { basis = 'Last Updated Date', range
     const sel = [...document.querySelectorAll('select')].find((s) => s.name.includes('allOrders'));
     sel.value = range;
     sel.dispatchEvent(new Event('change', { bubbles: true }));
-  }, basis, range);
+  }, basis, from ? 'exact-dates' : range);
+  await sleep(1500);
+  if (from) {  // "Exact dates": two MM/DD/YYYY boxes (max 30 days apart)
+    const us = (d) => `${String(d.getUTCMonth() + 1).padStart(2, '0')}/${String(d.getUTCDate()).padStart(2, '0')}/${d.getUTCFullYear()}`;
+    const boxes = await page.$$('input[type=text]');
+    const visible = [];
+    for (const b of boxes) if (await b.boundingBox() && /\d\d\/\d\d\/\d{4}/.test(await b.evaluate((e) => e.value))) visible.push(b);
+    for (const [box, d] of [[visible[0], from], [visible[1], to]]) {
+      await box.click({ clickCount: 3 });
+      await box.type(us(d), { delay: 30 });
+      await page.keyboard.press('Tab');
+      await sleep(500);
+    }
+  }
   await sleep(1200);
   const topBefore = await page.evaluate(() => ([...document.querySelectorAll('table tr')][1]?.innerText || '').replace(/\s+/g, ' '));
   await page.click('#a-autoid-1-announce');
@@ -99,6 +112,16 @@ async function flipkartPickRange(page, from, to) {
   await sleep(1500);
   for (const d of [from, to]) {
     const title = `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+    for (let k = 0; k < 6; k++) {  // the calendar shows two months; step back/forward with ‹ ›
+      const where = await page.evaluate((title) => {
+        const heads = [...document.querySelectorAll('*')].filter((e) => e.children.length === 0 && /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/.test(e.textContent.trim()) && e.getBoundingClientRect().width > 0).map((e) => e.textContent.trim());
+        if (heads.includes(title)) return 'ok';
+        return heads.length && new Date(`1 ${heads[0]}`) > new Date(`1 ${title}`) ? 'back' : 'fwd';
+      }, title);
+      if (where === 'ok') break;
+      await clickByText(page, '*', where === 'back' ? /^‹$/ : /^›$/);
+      await sleep(700);
+    }
     const ok = await page.evaluate((title, day) => {
       const header = [...document.querySelectorAll('*')].find((e) => e.children.length === 0 && e.textContent.trim() === title);
       if (!header) return false;
@@ -201,14 +224,17 @@ export async function uploadAndDelete(file, platform, { url, token }) {
   const form = new FormData();
   form.append('file', new Blob([fs.readFileSync(file)]), path.basename(file));
   form.append('platform', platform);
-  try {
-    const r = await fetch(`${url}/api/agent/upload`, { method: 'POST', body: form, headers: { Authorization: `Bearer ${token}` } });
-    const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body.detail || `upload failed ${r.status}`);
-    return body;
-  } finally {
-    fs.rmSync(file, { force: true });
+  const r = await fetch(`${url}/api/agent/upload`, { method: 'POST', body: form, headers: { Authorization: `Bearer ${token}` } });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    // keep an unrecognised report for a closer look (data/downloads/failed), everything else is deleted
+    const failed = path.join(DOWNLOAD_DIR, 'failed');
+    fs.mkdirSync(failed, { recursive: true });
+    fs.renameSync(file, path.join(failed, path.basename(file)));
+    throw new Error(body.detail || `upload failed ${r.status}`);
   }
+  fs.rmSync(file, { force: true });
+  return body;
 }
 
 export { daysAgo, fmt };

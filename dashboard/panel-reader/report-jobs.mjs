@@ -37,6 +37,9 @@ export function dailyJobs() {
 export function backfillJobs() {
   const jobs = [];
   jobs.push({ key: 'bf-amazon-30', platform: 'amazon', run: (p) => amazonAllOrders(p, { basis: 'Order Date', range: 'P30D' }) });
+  for (const [a, b] of [[89, 60], [59, 30]]) {  // older Amazon windows (30 days per file)
+    jobs.push({ key: `bf-amazon-${a}-${b}`, platform: 'amazon', run: (p) => amazonAllOrders(p, { basis: 'Order Date', from: daysAgo(a), to: daysAgo(b) }) });
+  }
   for (const back of [2, 1]) {  // two previous full months
     const ref = new Date(Date.UTC(daysAgo(0).getUTCFullYear(), daysAgo(0).getUTCMonth() - back, 15));
     const from = monthStart(ref), to = monthEnd(ref), tag = from.toISOString().slice(0, 7);
@@ -47,7 +50,8 @@ export function backfillJobs() {
   const from = monthStart(daysAgo(0));
   jobs.push({ key: 'bf-flipkart-orders-mtd', platform: 'flipkart', run: (p) => flipkartReport(p, { group: 'Fulfilment Reports', name: 'Orders', from, to: daysAgo(0) }) });
   jobs.push({ key: 'bf-flipkart-sales-mtd', platform: 'flipkart', run: (p) => flipkartReport(p, { group: 'Tax Reports', name: 'Sales Report', from, to: daysAgo(3) }) });
-  jobs.push({ key: 'bf-flipkart-returns-90', platform: 'flipkart', run: (p) => flipkartReport(p, { group: 'Fulfilment Reports', name: 'Returns', from: daysAgo(89), to: daysAgo(0) }) });
+  // Flipkart's picker shows last + this month; returns older than that matter less.
+  jobs.push({ key: 'bf-flipkart-returns-2m', platform: 'flipkart', run: (p) => flipkartReport(p, { group: 'Fulfilment Reports', name: 'Returns', from: monthStart(new Date(Date.UTC(daysAgo(0).getUTCFullYear(), daysAgo(0).getUTCMonth() - 1, 15))), to: daysAgo(0) }) });
   jobs.push({ key: 'bf-meesho-orders-mtd', platform: 'meesho', run: (p) => meeshoOrders(p, { from, to: daysAgo(0) }) });
   return jobs;
 }

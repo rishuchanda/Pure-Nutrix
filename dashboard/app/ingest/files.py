@@ -182,16 +182,20 @@ def _orders_handler(platform: str):
             amount = abs(r.money("amount"))
             if event and event != "sale":
                 amount = 0  # keep the original sale value
+            pitem = None
             if platform == "flipkart":
                 # Flipkart's 18-digit item ids lose their last digits when Excel stores them as numbers,
                 # so the same line gets different ids in the Orders and Sales reports. Order + SKU is stable.
                 item_id = f"{order_id}:{psku}"
+                raw_item = r.get("item_id")
+                if isinstance(raw_item, str) and raw_item.upper().startswith("OI:"):  # exact text id (Orders report)
+                    pitem = raw_item.upper()
             else:
                 item_id = str(r.get("item_id") or f"{order_id}:{psku}")
             save_order(conn, platform=platform, order_id=str(order_id), item_id=item_id,
                        order_date=day, platform_sku=psku, qty=qty, sale_amount=amount,
                        status=normalize_status(status_raw), product_name=str(r.get("name") or ""),
-                       source=source)
+                       source=source, platform_item_id=pitem)
             seen.append((psku, r.get("name")))
             res.rows += 1
         ensure_products(conn, seen)
@@ -204,9 +208,28 @@ def _orders_handler(platform: str):
 
 def _returns_handler(platform: str):
     def handle(conn, rows: Rows, res: ImportResult, source: str):
+        unmatched = 0
         for r in rows:
             order_id = r.get("order_id")
-            day = parse_date(r.get("date"))
+            item_hint = ""
+            if str(r.get("status") or "").lower() == "cancelled":
+                continue  # the return itself was withdrawn
+            if not order_id and r.get("item_id"):
+                pid = str(r.get("item_id")).upper()
+                hit = conn.execute("SELECT order_id, item_id FROM orders WHERE platform=? AND platform_item_id=?",
+                                   (platform, pid)).fetchone()
+                if not hit and pid.startswith("OI:"):
+                    # single-item orders share the digits: OI:338…100 -> OD338…100
+                    hit = conn.execute("SELECT order_id, item_id FROM orders WHERE platform=? AND order_id=? "
+                                       "AND (sku=? OR ?='')", (platform, "OD" + pid[3:], clean_sku(r.get("sku")),
+                                                               clean_sku(r.get("sku")))).fetchone()
+                if hit:
+                    order_id, item_hint = hit["order_id"], hit["item_id"]
+                else:
+                    unmatched += 1
+                    continue
+            day = (parse_date(r.get("date")) or parse_date(r.get("date2")) or parse_date(r.get("date3"))
+                   or parse_date(r.get("date4")))
             if not order_id or not day:
                 res.skipped += 1
                 continue
@@ -215,11 +238,13 @@ def _returns_handler(platform: str):
             disposition = str(r.get("disposition") or "").lower()
             restock = not any(k in disposition for k in ("damaged", "defective", "unsellable", "disposed"))
             save_return(conn, platform=platform, order_id=str(order_id),
-                        item_id=str(r.get("item_id") or ""), return_date=day,
+                        item_id=item_hint or str(r.get("item_id") or ""), return_date=day,
                         platform_sku=clean_sku(r.get("sku")), qty=abs(parse_int(r.get("qty"), 1)),
                         return_type="rto" if is_rto else "customer",
                         reason=str(r.get("reason") or "")[:200], restock=restock, source=source)
             res.rows += 1
+        if unmatched:
+            res.notes.append(f"{unmatched} returns skipped: their order is not in the dashboard yet (older than the orders loaded)")
     return handle
 
 
@@ -433,12 +458,16 @@ REPORTS: List[Report] = [
         "order_id": ["order_id", "Order ID", "Order Id"],
         "item_id": ["order_item_id", "Order Item ID", "Order Item Id"],
         "date": ["return_requested_date", "Return Requested Date", "Return Created Date", "return_date", "Return Date"],
+        "date2": ["return_approval_date"],
+        "date3": ["return_completion_date"],
+        "date4": ["return_cancellation_date"],
+        "status": ["return_status"],
         "sku": ["sku", "SKU"],
         "qty": ["quantity", "Quantity"],
         "reason": ["return_reason", "Return Reason"],
         "return_type": ["return_type", "Return Type"],
         "disposition": ["return_status", "Return Status", "Return Completion Type"],
-    }, ["order_id", "date", "return_type"], _returns_handler("flipkart"), bonus=("return_type",)),
+    }, ["item_id", "return_type"], _returns_handler("flipkart"), bonus=("return_type", "date2")),
 
     Report("flipkart_settlement", "flipkart", "Flipkart settled payments", {
         "neft_id": ["NEFT ID", "Settlement Ref No", "Payment ID"],

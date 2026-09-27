@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS orders (
     source       TEXT,
     updated_at   TEXT,
     price_estimated INTEGER NOT NULL DEFAULT 0,  -- 1 = sale_amount is a stand-in until the sales report has it
+    platform_item_id TEXT,                       -- marketplace's own line id (Flipkart returns only carry this)
     PRIMARY KEY (platform, order_id, item_id)
 );
 CREATE INDEX IF NOT EXISTS ix_orders_date ON orders(order_date);
@@ -266,8 +267,12 @@ def init_db() -> None:
         cols = {r["name"] for r in conn.execute("PRAGMA table_info(agent_pages)")}
         if "text" not in cols:
             conn.execute("ALTER TABLE agent_pages ADD COLUMN text TEXT")
-        if "price_estimated" not in {r["name"] for r in conn.execute("PRAGMA table_info(orders)")}:
+        ocols = {r["name"] for r in conn.execute("PRAGMA table_info(orders)")}
+        if "price_estimated" not in ocols:
             conn.execute("ALTER TABLE orders ADD COLUMN price_estimated INTEGER NOT NULL DEFAULT 0")
+        if "platform_item_id" not in ocols:
+            conn.execute("ALTER TABLE orders ADD COLUMN platform_item_id TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS ix_orders_pitem ON orders(platform, platform_item_id)")
 
 
 def now_iso() -> str:
