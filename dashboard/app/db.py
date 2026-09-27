@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS orders (
     status       TEXT NOT NULL DEFAULT 'pending',
     source       TEXT,
     updated_at   TEXT,
+    price_estimated INTEGER NOT NULL DEFAULT 0,  -- 1 = sale_amount is a stand-in until the sales report has it
     PRIMARY KEY (platform, order_id, item_id)
 );
 CREATE INDEX IF NOT EXISTS ix_orders_date ON orders(order_date);
@@ -265,6 +266,8 @@ def init_db() -> None:
         cols = {r["name"] for r in conn.execute("PRAGMA table_info(agent_pages)")}
         if "text" not in cols:
             conn.execute("ALTER TABLE agent_pages ADD COLUMN text TEXT")
+        if "price_estimated" not in {r["name"] for r in conn.execute("PRAGMA table_info(orders)")}:
+            conn.execute("ALTER TABLE orders ADD COLUMN price_estimated INTEGER NOT NULL DEFAULT 0")
 
 
 def now_iso() -> str:

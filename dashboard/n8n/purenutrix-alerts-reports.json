@@ -35,7 +35,7 @@
         "method": "GET",
         "url": "https://dashboard.purenutrix.in/api/agent/alerts",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth"
@@ -97,7 +97,7 @@
         "method": "POST",
         "url": "https://dashboard.purenutrix.in/api/agent/alerts/sent",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
@@ -146,7 +146,7 @@
         "method": "GET",
         "url": "https://dashboard.purenutrix.in/api/agent/report?kind=week",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth"
@@ -215,7 +215,7 @@
         "method": "GET",
         "url": "https://dashboard.purenutrix.in/api/agent/report?kind=month",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth"

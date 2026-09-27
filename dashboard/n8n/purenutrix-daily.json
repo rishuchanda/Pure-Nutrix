@@ -3,8 +3,8 @@
   "name": "PureNutrix — roz subah panel se data",
   "nodes": [
     {
-      "id": "4d10b4df-3f90-525e-9f13-3fc103154d7a",
-      "name": "Roz subah 6:30",
+      "id": "89dd461e-5768-5b16-88c8-4806d0b56a33",
+      "name": "Roz 6:30 (+10:30, 14:30, 19:30 dobara koshish)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
@@ -16,11 +16,34 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "30 6 * * *"
+              "expression": "30 6,10,14,19 * * *"
             }
           ]
         }
       }
+    },
+    {
+      "id": "bc35772f-71af-5d87-a7e7-94c78d618043",
+      "name": "Reports download karo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3100/reports",
+        "options": {
+          "timeout": 3600000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mode: \"daily\" }) }}"
+      },
+      "executeOnce": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
     },
     {
       "id": "a09d1f03-5665-596e-966e-781f4d2d5f7d",
@@ -28,11 +51,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        480,
+        720,
         300
       ],
       "parameters": {
-        "jsCode": "// Kal ka din (IST) aur har platform ke pages. URL badle to yahan theek karo.\nconst d = new Date(Date.now() + 5.5 * 3600 * 1000 - 24 * 3600 * 1000);\nconst day = d.toISOString().slice(0, 10);\nconst PAGES = {\n  \"amazon\": [\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/pending/easyship?page=1\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/unshipped/easyship?page=1\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/shipped/easyship/handover-ready?page=1\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/shipped/easyship/handover-done?page=1\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/shipped/easyship/handover-done?page=2\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://sellercentral.amazon.in/orders-v3/mfn/canceled/easyship?page=1\"\n    },\n    {\n      \"page_kind\": \"returns\",\n      \"url\": \"https://sellercentral.amazon.in/gp/returns/list/v2\"\n    },\n    {\n      \"page_kind\": \"payments\",\n      \"url\": \"https://sellercentral.amazon.in/payments/dashboard/index.html\"\n    }\n  ],\n  \"flipkart\": [\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://seller.flipkart.com/index.html#dashboard/active-orders?query=%7B%22activeShipmentTile%22%3A%22inTransit%22%7D\"\n    },\n    {\n      \"page_kind\": \"returns\",\n      \"url\": \"https://seller.flipkart.com/index.html#dashboard/returns\"\n    },\n    {\n      \"page_kind\": \"ads\",\n      \"url\": \"https://seller.flipkart.com/index.html#dashboard/ads/campaigns\"\n    }\n  ],\n  \"meesho\": [\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/pending\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/ready-to-ship\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/shipped\"\n    },\n    {\n      \"page_kind\": \"orders\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/cancelled\"\n    },\n    {\n      \"page_kind\": \"returns\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/returns/overview\"\n    },\n    {\n      \"page_kind\": \"returns\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/returns/returnTracking-intransit\"\n    },\n    {\n      \"page_kind\": \"payments\",\n      \"url\": \"https://supplier.meesho.com/panel/v3/new/payouts/jpsyo/payments\"\n    }\n  ]\n};\nconst out = { day };\nfor (const [platform, pages] of Object.entries(PAGES)) {\n  out[platform] = { platform, day, wait_ms: 3000, pages };\n}\nreturn [{ json: out }];"
+        "jsCode": "// Kal ka din (IST) aur har platform ke pages. URL badle to yahan theek karo.\nconst d = new Date(Date.now() + 5.5 * 3600 * 1000 - 24 * 3600 * 1000);\nconst day = d.toISOString().slice(0, 10);\nconst PAGES = {\n  \"amazon\": [],\n  \"flipkart\": [\n    {\n      \"page_kind\": \"ads\",\n      \"url\": \"https://seller.flipkart.com/index.html#dashboard/ads/campaigns\"\n    }\n  ],\n  \"meesho\": []\n};\nconst out = { day };\nfor (const [platform, pages] of Object.entries(PAGES)) {\n  out[platform] = { platform, day, wait_ms: 3000, pages };\n}\nreturn [{ json: out }];"
       }
     },
     {
@@ -41,14 +64,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        720,
+        960,
         300
       ],
       "parameters": {
         "method": "GET",
         "url": "=https://dashboard.purenutrix.in/api/agent/snapshot?day={{ $json.day }}",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth"
@@ -67,7 +90,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        960,
+        1200,
         300
       ],
       "parameters": {
@@ -80,14 +103,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1200,
+        1440,
         300
       ],
       "parameters": {
         "method": "POST",
         "url": "http://127.0.0.1:3100/read",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpCustomAuth",
@@ -111,14 +134,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1440,
+        1680,
         300
       ],
       "parameters": {
         "method": "POST",
         "url": "http://127.0.0.1:3100/read",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpCustomAuth",
@@ -142,14 +165,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1680,
+        1920,
         300
       ],
       "parameters": {
         "method": "POST",
         "url": "http://127.0.0.1:3100/read",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpCustomAuth",
@@ -173,14 +196,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1920,
+        2160,
         300
       ],
       "parameters": {
         "method": "POST",
         "url": "http://127.0.0.1:3100/read",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "sendBody": true,
         "specifyBody": "json",
@@ -196,7 +219,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2160,
+        2400,
         300
       ],
       "parameters": {
@@ -209,14 +232,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2400,
+        2640,
         300
       ],
       "parameters": {
         "method": "POST",
         "url": "https://dashboard.purenutrix.in/api/agent/page",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
@@ -239,14 +262,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2640,
+        2880,
         300
       ],
       "parameters": {
         "method": "POST",
         "url": "https://dashboard.purenutrix.in/api/agent/finish",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
@@ -268,11 +291,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2880,
+        3120,
         300
       ],
       "parameters": {
-        "jsCode": "const r = $input.first().json;\nconst lines = ['🤖 PureNutrix — roz ki jaanch', r.summary || ''];\nif (r.alerts && r.alerts.count) lines.push('', r.alerts.text);\nreturn [{ json: { text: lines.join('\\n').slice(0, 4000), ids: (r.alerts && r.alerts.ids) || [] } }];"
+        "jsCode": "const r = $input.first().json;\nconst rep = $('Reports download karo').first().json || {};\nconst lines = ['🤖 PureNutrix — roz ki jaanch'];\nfor (const x of rep.results || []) {\n  if (x.status === 'ok') lines.push(`✓ ${x.job}: ${x.rows} rows`);\n  else if (x.status === 'error') lines.push(`⚠ ${x.job}: ${x.note}`);\n}\nif (rep.error) lines.push('⚠ Reports: ' + rep.error);\nlines.push(r.summary || '');\nif (r.alerts && r.alerts.count) lines.push('', r.alerts.text);\nreturn [{ json: { text: lines.join('\\n').slice(0, 4000), ids: (r.alerts && r.alerts.ids) || [] } }];"
       }
     },
     {
@@ -281,7 +304,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3120,
+        3360,
         300
       ],
       "parameters": {
@@ -305,14 +328,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3360,
+        3600,
         300
       ],
       "parameters": {
         "method": "POST",
         "url": "https://dashboard.purenutrix.in/api/agent/alerts/sent",
         "options": {
-          "timeout": 600000
+          "timeout": 3600000
         },
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
@@ -341,7 +364,18 @@
     }
   ],
   "connections": {
-    "Roz subah 6:30": {
+    "Roz 6:30 (+10:30, 14:30, 19:30 dobara koshish)": {
+      "main": [
+        [
+          {
+            "node": "Reports download karo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reports download karo": {
       "main": [
         [
           {
@@ -489,7 +523,7 @@
       "main": [
         [
           {
-            "node": "Pages ki list",
+            "node": "Reports download karo",
             "type": "main",
             "index": 0
           }

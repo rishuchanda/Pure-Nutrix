@@ -5,6 +5,7 @@
 // window with a real login, the seller panels treat it like the owner's browser.
 //
 //   POST /read   {config:{platform, day, pages:[...]}, credentials?}  -> {platform, pages:[{..., text|error}]}
+//   POST /reports {mode: 'daily'|'backfill', force?, only?: ['amazon',..]} -> downloads official reports, uploads them
 //   GET  /health                                                      -> {ok, chrome}
 //
 // Listens on 127.0.0.1 only. Start with:  node panel-reader/server.mjs
@@ -14,6 +15,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import puppeteer from 'puppeteer-core';
 import readPanel from './read-panel.js';
+import { backfillJobs, dailyJobs, runJobs } from './report-jobs.mjs';
 
 const PORT = Number(process.env.READER_PORT || 3100);
 const CHROME_PORT = Number(process.env.CHROME_DEBUG_PORT || 9222);
@@ -72,6 +74,18 @@ async function read(body) {
   }
 }
 
+async function reports(body) {
+  await startChrome();
+  const browser = await puppeteer.connect({ browserURL: `http://127.0.0.1:${CHROME_PORT}`, defaultViewport: null });
+  try {
+    const jobs = body.mode === 'backfill' ? backfillJobs() : dailyJobs();
+    const results = await runJobs(browser, jobs, { force: !!body.force, only: body.only || null });
+    return { mode: body.mode || 'daily', results, ok: results.every((r) => r.status !== 'error') };
+  } finally {
+    browser.disconnect();
+  }
+}
+
 function send(res, code, obj) {
   const b = JSON.stringify(obj);
   res.writeHead(code, { 'content-type': 'application/json', 'content-length': Buffer.byteLength(b) });
@@ -83,6 +97,18 @@ if (process.argv[1] && process.argv[1].endsWith('server.mjs')) {
     if (READER_TOKEN && req.headers.authorization !== `Bearer ${READER_TOKEN}`) return send(res, 401, { error: 'bad token' });
     if (req.method === 'GET' && req.url === '/health') {
       return chromeUp().then((chrome) => send(res, 200, { ok: true, chrome }));
+    }
+    if (req.method === 'POST' && req.url === '/reports') {
+      let raw = '';
+      req.on('data', (c) => { raw += c; });
+      req.on('end', () => {
+        let body;
+        try { body = JSON.parse(raw || '{}'); } catch { return send(res, 400, { error: 'invalid JSON' }); }
+        queue = queue.then(() => reports(body))
+          .then((out) => send(res, 200, out))
+          .catch((e) => send(res, 500, { error: String(e.message || e) }));
+      });
+      return;
     }
     if (req.method === 'POST' && req.url === '/read') {
       let raw = '';

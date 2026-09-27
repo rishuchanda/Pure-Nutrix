@@ -356,10 +356,14 @@ async def upload(file: UploadFile = File(...), platform: str = Form(""), report:
                                         report_key=report if report in files.REPORTS_BY_KEY else None)
         except Exception as e:
             log.exception("upload failed")
+            dest.unlink(missing_ok=True)
             raise HTTPException(400, f"File padh nahi paaye: {e}")
         if not results:
+            dest.unlink(missing_ok=True)
             raise HTTPException(400, "Ye kaunsi report hai, samajh nahi aaya. Platform chun kar dobara try karo, "
                                      "ya original download ki hui file upload karo.")
+        # Report files carry buyer names/addresses: keep only what was imported, never the raw file.
+        dest.unlink(missing_ok=True)
         for res in results:
             if res.platform in config.PLATFORMS:
                 conn.execute("INSERT INTO sync_runs(platform, job, started_at, finished_at, status, rows, message) "

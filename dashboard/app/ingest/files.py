@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
 from .common import (
-    ImportResult, clean_sku, ensure_products, normalize_status, parse_date, parse_int,
+    ImportResult, clean_sku, ensure_products, fill_missing_prices, normalize_status, parse_date, parse_int,
     parse_money, save_ad_day, save_finance, save_order, save_payout, save_return,
 )
 
@@ -38,6 +38,8 @@ def read_sheets(path: Path) -> List[Tuple[str, List[List]]]:
         wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
         out = []
         for ws in wb.worksheets:
+            # Some exports (Flipkart) store a wrong sheet size ("A1"); read-only mode would then see 1 row.
+            ws.reset_dimensions()
             rows = [list(r) for r in ws.iter_rows(values_only=True)]
             out.append((ws.title, rows))
         wb.close()
@@ -142,7 +144,7 @@ class _Row:
             return default
         v = self.raw[idx]
         if isinstance(v, str):
-            v = v.strip()
+            v = v.strip().strip('"').strip()  # Flipkart quotes ids as '"""OD123"""' 
         return default if v in (None, "") else v
 
     def has(self, key):
@@ -170,14 +172,22 @@ def _orders_handler(platform: str):
             if r.has("item_status") and "cancel" in str(r.get("item_status", "")).lower():
                 status_raw = "cancelled"
             event = str(r.get("event_type") or "").lower()
+            sub = str(r.get("event_sub_type") or "").lower()
             if event:
                 status_raw = {"sale": status_raw or "shipped", "return": "returned",
                               "cancellation": "cancelled"}.get(event, status_raw)
+                if "cancel" in sub and "return" not in sub:
+                    status_raw = "cancelled"
             qty = abs(parse_int(r.get("qty"), 1))
             amount = abs(r.money("amount"))
             if event and event != "sale":
                 amount = 0  # keep the original sale value
-            item_id = str(r.get("item_id") or f"{order_id}:{psku}")
+            if platform == "flipkart":
+                # Flipkart's 18-digit item ids lose their last digits when Excel stores them as numbers,
+                # so the same line gets different ids in the Orders and Sales reports. Order + SKU is stable.
+                item_id = f"{order_id}:{psku}"
+            else:
+                item_id = str(r.get("item_id") or f"{order_id}:{psku}")
             save_order(conn, platform=platform, order_id=str(order_id), item_id=item_id,
                        order_date=day, platform_sku=psku, qty=qty, sale_amount=amount,
                        status=normalize_status(status_raw), product_name=str(r.get("name") or ""),
@@ -185,6 +195,10 @@ def _orders_handler(platform: str):
             seen.append((psku, r.get("name")))
             res.rows += 1
         ensure_products(conn, seen)
+        if platform == "flipkart":
+            est = fill_missing_prices(conn, platform)
+            if est:
+                res.notes.append(f"{est} lines priced from recent average (until the Sales report has them)")
     return handle
 
 
@@ -359,6 +373,7 @@ def _purchases(conn, rows: Rows, res: ImportResult, source: str):
 REPORTS: List[Report] = [
     Report("amazon_orders", "amazon", "Amazon orders", {
         "order_id": ["amazon-order-id", "order-id", "Order ID"],
+        "item_id": ["order-item-id"],
         "date": ["purchase-date", "Order Date", "purchase date"],
         "sku": ["sku", "seller-sku", "Merchant SKU"],
         "qty": ["quantity", "quantity-purchased", "quantity-shipped"],
@@ -410,6 +425,7 @@ REPORTS: List[Report] = [
         "amount": ["Final Invoice Amount", "Invoice Amount", "Selling Price", "Price after discount"],
         "status": ["order_item_status", "Order State", "Order Status", "Status"],
         "event_type": ["Event Type"],
+        "event_sub_type": ["Event Sub Type"],
         "name": ["product_title", "Product Title", "Product Title/Description"],
     }, ["order_id", "date", "sku"], _orders_handler("flipkart"), bonus=("item_id",)),
 

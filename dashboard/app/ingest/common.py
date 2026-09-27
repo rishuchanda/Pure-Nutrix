@@ -91,7 +91,8 @@ def normalize_status(raw) -> str:
     s = str(raw or "").strip().lower().replace("-", "_").replace(" ", "_")
     if not s:
         return "pending"
-    if "rto" in s or "courier_return" in s or "return_to_origin" in s or "undeliver" in s:
+    if ("rto" in s or "courier_return" in s or "return_to_origin" in s or "undeliver" in s
+            or "returning_to_seller" in s or "rejected_by_buyer" in s or "return_to_seller" in s):
         return "rto"
     if "cancel" in s:
         return "cancelled"
@@ -105,7 +106,8 @@ def normalize_status(raw) -> str:
 
 
 def clean_sku(value) -> str:
-    return re.sub(r"\s+", " ", str(value or "")).strip()
+    s = re.sub(r"\s+", " ", str(value or "")).strip().strip('"').strip()
+    return re.sub(r"^SKU:\s*", "", s, flags=re.I)  # Flipkart writes '"""SKU:PN-..."""' 
 
 
 def resolve_sku(conn: sqlite3.Connection, platform: str, platform_sku: str) -> str:
@@ -142,6 +144,11 @@ _STATUS_RANK = {"pending": 0, "shipped": 1, "delivered": 2, "cancelled": 3, "ret
 def save_order(conn, *, platform, order_id, item_id, order_date, platform_sku, qty,
                sale_amount, status, product_name="", source="") -> None:
     sku = resolve_sku(conn, platform, platform_sku)
+    if source.startswith("file:"):
+        # Official reports are the source of truth: drop rows that were only read off a panel page
+        # for this order (they used a different line id and sometimes a dispatch date).
+        conn.execute("DELETE FROM orders WHERE platform=? AND order_id=? AND item_id != ? "
+                     "AND source IN ('n8n', 'claude-audit')", (platform, str(order_id), str(item_id or order_id)))
     existing = conn.execute(
         "SELECT status, sale_amount FROM orders WHERE platform=? AND order_id=? AND item_id=?",
         (platform, order_id, item_id),
@@ -160,7 +167,9 @@ def save_order(conn, *, platform, order_id, item_id, order_date, platform_sku, q
               order_date=excluded.order_date, sku=excluded.sku, platform_sku=excluded.platform_sku,
               product_name=COALESCE(NULLIF(excluded.product_name,''), orders.product_name),
               qty=excluded.qty, sale_amount=excluded.sale_amount, status=excluded.status,
-              source=excluded.source, updated_at=excluded.updated_at""",
+              source=excluded.source, updated_at=excluded.updated_at,
+              price_estimated=CASE WHEN excluded.sale_amount > 0 AND excluded.sale_amount != orders.sale_amount
+                                   THEN 0 ELSE orders.price_estimated END""",
         (platform, str(order_id), str(item_id or order_id), order_date, sku, platform_sku,
          product_name, qty, round(sale_amount, 2), status, source, db.now_iso()),
     )
@@ -240,3 +249,21 @@ def ensure_products(conn, rows: Iterable[tuple]) -> None:
                ON CONFLICT(sku) DO UPDATE SET name=COALESCE(products.name, excluded.name)""",
             (sku, name or None),
         )
+
+
+def fill_missing_prices(conn, platform: str) -> int:
+    """Give order lines without a price (Flipkart's Orders report has none; its Sales report lags 3 days)
+    the SKU's average recent price, flagged as an estimate until the real price arrives."""
+    rows = conn.execute(
+        "SELECT order_id, item_id, sku, qty, order_date FROM orders WHERE platform=? AND sale_amount=0 "
+        "AND status NOT IN ('cancelled')", (platform,)).fetchall()
+    n = 0
+    for r in rows:
+        avg = conn.execute(
+            "SELECT SUM(sale_amount)/SUM(qty) FROM orders WHERE platform=? AND sku=? AND sale_amount>0 "
+            "AND price_estimated=0 AND order_date >= date(?, '-60 days')", (platform, r["sku"], r["order_date"])).fetchone()[0]
+        if avg:
+            conn.execute("UPDATE orders SET sale_amount=?, price_estimated=1 WHERE platform=? AND order_id=? AND item_id=?",
+                         (round(avg * r["qty"], 2), platform, r["order_id"], r["item_id"]))
+            n += 1
+    return n
