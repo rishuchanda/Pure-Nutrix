@@ -317,3 +317,53 @@ def test_ads_summary_saved(conn):
     fin = metrics.finance(conn, y, y)
     s = metrics.ads_stats(conn, y, y, fin)["panel_summaries"]["flipkart"]
     assert s["spend"] == 14030 and s["roi"] == 4.22
+
+
+def _zip(files: dict) -> bytes:
+    import io, zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        for name, text in files.items():
+            z.writestr(name, text)
+    return buf.getvalue()
+
+
+def test_selfupdate_guard_rails(tmp_path, monkeypatch):
+    from app import selfupdate, config
+    root = tmp_path / "site"
+    (root / "app").mkdir(parents=True)
+    (root / "app" / "x.py").write_text("OLD = 1\n")
+    (root / ".env").write_text("SECRET=1\n")
+    monkeypatch.setattr(selfupdate, "ROOT", root)
+    monkeypatch.setattr(config, "DATABASE_PATH", root / "data" / "db.sqlite")
+    for bad in ({".env": "X=1"}, {"app/../.env": "X=1"}, {"data/purenutrix.db": "x"}, {"/etc/passwd": "x"}):
+        with pytest.raises(selfupdate.UpdateError):
+            selfupdate.apply_update(_zip({"app/x.py": "A=1\n", **bad}))
+    with pytest.raises(selfupdate.UpdateError, match="compile"):
+        selfupdate.apply_update(_zip({"app/x.py": "def broken(:\n"}))
+    assert (root / "app" / "x.py").read_text() == "OLD = 1\n"          # untouched after refusals
+    out = selfupdate.apply_update(_zip({"app/x.py": "NEW = 2\n", "VERSION": "v2"}))
+    assert (root / "app" / "x.py").read_text() == "NEW = 2\n" and out["version"] == "v2"
+    assert (root / ".env").read_text() == "SECRET=1\n"                  # never touched
+    assert (root / "tmp" / "restart.txt").exists() and list((root / "data" / "backups").glob("code-*.zip"))
+
+
+def test_deploy_endpoint_needs_deploy_token(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "api.db"))
+    monkeypatch.setenv("AUDIT_TOKEN", "n8n-token-n8n-token-n8n-token-12345")
+    monkeypatch.setenv("DEPLOY_TOKEN", "d" * 40)
+    monkeypatch.setenv("DASHBOARD_PASSWORD", "pw")
+    from app import config
+    importlib.reload(config)
+    for mod in ("app.db", "app.inventory", "app.metrics", "app.ingest.common", "app.ingest.files",
+                "app.alerts", "app.audit", "app.extract", "app.selfupdate", "app.main"):
+        importlib.reload(importlib.import_module(mod))
+    from fastapi.testclient import TestClient
+    from app import main
+    with TestClient(main.app) as c:
+        assert c.post("/api/agent/deploy", content=b"x").status_code == 403
+        assert c.post("/api/agent/deploy", content=b"x", headers={"Authorization": "Bearer n8n-token-n8n-token-n8n-token-12345"}).status_code == 403
+        c.post("/login", data={"password": "pw"})
+        assert c.post("/api/agent/deploy", content=b"x").status_code == 403       # a logged-in browser can't either
+        r = c.post("/api/agent/deploy", content=b"not a zip", headers={"Authorization": "Bearer " + "d" * 40})
+        assert r.status_code == 400 and "zip" in r.json()["detail"]

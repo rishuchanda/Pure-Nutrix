@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from . import alerts, audit, config, db, demo, extract, metrics
+from . import alerts, audit, config, db, demo, extract, metrics, selfupdate
 from .ingest import files
 from .ingest.common import parse_date
 from .inventory import compute as compute_inventory
@@ -56,6 +56,11 @@ OPEN_PATHS = ("/login", "/static/", "/healthz", "/manifest.webmanifest")
 @app.middleware("http")
 async def require_login(request: Request, call_next):
     path = request.url.path
+    if path == "/api/agent/deploy":
+        # code updates: only the deploy token, never the n8n token or a browser session
+        ok = len(config.DEPLOY_TOKEN) >= 32 and hmac.compare_digest(
+            request.headers.get("authorization", "").encode(), f"Bearer {config.DEPLOY_TOKEN}".encode())
+        return await call_next(request) if ok else JSONResponse({"detail": "forbidden"}, status_code=403)
     token_ok = bool(config.AUDIT_TOKEN) and path.startswith("/api/agent/") and hmac.compare_digest(
         request.headers.get("authorization", "").encode(), f"Bearer {config.AUDIT_TOKEN}".encode())
     if any(path == p or path.startswith(p) for p in OPEN_PATHS) or token_ok or request.session.get("ok"):
@@ -107,7 +112,16 @@ def logout(request: Request):
 
 @app.get("/healthz")
 def health():
-    return {"ok": True}
+    return {"ok": True, "version": selfupdate.current_version()}
+
+
+@app.post("/api/agent/deploy")
+async def deploy(request: Request):
+    """Code-only update from scripts/deploy.sh (see app/selfupdate.py for the guard rails)."""
+    try:
+        return selfupdate.apply_update(await request.body())
+    except selfupdate.UpdateError as e:
+        raise HTTPException(400, str(e))
 
 
 @app.get("/")

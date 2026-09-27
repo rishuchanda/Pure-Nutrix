@@ -85,6 +85,8 @@ DEFAULT_GST_RATE = env_float("DEFAULT_GST_RATE", 18.0)
 
 # Shared secret between n8n and the dashboard (long random string).
 AUDIT_TOKEN = env("AUDIT_TOKEN")
+# Separate secret that allows code updates from the Mac (scripts/deploy.sh). Never given to n8n.
+DEPLOY_TOKEN = env("DEPLOY_TOKEN")
 # On the Mac only: when set, `app.cli agent ...` talks to the ONLINE dashboard instead of the local database.
 DASHBOARD_URL = env("DASHBOARD_URL").rstrip("/")
 
