@@ -149,7 +149,7 @@ const SEOTab = ({ showNotification = (msg) => alert(msg) }) => {
         <p style={{ margin: '0 0 12px 0', fontSize: '0.95rem', lineHeight: '1.6', color: '#1e40af' }}>
           <strong>Google rankings and search visibility are controlled entirely by Google's external web servers.</strong> Just writing code or building an app does NOT automatically make it appear on Google. To appear #1 on Google in real life, you must follow these <strong>3 mandatory real-world steps</strong>:
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: '14px' }}>
           <div style={{ background: '#ffffff', padding: '14px', borderRadius: '8px', border: '1px solid #dbeafe' }}>
             <strong style={{ color: '#1d4ed8' }}>1. Verify Domain in Google Search Console</strong><br/>
             <span style={{ fontSize: '0.85rem', color: '#475569' }}>Enter your Google HTML Tag verification code below and save it. Then verify ownership on Google's portal.</span>
@@ -188,7 +188,7 @@ const SEOTab = ({ showNotification = (msg) => alert(msg) }) => {
           <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px', color: '#0f172a', fontSize: '1.2rem' }}>
             <Activity style={{ color: '#10b981' }} size={22} /> Real DOM Technical Inspection (Live Browser Audit)
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: '14px' }}>
             <div style={{ padding: '14px', background: realAuditResults.titlePresent ? '#f0fdf4' : '#fef2f2', border: `1px solid ${realAuditResults.titlePresent ? '#bbf7d0' : '#fecaca'}`, borderRadius: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: realAuditResults.titlePresent ? '#166534' : '#991b1b', marginBottom: '4px' }}>
                 <CheckCircle2 size={18} /> Live Page Title Tag
@@ -235,7 +235,7 @@ const SEOTab = ({ showNotification = (msg) => alert(msg) }) => {
         </h3>
 
         <form onSubmit={handleSaveConfig}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '20px', marginBottom: '20px' }}>
             <div>
               <label style={{ display: 'block', fontWeight: 700, fontSize: '0.9rem', color: '#334155', marginBottom: '6px' }}>
                 🌐 Live Website URL (Domain Root) *

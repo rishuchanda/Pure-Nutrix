@@ -714,3 +714,222 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   background-color: var(--admin-hover-bg);
 }
+
+/* ==========================================================================
+   Phone & tablet layout
+   ========================================================================== */
+
+/* Brand text in the top bar is only needed once the sidebar is hidden. */
+.admin-header-brand { display: none; }
+
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    height: 100vh;
+    height: 100dvh;
+    width: 280px;
+    max-width: 85vw;
+  }
+  .admin-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 99; /* just under the sidebar (100) */
+  }
+  .admin-nav-item { padding: 12px 16px; } /* bigger tap targets */
+}
+
+@media (max-width: 768px) {
+  /* ── Top bar ── */
+  .admin-top-header {
+    height: 58px;
+    padding: 0 12px;
+  }
+  .admin-top-header .admin-search-container { display: none; }
+  .admin-header-brand {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.3px;
+    color: var(--admin-text);
+    white-space: nowrap;
+  }
+  .admin-header-brand .gold-text { color: var(--admin-accent); }
+  .admin-header-actions { gap: 6px; }
+  .header-icon-btn { width: 40px; height: 40px; }
+
+  .admin-content { padding: 16px 12px 32px; }
+  .admin-page-header { margin-bottom: 18px; }
+  .admin-page-header h1 { font-size: 1.35rem; }
+  .admin-page-header p { font-size: 0.85rem; }
+  .admin-page-header > div:last-child:not(:first-child) { width: 100%; }
+  .admin-page-header > div:last-child:not(:first-child) .admin-btn { flex: 1; }
+
+  /* ── KPI cards: 2 per row instead of 4 tall cards ── */
+  .admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .admin-kpi-card { padding: 14px; border-radius: 10px; }
+  .admin-kpi-card:hover { transform: none; }
+  .kpi-header { margin-bottom: 8px; }
+  .kpi-title { font-size: 0.78rem; }
+  .kpi-icon { padding: 6px; }
+  .kpi-icon svg { width: 16px; height: 16px; }
+  .kpi-value { font-size: 1.45rem; margin-bottom: 6px; }
+  .kpi-trend { font-size: 0.7rem; }
+
+  .admin-chart-card { padding: 16px; margin-bottom: 18px; }
+  .css-mock-chart { height: 150px; gap: 6px; }
+  .css-mock-chart::before { display: none; }
+
+  /* ── Order status filters: one swipeable row instead of four wrapped rows ── */
+  .order-tabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin: 0 -12px 14px !important;
+    padding: 0 12px 2px;
+  }
+  .order-tabs::-webkit-scrollbar { display: none; }
+  .order-tabs .admin-btn { flex-shrink: 0; white-space: nowrap; }
+
+}
+
+/* Tables become stacked cards on phones AND tablets, so the order action
+   buttons are never hidden behind a sideways scroll. */
+@media (max-width: 1024px) {
+  /* ── Stacked cards ── */
+  .admin-table-container {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+  }
+  .admin-table-toolbar {
+    flex-wrap: wrap;
+    padding: 0 0 12px;
+    border-bottom: none;
+  }
+  .admin-table-toolbar .admin-search-container { width: 100% !important; max-width: none; flex: 1 1 100%; }
+  .admin-table-toolbar .toolbar-filters,
+  .admin-table-toolbar .admin-select { width: 100% !important; }
+
+  .admin-table.admin-table-stack { min-width: 0; }
+  .admin-table-stack thead { display: none; }
+  .admin-table-stack,
+  .admin-table-stack tbody { display: block; width: 100%; }
+  .admin-table-stack tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    background: var(--admin-card-bg);
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--admin-shadow);
+  }
+  .admin-table-stack td {
+    display: block;
+    padding: 6px 0;
+    border-bottom: none;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 0.88rem;
+  }
+  .admin-table-stack td::before {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--admin-text-muted);
+  }
+  /* "Loading…" / "No orders found" rows */
+  .admin-table-stack td[colspan] { grid-column: 1 / -1; text-align: center; }
+  .admin-table-stack td[colspan]::before { content: none; }
+  .admin-table-stack .admin-btn { min-height: 40px; }
+
+  /* Dashboard → Recent orders: ID | Date, product, customer, payment | status */
+  .t-recent td:nth-child(1) { order: 1; }
+  .t-recent td:nth-child(4) { order: 2; text-align: right; }
+  .t-recent td:nth-child(2) { order: 3; grid-column: 1 / -1; }
+  .t-recent td:nth-child(3) { order: 4; grid-column: 1 / -1; }
+  .t-recent td:nth-child(5) { order: 5; }
+  .t-recent td:nth-child(6) { order: 6; text-align: right; }
+  .t-recent td:nth-child(3)::before { content: 'Customer & Delivery'; }
+  .t-recent td:nth-child(5)::before { content: 'Payment'; }
+  .t-recent td:nth-child(6)::before { content: 'Status'; }
+
+  /* Orders: ID | Date, product, customer, then full-width action buttons */
+  .t-orders td:nth-child(1) { order: 1; }
+  .t-orders td:nth-child(4) { order: 2; text-align: right; }
+  .t-orders td:nth-child(2) { order: 3; grid-column: 1 / -1; }
+  .t-orders td:nth-child(3) { order: 4; grid-column: 1 / -1; }
+  .t-orders td:nth-child(5) { order: 5; grid-column: 1 / -1; padding-top: 10px; }
+  .t-orders td:nth-child(3)::before { content: 'Customer & Delivery'; }
+  .t-orders td:nth-child(5) > div { flex-wrap: nowrap !important; }
+  .t-orders td:nth-child(5) .admin-btn { flex: 1; }
+
+  /* Inventory: product, status | stock, quick update */
+  .t-inventory td:nth-child(1) { grid-column: 1 / -1; }
+  .t-inventory td:nth-child(3) { text-align: right; }
+  .t-inventory td:nth-child(4) { grid-column: 1 / -1; }
+  .t-inventory td:nth-child(4)::before { content: 'Update stock'; }
+  .t-inventory td:nth-child(4) .admin-input { flex: 1; min-width: 0; width: auto !important; font-size: 16px; }
+
+  /* Users: name | LTV, email, registered */
+  .t-users td:nth-child(1) { order: 1; }
+  .t-users td:nth-child(4) { order: 2; text-align: right; }
+  .t-users td:nth-child(2) { order: 3; grid-column: 1 / -1; }
+  .t-users td:nth-child(3) { order: 4; }
+  .t-users td:nth-child(4)::before { content: 'Lifetime value'; }
+  .t-users td:nth-child(3)::before { content: 'Registered'; }
+
+  /* Catalog: product + edit/delete on top, then price & stock details */
+  .t-catalog td:nth-child(1) { order: 1; }
+  .t-catalog td:nth-child(7) { order: 2; display: flex; justify-content: flex-end; align-items: flex-start; }
+  .t-catalog td:nth-child(7) .header-icon-btn { width: 40px; height: 40px; }
+  .t-catalog td:nth-child(1) .table-product-cell > div { max-width: none !important; white-space: normal !important; }
+  .t-catalog td:nth-child(5) { order: 3; }
+  .t-catalog td:nth-child(4) { order: 4; text-align: right; }
+  .t-catalog td:nth-child(6) { order: 5; }
+  .t-catalog td:nth-child(3) { order: 6; text-align: right; }
+  .t-catalog td:nth-child(2) { order: 7; grid-column: 1 / -1; }
+  .t-catalog td:nth-child(2)::before { content: 'SKU'; }
+  .t-catalog td:nth-child(3)::before { content: 'Category'; }
+  .t-catalog td:nth-child(4)::before { content: 'MRP'; }
+  .t-catalog td:nth-child(5)::before { content: 'Selling price'; }
+  .t-catalog td:nth-child(6)::before { content: 'Stock'; }
+  .t-catalog tr { grid-template-columns: minmax(0, 1fr) auto; }
+  .t-catalog td:nth-child(n+3):nth-child(-n+6) { grid-column: auto; }
+
+}
+
+@media (max-width: 768px) {
+  /* ── Add / edit product: full-screen sheet ── */
+  .admin-modal-overlay { padding: 0; align-items: stretch; }
+  .admin-modal-content {
+    max-width: 100%;
+    max-height: none;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+  .admin-modal-header { padding: 14px 16px; }
+  .admin-modal-header h2 { font-size: 1.1rem; }
+  .admin-modal-body { padding: 16px; }
+  .admin-modal-footer { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .admin-modal-footer .admin-btn { flex: 1; min-height: 44px; }
+  .drag-drop-zone { padding: 24px 16px; }
+
+  /* iOS zooms into any field under 16px on focus. */
+  .admin-dashboard-wrapper input,
+  .admin-dashboard-wrapper select,
+  .admin-dashboard-wrapper textarea { font-size: 16px; }
+}

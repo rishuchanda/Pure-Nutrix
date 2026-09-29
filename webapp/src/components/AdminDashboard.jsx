@@ -405,6 +405,9 @@ const AdminDashboard = ({ user }) => {
       {activeTab !== 'crm' && activeTab !== 'gst' && (
         <>
           {/* Sidebar */}
+          {mobileMenuOpen && (
+            <div className="admin-sidebar-backdrop hide-on-desktop" onClick={() => setMobileMenuOpen(false)} />
+          )}
           <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="admin-brand">
           <h2>PURE <span className="gold-text">NUTRIX</span></h2>
@@ -460,6 +463,7 @@ const AdminDashboard = ({ user }) => {
             <button className="header-icon-btn hide-on-desktop mobile-menu-toggle" onClick={() => setMobileMenuOpen(true)}>
               <Menu size={20} />
             </button>
+            <span className="admin-header-brand">PURE <span className="gold-text">NUTRIX</span></span>
             <div className="admin-search-container">
               <Search size={18} color="var(--admin-text-muted)" />
               <input type="text" placeholder="Search orders, SKUs..." />
@@ -560,7 +564,7 @@ const AdminDashboard = ({ user }) => {
                   {/* Recent Orders Table */}
                   <h3 style={{ marginBottom: '16px', fontSize: '1.2rem' }}>Recent Orders</h3>
                   <div className="admin-table-container">
-                    <table className="admin-table">
+                    <table className="admin-table admin-table-stack t-recent">
                       <thead>
                         <tr>
                           <th>Order ID</th>
@@ -637,7 +641,7 @@ const AdminDashboard = ({ user }) => {
                   </div>
 
                   <div className="admin-table-container">
-                    <table className="admin-table">
+                    <table className="admin-table admin-table-stack t-orders">
                       <thead>
                         <tr>
                           <th>Order ID</th>
@@ -748,7 +752,7 @@ const AdminDashboard = ({ user }) => {
                     </div>
                   </div>
                   <div className="admin-table-container">
-                    <table className="admin-table">
+                    <table className="admin-table admin-table-stack t-inventory">
                       <thead>
                         <tr>
                           <th>Product / SKU</th>
@@ -821,7 +825,7 @@ const AdminDashboard = ({ user }) => {
                     </div>
                   </div>
                   <div className="admin-table-container">
-                    <table className="admin-table">
+                    <table className="admin-table admin-table-stack t-users">
                       <thead>
                         <tr>
                           <th>Name</th>
@@ -880,7 +884,7 @@ const AdminDashboard = ({ user }) => {
                       </div>
                     </div>
 
-                    <table className="admin-table">
+                    <table className="admin-table admin-table-stack t-catalog">
                       <thead>
                         <tr>
                           <th>Product</th>
@@ -889,7 +893,6 @@ const AdminDashboard = ({ user }) => {
                           <th>MRP</th>
                           <th>Selling Price</th>
                           <th>Stock</th>
-                          <th>Status</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
