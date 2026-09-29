@@ -414,3 +414,140 @@
 .audience-item { display: flex; align-items: center; gap: 1rem; padding: 0.8rem; background: #fcfcfc; border: 1px solid #f0f0f0; border-radius: 12px; }
 .audience-ltv { margin-left: auto; font-weight: 600; color: #28c76f; font-size: 0.9rem; }
 .contact-avatar.small { width: 32px; height: 32px; font-size: 0.9rem; }
+
+/* ==========================================================================
+   Phone & tablet layout
+   Desktop keeps the 3-column workspace. On a phone the screen shows ONE
+   thing at a time, like the WhatsApp app: the contact list, or an open chat
+   (with a back arrow), or one of the other sections — with the section
+   tabs as a bottom bar.
+   ========================================================================== */
+.chat-back-btn { display: none; }
+
+@media (max-width: 1024px) {
+  .crm-fullscreen-container {
+    padding: 0;
+    height: 100vh;
+    height: 100dvh;
+    width: 100%;
+  }
+
+  /* "Back to Panel" becomes a normal top bar instead of floating over the search box */
+  .crm-floating-header {
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    flex-shrink: 0;
+  }
+  .crm-back-btn { padding: 0.5rem 0.9rem; font-size: 0.85rem; box-shadow: none; }
+  .crm-back-btn:hover { transform: none; }
+  .crm-brand-title { display: block; color: #fff; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.5px; }
+  .crm-brand-title .gold-text { color: #D4AF37; }
+
+  .crm-container { border-radius: 16px 16px 0 0; box-shadow: none; }
+  .crm-main { flex-direction: column; border-radius: 0; }
+
+  /* Let the sidebar's children join the column so they can be re-ordered */
+  .crm-sidebar { display: contents; }
+  .crm-search-box { order: 1; margin: 12px 12px 6px; padding: 0.7rem 1rem; flex-shrink: 0; }
+  .crm-search-box input { font-size: 16px; }
+  .crm-contact-list { order: 2; flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 8px; }
+  .crm-contact-item { padding: 0.75rem; gap: 0.75rem; }
+  .crm-content-area { order: 3; flex: 1; min-height: 0; height: auto; }
+
+  /* Section tabs → bottom tab bar */
+  .crm-section-nav {
+    order: 4;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 2px;
+    height: auto;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    border-radius: 0;
+    flex-shrink: 0;
+  }
+  .crm-nav-btn { flex: 1; width: auto; padding: 6px 0; font-size: 0.68rem; border-radius: 12px; }
+  .crm-nav-btn.active { border-radius: 12px; }
+  .crm-nav-btn.active::before,
+  .crm-nav-btn.active::after { display: none; }
+
+  /* Inbox, no chat open: just the list (the "select a contact" placeholder is pointless here) */
+  .crm-view-inbox:not(.crm-chat-open) .crm-content-area { display: none; }
+  /* Other sections: hide the contact list, show the section */
+  .crm-fullscreen-container:not(.crm-view-inbox) .crm-search-box,
+  .crm-fullscreen-container:not(.crm-view-inbox) .crm-contact-list { display: none; }
+  /* Chat open: the conversation gets the whole screen */
+  .crm-chat-open .crm-floating-header,
+  .crm-chat-open .crm-search-box,
+  .crm-chat-open .crm-contact-list,
+  .crm-chat-open .crm-section-nav { display: none; }
+  .crm-chat-open .crm-container { border-radius: 0; }
+
+  /* ── Chat ── */
+  .chat-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-left: -6px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #7367F0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .chat-header { padding: 8px 12px; }
+  .chat-header-info { gap: 8px; min-width: 0; }
+  .chat-header-info > div:last-child { min-width: 0; }
+  .chat-name { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-phone { font-size: 0.78rem; }
+  .contact-avatar.large { width: 38px; height: 38px; font-size: 1rem; }
+  .chat-ltv { font-size: 0.75rem; white-space: nowrap; }
+
+  .chat-messages { padding: 1rem 0.75rem; gap: 0.6rem; }
+  .msg-wrapper { max-width: 85%; }
+  .msg-bubble { padding: 0.6rem 0.85rem; font-size: 0.95rem; overflow-wrap: anywhere; }
+
+  .crm-template-bar { padding: 6px 10px !important; gap: 6px !important; flex-wrap: nowrap !important; }
+  .crm-template-bar > span { display: none; }
+  .crm-template-bar select { flex: 1; min-width: 0; width: auto !important; font-size: 16px !important; padding: 6px 8px !important; }
+  .crm-template-bar button { flex-shrink: 0; min-height: 36px; font-size: 0.8rem !important; }
+
+  .chat-input-area { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
+  .chat-input-area input { padding: 0.7rem 1rem; font-size: 16px; }
+  .chat-send-btn { width: 44px; height: 44px; background: #7367F0; color: #fff; }
+  .chat-send-btn:hover:not(:disabled) { transform: none; background: #7367F0; }
+
+  /* ── Contacts / Auto-reply / Campaigns / Settings ── */
+  .crm-section-content { padding: 1rem 0.9rem 1.5rem !important; border-radius: 0; }
+  .crm-section-header { flex-direction: column; align-items: stretch; gap: 0.75rem; margin-bottom: 1.25rem; }
+  .crm-section-header h2 { font-size: 1.35rem; margin: 0 0 0.25rem; }
+  .crm-section-header p { font-size: 0.85rem; }
+  .glass-card { padding: 1rem; border-radius: 14px; margin-bottom: 1rem; }
+  .autoreply-form-row { flex-direction: column; align-items: stretch; }
+  .autoreply-rule-card { padding: 0.9rem; }
+  .rule-display { flex-wrap: wrap; gap: 0.6rem; }
+  .rule-keyword { min-width: 0; }
+  .rule-reply { flex-basis: 100%; order: 3; font-size: 0.9rem; }
+  .campaign-layout { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .audience-list { max-height: 300px; }
+
+  .crm-fullscreen-container input,
+  .crm-fullscreen-container select,
+  .crm-fullscreen-container textarea,
+  .crm-modal input { font-size: 16px; }
+
+  /* Add-contact dialog slides up from the bottom */
+  .crm-modal-overlay { align-items: flex-end; }
+  .crm-modal { max-width: 100%; border-radius: 20px 20px 0 0; }
+  .crm-modal-header { padding: 1rem 1.25rem; }
+  .crm-modal-body { padding: 1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)); }
+  .crm-modal-actions { margin-top: 1.25rem; }
+  .crm-modal-actions button { flex: 1; }
+}

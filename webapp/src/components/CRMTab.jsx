@@ -455,7 +455,7 @@ const CRMTab = ({ onBack }) => {
   }
 
   return (
-    <div className="crm-fullscreen-container">
+    <div className={`crm-fullscreen-container crm-view-${activeSection}${activeSection === 'inbox' && selectedContact ? ' crm-chat-open' : ''}`}>
       {/* ── Top Floating Nav ── */}
       <div className="crm-floating-header">
         <button className="crm-back-btn" onClick={onBack}>
@@ -578,6 +578,9 @@ const CRMTab = ({ onBack }) => {
                 {/* Chat Header */}
                 <div className="chat-header">
                   <div className="chat-header-info">
+                    <button type="button" className="chat-back-btn" onClick={() => setSelectedContact(null)} aria-label="Back to contacts">
+                      <ChevronRight size={22} style={{ transform: 'rotate(180deg)' }} />
+                    </button>
                     <div className="contact-avatar large">{selectedContact.name?.charAt(0) || '?'}</div>
                     <div>
                       <div className="chat-name">{selectedContact.name || 'Unknown Customer'}</div>
@@ -625,7 +628,7 @@ const CRMTab = ({ onBack }) => {
                 </div>
 
                 {/* Input */}
-                <div style={{ padding: '0.5rem 1rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <div className="crm-template-bar" style={{ padding: '0.5rem 1rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Select Template (24h bypass):</span>
                   <select 
                     value={customInboxTemplate} 
@@ -644,7 +647,7 @@ const CRMTab = ({ onBack }) => {
                     placeholder="Type a message..."
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
-                    autoFocus
+                    autoFocus={typeof window !== 'undefined' && window.matchMedia?.('(pointer: fine)').matches}
                   />
                   <button type="submit" className="chat-send-btn" disabled={!messageInput.trim() || isSending}>
                     {isSending ? <RefreshCcw size={18} className="spinning" /> : <Send size={18} />}

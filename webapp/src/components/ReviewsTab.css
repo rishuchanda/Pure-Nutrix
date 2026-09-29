@@ -431,6 +431,7 @@
 
 .review-action-btns {
   display: flex;
+  flex-wrap: wrap; /* buttons ran off the right edge on phones */
   gap: 10px;
   align-items: center;
 }
