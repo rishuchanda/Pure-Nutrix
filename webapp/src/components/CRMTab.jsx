@@ -3,8 +3,11 @@ import { supabase } from '../supabaseClient';
 import {
   Search, Send, MessageSquare, TrendingUp, Users, Plus,
   X, Bot, UserPlus, Edit2, Check, ChevronRight,
-  Inbox, Megaphone, Settings, Trash2, Phone, RefreshCcw
+  Inbox, Megaphone, Settings, Trash2, Phone, RefreshCcw, Paperclip, FileText
 } from 'lucide-react';
+import {
+  MEDIA_BUCKET, MEDIA_ACCEPT, MessageMedia, isMediaMessage, classifyFile, outboundPath, formatBytes
+} from './WhatsAppMedia';
 import './CRMTab.css';
 
 // ─── Default Auto-Reply Rules ────────────────────────────────────────────────
@@ -57,6 +60,33 @@ const CRMTab = ({ onBack }) => {
 
   const messagesEndRef = useRef(null);
 
+  // ─── Media attachment (photo / video / audio / document) ───
+  const fileInputRef = useRef(null);
+  const [pendingFile, setPendingFile] = useState(null); // { file, kind, mime, previewUrl }
+
+  const clearPendingFile = () => {
+    setPendingFile(prev => { if (prev?.previewUrl) URL.revokeObjectURL(prev.previewUrl); return null; });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handlePickFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const info = classifyFile(file);
+    if (info.error) {
+      alert(info.error);
+      e.target.value = '';
+      return;
+    }
+    setPendingFile(prev => {
+      if (prev?.previewUrl) URL.revokeObjectURL(prev.previewUrl);
+      return { file, kind: info.kind, mime: info.mime, previewUrl: info.kind === 'image' ? URL.createObjectURL(file) : null };
+    });
+  };
+
+  // Drop the attachment when switching to another chat
+  useEffect(() => { clearPendingFile(); }, [selectedContact?.phone_number]);
+
   // ─── Realtime Subscription & Settings Fetch ──────────────────────────────────────────
   useEffect(() => {
     // Splash screen timer
@@ -91,8 +121,8 @@ const CRMTab = ({ onBack }) => {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'whatsapp_messages' }, payload => {
         setMessages(prev =>
           prev.map(m =>
-            m.id === payload.new.id || m.meta_message_id === payload.new.meta_message_id
-              ? { ...m, status: payload.new.status }
+            m.id === payload.new.id || (m.meta_message_id && m.meta_message_id === payload.new.meta_message_id)
+              ? { ...m, ...payload.new } // also brings in media once the webhook has saved it
               : m
           )
         );
@@ -170,8 +200,89 @@ const CRMTab = ({ onBack }) => {
   };
 
   // ─── Send Message ─────────────────────────────────────────────────────────
+  // ─── Send Media ───────────────────────────────────────────────────────────
+  const handleSendMedia = async () => {
+    const attachment = pendingFile;
+    const caption = attachment.kind === 'audio' ? '' : messageInput.trim();
+    setIsSending(true);
+    const optMsg = {
+      id: 'temp-' + Date.now(),
+      contact_phone: selectedContact.phone_number,
+      direction: 'outbound',
+      message_type: attachment.kind,
+      message_body: caption,
+      media_local_url: URL.createObjectURL(attachment.file),
+      media_mime: attachment.mime,
+      media_filename: attachment.file.name,
+      media_size: attachment.file.size,
+      status: 'sending',
+      created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, optMsg]);
+    setMessageInput('');
+    clearPendingFile();
+
+    try {
+      // STEP 1: Ensure contact exists (FK dependency)
+      const { data: ext1 } = await supabase.from('whatsapp_contacts').select('id').eq('phone_number', selectedContact.phone_number).maybeSingle();
+      if (!ext1) {
+         await supabase.from('whatsapp_contacts').insert({ phone_number: selectedContact.phone_number, name: selectedContact.name || null, last_message_at: new Date().toISOString() });
+      } else {
+         await supabase.from('whatsapp_contacts').update({ last_message_at: new Date().toISOString() }).eq('phone_number', selectedContact.phone_number);
+      }
+
+      // STEP 2: Put the file in our private bucket
+      const path = outboundPath(selectedContact.phone_number, attachment.file.name);
+      const { error: upErr } = await supabase.storage.from(MEDIA_BUCKET).upload(path, attachment.file, { contentType: attachment.mime, upsert: false });
+      if (upErr) throw new Error('Upload failed: ' + upErr.message);
+
+      // STEP 3: The edge function hands it to WhatsApp and sends it
+      const { data, error } = await supabase.functions.invoke('send-whatsapp', {
+        body: {
+          phone_number: selectedContact.phone_number,
+          type: 'media',
+          media_kind: attachment.kind,
+          media_path: path,
+          caption,
+          filename: attachment.file.name
+        }
+      });
+      if (error || !data?.success) {
+        let reason = data?.error;
+        if (!reason && error?.context?.json) { try { reason = (await error.context.json())?.error; } catch { /* ignore */ } }
+        throw new Error(reason || error?.message || 'Send failed');
+      }
+      const metaMsgId = data?.data?.messages?.[0]?.id || null;
+
+      // STEP 4: Log it in the inbox
+      const { data: insertedMsg } = await supabase.from('whatsapp_messages').insert({
+        contact_phone: selectedContact.phone_number,
+        direction: 'outbound',
+        message_type: attachment.kind,
+        message_body: caption,
+        media_path: path,
+        media_mime: attachment.mime,
+        media_filename: attachment.file.name,
+        media_size: attachment.file.size,
+        status: 'sent',
+        meta_message_id: metaMsgId
+      }).select().single();
+
+      setMessages(prev => prev.map(m =>
+        m.id === optMsg.id ? { ...(insertedMsg || m), media_local_url: optMsg.media_local_url, status: 'sent' } : m
+      ));
+    } catch (err) {
+      console.error('Media send error:', err);
+      alert('Failed to send file: ' + err.message + (/24|re-engage|window/i.test(err.message) ? '\n\nWhatsApp only allows free messages within 24 hours of the customer\'s last message. Send a template first.' : ''));
+      setMessages(prev => prev.map(m => m.id === optMsg.id ? { ...m, status: 'failed' } : m));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
+    if (pendingFile && selectedContact && !isSending) return handleSendMedia();
     if (!messageInput.trim() || !selectedContact || isSending) return;
     setIsSending(true);
     const textToSend = messageInput;
@@ -614,7 +725,8 @@ const CRMTab = ({ onBack }) => {
                       return (
                         <div key={msg.id || idx} className={`msg-wrapper ${isOut ? 'outbound' : 'inbound'}`}>
                           <div className={`msg-bubble ${isOut ? 'out' : 'in'} ${msg.status === 'failed' ? 'failed' : ''}`}>
-                            <span className="msg-text">{msg.message_body}</span>
+                            {isMediaMessage(msg) && <MessageMedia msg={msg} />}
+                            {msg.message_body && <span className="msg-text">{msg.message_body}</span>}
                             <div className="msg-meta">
                               <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                               {isOut && getTickIcon(msg.status)}
@@ -641,15 +753,36 @@ const CRMTab = ({ onBack }) => {
                   </select>
                   <button onClick={handleSendTemplate} className="admin-btn admin-btn-primary" style={{ padding: '4px 10px', fontSize: '0.75rem' }} disabled={isSending}>Send Template</button>
                 </div>
+                {pendingFile && (
+                  <div className="chat-attachment-preview">
+                    {pendingFile.previewUrl
+                      ? <img src={pendingFile.previewUrl} alt="" className="chat-attachment-thumb" />
+                      : <div className="chat-attachment-icon"><FileText size={22} /></div>}
+                    <div className="chat-attachment-info">
+                      <span className="chat-attachment-name">{pendingFile.file.name}</span>
+                      <span className="chat-attachment-meta">
+                        {{ image: 'Photo', video: 'Video', audio: 'Audio', document: 'Document' }[pendingFile.kind]} · {formatBytes(pendingFile.file.size)}
+                      </span>
+                    </div>
+                    <button type="button" className="chat-attachment-remove" onClick={clearPendingFile} aria-label="Remove attachment">
+                      <X size={18} />
+                    </button>
+                  </div>
+                )}
                 <form className="chat-input-area" onSubmit={handleSendMessage}>
+                  <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT} onChange={handlePickFile} style={{ display: 'none' }} />
+                  <button type="button" className="chat-attach-btn" onClick={() => fileInputRef.current?.click()} disabled={isSending} aria-label="Attach photo, video or document" title="Attach photo, video, audio or document">
+                    <Paperclip size={20} />
+                  </button>
                   <input
                     type="text"
-                    placeholder="Type a message..."
+                    placeholder={pendingFile ? (pendingFile.kind === 'audio' ? 'Audio is sent without a caption' : 'Add a caption (optional)...') : 'Type a message...'}
+                    disabled={pendingFile?.kind === 'audio'}
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
                     autoFocus={typeof window !== 'undefined' && window.matchMedia?.('(pointer: fine)').matches}
                   />
-                  <button type="submit" className="chat-send-btn" disabled={!messageInput.trim() || isSending}>
+                  <button type="submit" className="chat-send-btn" disabled={(!messageInput.trim() && !pendingFile) || isSending}>
                     {isSending ? <RefreshCcw size={18} className="spinning" /> : <Send size={18} />}
                   </button>
                 </form>
