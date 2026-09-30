@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Download, ImageOff, Loader } from 'lucide-react';
+import { FileText, Download, ImageOff, Loader, RefreshCcw } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 // Private bucket (see supabase/migrations/20260930_whatsapp_media.sql).
@@ -56,45 +56,92 @@ export function outboundPath(phone, fileName) {
   return `outbound/${String(phone).replace(/\D/g, '')}/${Date.now()}-${safe}`;
 }
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const withTimeout = (p, ms) => Promise.race([p, sleep(ms).then(() => { throw new Error('timeout'); })]);
+
 // Signed links last an hour; cache them so re-renders don't refetch.
 const urlCache = new Map();
 async function signedUrl(path) {
   const hit = urlCache.get(path);
   if (hit && hit.expires > Date.now()) return hit.url;
-  const { data, error } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 3600);
-  if (error || !data?.signedUrl) throw error || new Error('no url');
-  urlCache.set(path, { url: data.signedUrl, expires: Date.now() + 55 * 60 * 1000 });
-  return data.signedUrl;
+  // A request can occasionally hang (e.g. while the login token is being refreshed),
+  // so give each try 8 s and retry instead of spinning forever.
+  let lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const { data, error } = await withTimeout(supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 3600), 8000);
+      if (error || !data?.signedUrl) throw error || new Error('no url');
+      urlCache.set(path, { url: data.signedUrl, expires: Date.now() + 55 * 60 * 1000 });
+      return data.signedUrl;
+    } catch (err) {
+      lastErr = err;
+      await sleep(1000 * (attempt + 1));
+    }
+  }
+  throw lastErr;
 }
 
 const MEDIA_MESSAGE_TYPES = ['image', 'video', 'audio', 'document', 'sticker'];
 export const isMediaMessage = (msg) => MEDIA_MESSAGE_TYPES.includes(msg.message_type) || !!msg.media_path || !!msg.media_local_url;
 
 /** Shows the photo / video / voice note / document inside a chat bubble. */
-export function MessageMedia({ msg }) {
+export function MessageMedia({ msg: original }) {
+  // The webhook saves the file a few seconds after the message row appears.
+  // Normally a live update brings the file in; if that update is missed we
+  // look the row up ourselves, so the photo never stays stuck on "Loading".
+  const [fetched, setFetched] = useState(null);
+  const msg = fetched && !original.media_path ? { ...original, ...fetched } : original;
   const [url, setUrl] = useState(msg.media_local_url || null);
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const type = msg.message_type === 'sticker' ? 'image' : msg.message_type;
-  // Inbound files are fetched from WhatsApp a few seconds after the message arrives.
+  const ageMs = Date.now() - new Date(msg.created_at).getTime();
   // If there is still no file after 2 minutes, it is not coming.
-  const gaveUp = !msg.media_path && !msg.media_local_url && Date.now() - new Date(msg.created_at).getTime() > 2 * 60 * 1000;
+  const gaveUp = !msg.media_path && !msg.media_local_url && ageMs > 2 * 60 * 1000;
   const downloadFailed = msg.media_mime === 'error/download-failed' || gaveUp;
+
+  useEffect(() => {
+    if (msg.media_path || msg.media_local_url || downloadFailed) return undefined;
+    if (!msg.id || String(msg.id).startsWith('temp-')) return undefined;
+    let alive = true;
+    const timer = setInterval(async () => {
+      const { data } = await supabase.from('whatsapp_messages')
+        .select('media_path, media_mime, media_size, media_filename').eq('id', msg.id).maybeSingle();
+      if (!alive) return;
+      if (data?.media_path || data?.media_mime === 'error/download-failed') {
+        setFetched(data);
+        clearInterval(timer);
+      } else if (Date.now() - new Date(msg.created_at).getTime() > 2 * 60 * 1000) {
+        setFetched({ media_mime: 'error/download-failed' });
+        clearInterval(timer);
+      }
+    }, 3000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [msg.id, msg.media_path, msg.media_local_url, downloadFailed, msg.created_at]);
 
   useEffect(() => {
     let alive = true;
     if (msg.media_local_url) { setUrl(msg.media_local_url); return undefined; }
     if (!msg.media_path) return undefined;
+    setFailed(false);
     signedUrl(msg.media_path)
       .then(u => { if (alive) setUrl(u); })
       .catch(() => { if (alive) setFailed(true); });
     return () => { alive = false; };
-  }, [msg.media_path, msg.media_local_url]);
+  }, [msg.media_path, msg.media_local_url, attempt]);
 
-  if (downloadFailed || failed) {
+  if (downloadFailed) {
     return (
       <div className="msg-media-missing">
-        <ImageOff size={18} /> <span>{downloadFailed ? 'Media could not be downloaded — open WhatsApp on the phone to see it' : 'Could not load this file'}</span>
+        <ImageOff size={18} /> <span>Media could not be downloaded — open WhatsApp on the phone to see it</span>
       </div>
+    );
+  }
+  if (failed) {
+    return (
+      <button type="button" className="msg-media-missing msg-media-retry" onClick={() => setAttempt(a => a + 1)}>
+        <RefreshCcw size={16} /> <span>Could not load — tap to retry</span>
+      </button>
     );
   }
   if (!url) {
