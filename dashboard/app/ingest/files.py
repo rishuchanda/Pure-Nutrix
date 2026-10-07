@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
 from .common import (
-    ImportResult, clean_sku, ensure_products, normalize_status, parse_date, parse_int,
+    ImportResult, clean_sku, ensure_products, fill_missing_prices, normalize_status, parse_date, parse_int,
     parse_money, save_ad_day, save_finance, save_order, save_payout, save_return,
 )
 
@@ -38,6 +38,8 @@ def read_sheets(path: Path) -> List[Tuple[str, List[List]]]:
         wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
         out = []
         for ws in wb.worksheets:
+            # Some exports (Flipkart) store a wrong sheet size ("A1"); read-only mode would then see 1 row.
+            ws.reset_dimensions()
             rows = [list(r) for r in ws.iter_rows(values_only=True)]
             out.append((ws.title, rows))
         wb.close()
@@ -142,7 +144,7 @@ class _Row:
             return default
         v = self.raw[idx]
         if isinstance(v, str):
-            v = v.strip()
+            v = v.strip().strip('"').strip()  # Flipkart quotes ids as '"""OD123"""' 
         return default if v in (None, "") else v
 
     def has(self, key):
@@ -170,29 +172,64 @@ def _orders_handler(platform: str):
             if r.has("item_status") and "cancel" in str(r.get("item_status", "")).lower():
                 status_raw = "cancelled"
             event = str(r.get("event_type") or "").lower()
+            sub = str(r.get("event_sub_type") or "").lower()
             if event:
                 status_raw = {"sale": status_raw or "shipped", "return": "returned",
                               "cancellation": "cancelled"}.get(event, status_raw)
+                if "cancel" in sub and "return" not in sub:
+                    status_raw = "cancelled"
             qty = abs(parse_int(r.get("qty"), 1))
             amount = abs(r.money("amount"))
             if event and event != "sale":
                 amount = 0  # keep the original sale value
-            item_id = str(r.get("item_id") or f"{order_id}:{psku}")
+            pitem = None
+            if platform == "flipkart":
+                # Flipkart's 18-digit item ids lose their last digits when Excel stores them as numbers,
+                # so the same line gets different ids in the Orders and Sales reports. Order + SKU is stable.
+                item_id = f"{order_id}:{psku}"
+                raw_item = r.get("item_id")
+                if isinstance(raw_item, str) and raw_item.upper().startswith("OI:"):  # exact text id (Orders report)
+                    pitem = raw_item.upper()
+            else:
+                item_id = str(r.get("item_id") or f"{order_id}:{psku}")
             save_order(conn, platform=platform, order_id=str(order_id), item_id=item_id,
                        order_date=day, platform_sku=psku, qty=qty, sale_amount=amount,
                        status=normalize_status(status_raw), product_name=str(r.get("name") or ""),
-                       source=source)
+                       source=source, platform_item_id=pitem)
             seen.append((psku, r.get("name")))
             res.rows += 1
         ensure_products(conn, seen)
+        if platform == "flipkart":
+            est = fill_missing_prices(conn, platform)
+            if est:
+                res.notes.append(f"{est} lines priced from recent average (until the Sales report has them)")
     return handle
 
 
 def _returns_handler(platform: str):
     def handle(conn, rows: Rows, res: ImportResult, source: str):
+        unmatched = 0
         for r in rows:
             order_id = r.get("order_id")
-            day = parse_date(r.get("date"))
+            item_hint = ""
+            if str(r.get("status") or "").lower() == "cancelled":
+                continue  # the return itself was withdrawn
+            if not order_id and r.get("item_id"):
+                pid = str(r.get("item_id")).upper()
+                hit = conn.execute("SELECT order_id, item_id FROM orders WHERE platform=? AND platform_item_id=?",
+                                   (platform, pid)).fetchone()
+                if not hit and pid.startswith("OI:"):
+                    # single-item orders share the digits: OI:338…100 -> OD338…100
+                    hit = conn.execute("SELECT order_id, item_id FROM orders WHERE platform=? AND order_id=? "
+                                       "AND (sku=? OR ?='')", (platform, "OD" + pid[3:], clean_sku(r.get("sku")),
+                                                               clean_sku(r.get("sku")))).fetchone()
+                if hit:
+                    order_id, item_hint = hit["order_id"], hit["item_id"]
+                else:
+                    unmatched += 1
+                    continue
+            day = (parse_date(r.get("date")) or parse_date(r.get("date2")) or parse_date(r.get("date3"))
+                   or parse_date(r.get("date4")))
             if not order_id or not day:
                 res.skipped += 1
                 continue
@@ -201,11 +238,13 @@ def _returns_handler(platform: str):
             disposition = str(r.get("disposition") or "").lower()
             restock = not any(k in disposition for k in ("damaged", "defective", "unsellable", "disposed"))
             save_return(conn, platform=platform, order_id=str(order_id),
-                        item_id=str(r.get("item_id") or ""), return_date=day,
+                        item_id=item_hint or str(r.get("item_id") or ""), return_date=day,
                         platform_sku=clean_sku(r.get("sku")), qty=abs(parse_int(r.get("qty"), 1)),
                         return_type="rto" if is_rto else "customer",
                         reason=str(r.get("reason") or "")[:200], restock=restock, source=source)
             res.rows += 1
+        if unmatched:
+            res.notes.append(f"{unmatched} returns skipped: their order is not in the dashboard yet (older than the orders loaded)")
     return handle
 
 
@@ -359,6 +398,7 @@ def _purchases(conn, rows: Rows, res: ImportResult, source: str):
 REPORTS: List[Report] = [
     Report("amazon_orders", "amazon", "Amazon orders", {
         "order_id": ["amazon-order-id", "order-id", "Order ID"],
+        "item_id": ["order-item-id"],
         "date": ["purchase-date", "Order Date", "purchase date"],
         "sku": ["sku", "seller-sku", "Merchant SKU"],
         "qty": ["quantity", "quantity-purchased", "quantity-shipped"],
@@ -410,6 +450,7 @@ REPORTS: List[Report] = [
         "amount": ["Final Invoice Amount", "Invoice Amount", "Selling Price", "Price after discount"],
         "status": ["order_item_status", "Order State", "Order Status", "Status"],
         "event_type": ["Event Type"],
+        "event_sub_type": ["Event Sub Type"],
         "name": ["product_title", "Product Title", "Product Title/Description"],
     }, ["order_id", "date", "sku"], _orders_handler("flipkart"), bonus=("item_id",)),
 
@@ -417,12 +458,16 @@ REPORTS: List[Report] = [
         "order_id": ["order_id", "Order ID", "Order Id"],
         "item_id": ["order_item_id", "Order Item ID", "Order Item Id"],
         "date": ["return_requested_date", "Return Requested Date", "Return Created Date", "return_date", "Return Date"],
+        "date2": ["return_approval_date"],
+        "date3": ["return_completion_date"],
+        "date4": ["return_cancellation_date"],
+        "status": ["return_status"],
         "sku": ["sku", "SKU"],
         "qty": ["quantity", "Quantity"],
         "reason": ["return_reason", "Return Reason"],
         "return_type": ["return_type", "Return Type"],
         "disposition": ["return_status", "Return Status", "Return Completion Type"],
-    }, ["order_id", "date", "return_type"], _returns_handler("flipkart"), bonus=("return_type",)),
+    }, ["item_id", "return_type"], _returns_handler("flipkart"), bonus=("return_type", "date2")),
 
     Report("flipkart_settlement", "flipkart", "Flipkart settled payments", {
         "neft_id": ["NEFT ID", "Settlement Ref No", "Payment ID"],

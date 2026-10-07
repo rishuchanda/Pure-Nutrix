@@ -52,6 +52,9 @@ def env_bool(name: str, default: bool = False) -> bool:
 DATABASE_PATH = Path(env("DATABASE_PATH", str(BASE_DIR / "data" / "purenutrix.db")))
 if not DATABASE_PATH.is_absolute():  # relative paths are relative to the project, not the server's cwd
     DATABASE_PATH = BASE_DIR / DATABASE_PATH
+SQLITE_JOURNAL_MODE = env("SQLITE_JOURNAL_MODE", "DELETE").upper()
+if SQLITE_JOURNAL_MODE not in ("DELETE", "WAL", "TRUNCATE", "PERSIST"):
+    SQLITE_JOURNAL_MODE = "DELETE"
 UPLOAD_DIR = Path(env("UPLOAD_DIR", str(DATABASE_PATH.parent / "uploads")))
 DASHBOARD_PASSWORD = env("DASHBOARD_PASSWORD")
 # If no key is set, use a random one: safe, but everyone is logged out on each restart.
@@ -82,6 +85,8 @@ DEFAULT_GST_RATE = env_float("DEFAULT_GST_RATE", 18.0)
 
 # Shared secret between n8n and the dashboard (long random string).
 AUDIT_TOKEN = env("AUDIT_TOKEN")
+# Separate secret that allows code updates from the Mac (scripts/deploy.sh). Never given to n8n.
+DEPLOY_TOKEN = env("DEPLOY_TOKEN")
 # On the Mac only: when set, `app.cli agent ...` talks to the ONLINE dashboard instead of the local database.
 DASHBOARD_URL = env("DASHBOARD_URL").rstrip("/")
 

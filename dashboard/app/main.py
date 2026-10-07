@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from . import alerts, audit, config, db, demo, extract, metrics
+from . import alerts, audit, config, db, demo, extract, metrics, selfupdate
 from .ingest import files
 from .ingest.common import parse_date
 from .inventory import compute as compute_inventory
@@ -56,6 +56,11 @@ OPEN_PATHS = ("/login", "/static/", "/healthz", "/manifest.webmanifest")
 @app.middleware("http")
 async def require_login(request: Request, call_next):
     path = request.url.path
+    if path == "/api/agent/deploy":
+        # code updates: only the deploy token, never the n8n token or a browser session
+        ok = len(config.DEPLOY_TOKEN) >= 32 and hmac.compare_digest(
+            request.headers.get("authorization", "").encode(), f"Bearer {config.DEPLOY_TOKEN}".encode())
+        return await call_next(request) if ok else JSONResponse({"detail": "forbidden"}, status_code=403)
     token_ok = bool(config.AUDIT_TOKEN) and path.startswith("/api/agent/") and hmac.compare_digest(
         request.headers.get("authorization", "").encode(), f"Bearer {config.AUDIT_TOKEN}".encode())
     if any(path == p or path.startswith(p) for p in OPEN_PATHS) or token_ok or request.session.get("ok"):
@@ -107,7 +112,16 @@ def logout(request: Request):
 
 @app.get("/healthz")
 def health():
-    return {"ok": True}
+    return {"ok": True, "version": selfupdate.current_version()}
+
+
+@app.post("/api/agent/deploy")
+async def deploy(request: Request):
+    """Code-only update from scripts/deploy.sh (see app/selfupdate.py for the guard rails)."""
+    try:
+        return selfupdate.apply_update(await request.body())
+    except selfupdate.UpdateError as e:
+        raise HTTPException(400, str(e))
 
 
 @app.get("/")
@@ -356,10 +370,14 @@ async def upload(file: UploadFile = File(...), platform: str = Form(""), report:
                                         report_key=report if report in files.REPORTS_BY_KEY else None)
         except Exception as e:
             log.exception("upload failed")
+            dest.unlink(missing_ok=True)
             raise HTTPException(400, f"File padh nahi paaye: {e}")
         if not results:
+            dest.unlink(missing_ok=True)
             raise HTTPException(400, "Ye kaunsi report hai, samajh nahi aaya. Platform chun kar dobara try karo, "
                                      "ya original download ki hui file upload karo.")
+        # Report files carry buyer names/addresses: keep only what was imported, never the raw file.
+        dest.unlink(missing_ok=True)
         for res in results:
             if res.platform in config.PLATFORMS:
                 conn.execute("INSERT INTO sync_runs(platform, job, started_at, finished_at, status, rows, message) "
@@ -444,6 +462,29 @@ def agent_apply(page_id: int, data: dict = Body(...)):
     finally:
         conn.close()
     return result
+
+
+@app.post("/api/agent/live")
+def agent_live(data: dict = Body(...)):
+    """Today's running totals read off a panel's home page (see apply_live_today)."""
+    platform = str(data.get("platform") or "")
+    if platform not in config.PLATFORMS:
+        raise HTTPException(400, "platform?")
+    day = data.get("day") or metrics.today().isoformat()
+
+    def num(k, typ=float):
+        v = data.get(k)
+        return None if v in (None, "") else typ(v)
+
+    with db.session() as conn:
+        conn.execute(
+            """INSERT INTO live_today(platform, day, units, sales, new_orders, returns, captured_at) VALUES(?,?,?,?,?,?,?)
+               ON CONFLICT(platform, day) DO UPDATE SET units=excluded.units, sales=excluded.sales,
+               new_orders=excluded.new_orders, returns=excluded.returns, captured_at=excluded.captured_at""",
+            (platform, day, num("units", int), num("sales"), num("new_orders", int), num("returns", int), db.now_iso()))
+        conn.execute("INSERT INTO sync_runs(platform, job, started_at, finished_at, status, rows, message) "
+                     "VALUES(?, 'live', ?, ?, 'ok', 0, 'panel home counters')", (platform, db.now_iso(), db.now_iso()))
+    return {"ok": True}
 
 
 @app.post("/api/agent/finish")

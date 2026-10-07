@@ -14,7 +14,6 @@ from typing import Iterator
 from . import config
 
 SCHEMA = """
-PRAGMA journal_mode = WAL;
 
 -- Master product list. `sku` is YOUR sku; platform-specific skus map here via sku_aliases.
 CREATE TABLE IF NOT EXISTS products (
@@ -47,6 +46,8 @@ CREATE TABLE IF NOT EXISTS orders (
     status       TEXT NOT NULL DEFAULT 'pending',
     source       TEXT,
     updated_at   TEXT,
+    price_estimated INTEGER NOT NULL DEFAULT 0,  -- 1 = sale_amount is a stand-in until the sales report has it
+    platform_item_id TEXT,                       -- marketplace's own line id (Flipkart returns only carry this)
     PRIMARY KEY (platform, order_id, item_id)
 );
 CREATE INDEX IF NOT EXISTS ix_orders_date ON orders(order_date);
@@ -120,6 +121,18 @@ CREATE TABLE IF NOT EXISTS ad_summaries (
     views        INTEGER,
     source       TEXT,
     PRIMARY KEY (platform, captured_on)
+);
+
+-- Today's running totals shown on a panel's home page (orders only reach the reports the next day).
+CREATE TABLE IF NOT EXISTS live_today (
+    platform    TEXT NOT NULL,
+    day         TEXT NOT NULL,
+    units       INTEGER,
+    sales       REAL,
+    new_orders  INTEGER,
+    returns     INTEGER,
+    captured_at TEXT NOT NULL,
+    PRIMARY KEY (platform, day)
 );
 
 -- Stock you bought. Remaining value is CALCULATED from sales, never typed in by hand.
@@ -238,6 +251,9 @@ def connect() -> sqlite3.Connection:
     config.DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(config.DATABASE_PATH), timeout=30)
     conn.row_factory = sqlite3.Row
+    # WAL needs shared-memory locking that some shared-hosting file systems don't support (the app hangs);
+    # plain rollback-journal mode works everywhere and is plenty for one business.
+    conn.execute(f"PRAGMA journal_mode = {config.SQLITE_JOURNAL_MODE}")
     conn.execute("PRAGMA foreign_keys = ON")
     conn.create_function("REGEXP", 2, _regexp)
     return conn
@@ -263,6 +279,12 @@ def init_db() -> None:
         cols = {r["name"] for r in conn.execute("PRAGMA table_info(agent_pages)")}
         if "text" not in cols:
             conn.execute("ALTER TABLE agent_pages ADD COLUMN text TEXT")
+        ocols = {r["name"] for r in conn.execute("PRAGMA table_info(orders)")}
+        if "price_estimated" not in ocols:
+            conn.execute("ALTER TABLE orders ADD COLUMN price_estimated INTEGER NOT NULL DEFAULT 0")
+        if "platform_item_id" not in ocols:
+            conn.execute("ALTER TABLE orders ADD COLUMN platform_item_id TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS ix_orders_pitem ON orders(platform, platform_item_id)")
 
 
 def now_iso() -> str:

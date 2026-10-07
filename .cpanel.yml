@@ -9,5 +9,5 @@ deployment:
     # Only code is copied; the server's .env (passwords) and data/ (orders) are never overwritten.
     - export DASHPATH=/home/purenutr/purenutrix-dashboard
     - /bin/mkdir -p $DASHPATH/tmp
-    - /bin/cp -R dashboard/app dashboard/static dashboard/passenger_wsgi.py dashboard/requirements.txt $DASHPATH/
+    - /bin/cp -R dashboard/app dashboard/static dashboard/passenger_wsgi.py dashboard/requirements.txt dashboard/requirements-server.txt $DASHPATH/
     - /bin/touch $DASHPATH/tmp/restart.txt

@@ -4,7 +4,7 @@
 cd "$(dirname "$0")/.." || exit 1
 set -e
 rm -rf dist/pkg && mkdir -p dist/pkg/data
-cp -R app static passenger_wsgi.py requirements.txt dist/pkg/
+cp -R app static passenger_wsgi.py requirements.txt requirements-server.txt dist/pkg/
 find dist/pkg -name "__pycache__" -type d -prune -exec rm -rf {} +
 # consistent copy of the live database
 .venv/bin/python -c "import sqlite3; s=sqlite3.connect('data/purenutrix.db'); d=sqlite3.connect('dist/pkg/data/purenutrix.db'); s.backup(d); d.close()"

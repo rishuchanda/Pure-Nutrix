@@ -432,12 +432,51 @@ def freshness(conn) -> Dict[str, dict]:
     return out
 
 
+def apply_live_today(conn, fin: dict, start: str, end: str) -> None:
+    """Orders reach the marketplace reports a day late. For today, when a panel's own live counter shows
+    more than the reports have, use the panel's figures (marked live; profit waits for the report)."""
+    day = today().isoformat()
+    if not (start <= day <= end):
+        return
+    for r in conn.execute("SELECT * FROM live_today WHERE day = ?", (day,)):
+        d = fin["platforms"].get(r["platform"])
+        if d is None:
+            continue
+        have = conn.execute(f"SELECT COALESCE(SUM(qty),0) u FROM orders WHERE platform=? AND order_date=? "
+                            f"AND status != 'cancelled' AND {db.sku_filter_sql('sku')}", (r["platform"], day)).fetchone()["u"]
+        extra_units = max(0, (r["units"] or 0) - have)
+        if not extra_units:
+            continue
+        # add only the part of today the reports don't have yet, priced at what the seller actually gets
+        # (the panel's "sales" is the customer price, which includes the part Flipkart keeps for shipping)
+        avg = conn.execute(
+            "SELECT SUM(sale_amount)/SUM(qty) FROM orders WHERE platform=? AND sale_amount>0 AND price_estimated=0 "
+            "AND status != 'cancelled' AND order_date >= date(?, '-14 days')", (r["platform"], day)).fetchone()[0]
+        if avg:
+            extra_sales = round(extra_units * avg, 2)
+        else:
+            extra_sales = round((r["sales"] or 0) * extra_units / (r["units"] or extra_units), 2)
+        d["units"] += extra_units
+        d["orders"] += extra_units          # the panel counts units; one unit per order is the norm here
+        d["gross"] += extra_sales
+        d["net_sale"] += extra_sales
+        d["live"] = {"captured_at": r["captured_at"], "units": r["units"], "sales": r["sales"],
+                     "new_orders": r["new_orders"], "returns": r["returns"]}
+        t = fin["total"]
+        t["units"] += extra_units
+        t["orders"] += extra_units
+        t["gross"] += extra_sales
+        t["net_sale"] += extra_sales
+        t["live_extra_sales"] = round(t.get("live_extra_sales", 0) + extra_sales, 2)
+
+
 def summary(conn, pkey: str, start: Optional[str] = None, end: Optional[str] = None) -> dict:
     per = period(pkey, start, end)
     inv = compute_inventory(conn)
     fees = _fee_lookup(conn)
     rates = _estimate_rates(conn, fees)
     fin = finance(conn, per["start"], per["end"], inv, fees, rates)
+    apply_live_today(conn, fin, per["start"], per["end"])
     prev = finance(conn, per["prev_start"], per["prev_end"], inv, fees, rates)
     ret = returns_stats(conn, per["start"], per["end"])
     t = fin["total"]

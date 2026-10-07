@@ -21,31 +21,14 @@ CHAT_ID = "APNA_TELEGRAM_CHAT_ID"
 LOGIN_IDS = {"Amazon login": "pnAmazonLogin01", "Flipkart login": "pnFlipkartLogin", "Meesho login": "pnMeeshoLogin01"}
 
 # Read-only pages n8n opens every morning (in the PureNutrix Chrome profile).
-PAGES = {  # checked in the logged-in panels on 26 Sep 2026
-    "amazon": [
-        {"page_kind": "orders", "url": "https://sellercentral.amazon.in/orders-v3/mfn/pending/easyship?page=1"},
-        {"page_kind": "orders", "url": "https://sellercentral.amazon.in/orders-v3/mfn/unshipped/easyship?page=1"},
-        {"page_kind": "orders", "url": "https://sellercentral.amazon.in/orders-v3/mfn/shipped/easyship/handover-ready?page=1"},
-        {"page_kind": "orders", "url": "https://sellercentral.amazon.in/orders-v3/mfn/shipped/easyship/handover-done?page=1"},
-        {"page_kind": "orders", "url": "https://sellercentral.amazon.in/orders-v3/mfn/shipped/easyship/handover-done?page=2"},
-        {"page_kind": "orders", "url": "https://sellercentral.amazon.in/orders-v3/mfn/canceled/easyship?page=1"},
-        {"page_kind": "returns", "url": "https://sellercentral.amazon.in/gp/returns/list/v2"},
-        {"page_kind": "payments", "url": "https://sellercentral.amazon.in/payments/dashboard/index.html"},
-    ],
+# Orders, returns and payments come from the official report downloads (panel-reader /reports).
+# Only things that have no report are read off pages: Flipkart ads totals (+ listing pages from the dashboard).
+PAGES = {
+    "amazon": [],
     "flipkart": [
-        {"page_kind": "orders", "url": "https://seller.flipkart.com/index.html#dashboard/active-orders?query=%7B%22activeShipmentTile%22%3A%22inTransit%22%7D"},
-        {"page_kind": "returns", "url": "https://seller.flipkart.com/index.html#dashboard/returns"},
         {"page_kind": "ads", "url": "https://seller.flipkart.com/index.html#dashboard/ads/campaigns"},
     ],
-    "meesho": [  # "jpsyo" = your Meesho supplier id in the panel address
-        {"page_kind": "orders", "url": "https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/pending"},
-        {"page_kind": "orders", "url": "https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/ready-to-ship"},
-        {"page_kind": "orders", "url": "https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/shipped"},
-        {"page_kind": "orders", "url": "https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/orders/cancelled"},
-        {"page_kind": "returns", "url": "https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/returns/overview"},
-        {"page_kind": "returns", "url": "https://supplier.meesho.com/panel/v3/new/fulfillment/jpsyo/returns/returnTracking-intransit"},
-        {"page_kind": "payments", "url": "https://supplier.meesho.com/panel/v3/new/payouts/jpsyo/payments"},
-    ],
+    "meesho": [],
 }
 
 _x = 0
@@ -61,7 +44,7 @@ def node(name, ntype, version, params, **extra):
 
 
 def http(name, method, url, body_expr=None, cred=None, **extra):
-    p = {"method": method, "url": ("=" + url) if "{{" in url else url, "options": {"timeout": 600000}}
+    p = {"method": method, "url": ("=" + url) if "{{" in url else url, "options": {"timeout": 3600000}}
     if cred == "dash":
         p.update({"authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth"})
         extra["credentials"] = DASH_CRED
@@ -139,14 +122,23 @@ for (const [platform, nodeName] of Object.entries(readers)) {
 }
 return items;"""
     message_js = """const r = $input.first().json;
-const lines = ['🤖 PureNutrix — roz ki jaanch', r.summary || ''];
+const rep = $('Reports download karo').first().json || {};
+const lines = ['🤖 PureNutrix — roz ki jaanch'];
+for (const x of rep.results || []) {
+  if (x.status === 'ok') lines.push(`✓ ${x.job}: ${x.rows} rows`);
+  else if (x.status === 'error') lines.push(`⚠ ${x.job}: ${x.note}`);
+}
+if (rep.error) lines.push('⚠ Reports: ' + rep.error);
+lines.push(r.summary || '');
 if (r.alerts && r.alerts.count) lines.push('', r.alerts.text);
 return [{ json: { text: lines.join('\\n').slice(0, 4000), ids: (r.alerts && r.alerts.ids) || [] } }];"""
     reader_body = lambda p: "={{ JSON.stringify({ config: $('Listings jodo').first().json." + p + " }) }}"
     once = {"executeOnce": True}
     tolerant = {"executeOnce": True, "onError": "continueRegularOutput", "alwaysOutputData": True}
     nodes = [
-        schedule("Roz subah 6:30", "30 6 * * *"),
+        schedule("Roz 6:30 (+10:30, 14:30, 19:30 dobara koshish)", "30 6,10,14,19 * * *"),
+        http("Reports download karo", "POST", READER + "/reports", '={{ JSON.stringify({ mode: "daily" }) }}',
+             executeOnce=True, onError="continueRegularOutput", alwaysOutputData=True),
         code("Pages ki list", pages_js),
         http("Dashboard: kya pehle se hai", "GET", DASH + "/api/agent/snapshot?day={{ $json.day }}", cred="dash", **once),
         code("Listings jodo", listings_js),
@@ -169,7 +161,7 @@ return [{ json: { text: lines.join('\\n').slice(0, 4000), ids: (r.alerts && r.al
     manual["position"] = [240, 520]
     nodes.append(manual)
     conns = chain(*names)
-    conns["Abhi chalao (test)"] = {"main": [[{"node": "Pages ki list", "type": "main", "index": 0}]]}
+    conns["Abhi chalao (test)"] = {"main": [[{"node": "Reports download karo", "type": "main", "index": 0}]]}
     return workflow("pnDailyPanelRun1", "PureNutrix — roz subah panel se data", nodes, conns)
 
 
@@ -192,15 +184,18 @@ return [{ json: a }];"""
         schedule("Mahine ki 1 tareekh", "30 9 1 * *"),
         http("Mahine ki report", "GET", DASH + "/api/agent/report?kind=month", cred="dash"),
         telegram("Mahine ki report bhejo", "={{ $json.text }}"),
+        schedule("Har 30 min (8 AM - 11 PM)", "*/30 8-23 * * *"),
+        http("Aaj ke live number", "POST", READER + "/live", "={{ JSON.stringify({}) }}", onError="continueRegularOutput"),
     ]
-    for i, n in enumerate(nodes):  # lay out the three flows as rows
-        row = 0 if i < 5 else 1 if i < 8 else 2
-        col = i if i < 5 else i - 5 if i < 8 else i - 8
+    for i, n in enumerate(nodes):  # lay out the flows as rows
+        row = 0 if i < 5 else 1 if i < 8 else 2 if i < 11 else 3
+        col = i if i < 5 else i - 5 if i < 8 else i - 8 if i < 11 else i - 11
         n["position"] = [240 + 260 * col, 200 + 220 * row]
     conns = {}
     conns.update(chain("Har 3 ghante", "Naye alerts", "Koi alert hai?", "Alert bhejo", "Alerts bhej diye"))
     conns.update(chain("Somvaar subah 9", "Hafte ki report", "Hafte ki report bhejo"))
     conns.update(chain("Mahine ki 1 tareekh", "Mahine ki report", "Mahine ki report bhejo"))
+    conns.update(chain("Har 30 min (8 AM - 11 PM)", "Aaj ke live number"))
     return workflow("pnAlertsReports1", "PureNutrix — alerts aur reports", nodes, conns)
 
 
