@@ -1,0 +1,49 @@
+.lab-admin-card {
+  display: flex;
+  gap: 24px;
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--admin-shadow);
+}
+.lab-admin-qr { display: flex; flex-direction: column; gap: 10px; align-items: center; flex-shrink: 0; width: 200px; }
+.lab-admin-qr img, .lab-admin-qr-empty { width: 200px; height: 200px; border-radius: 10px; background: #fff; padding: 6px; }
+.lab-admin-qr-btns { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.lab-admin-qr-btns .admin-btn { width: 100%; padding: 8px 10px; font-size: 0.85rem; }
+.lab-admin-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.lab-admin-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.lab-admin-head h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 1.15rem; }
+.lab-admin-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; }
+.lab-admin-link { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.lab-admin-link code {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  background: var(--admin-bg); border: 1px solid var(--admin-border); border-radius: 6px; padding: 6px 10px; font-size: 0.85rem;
+}
+.lab-admin-hint { margin: 0; font-size: 0.8rem; color: var(--admin-text-muted); }
+.lab-admin-fields { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.lab-admin-fields label { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+.lab-admin-fields label span, .lab-admin-label { font-size: 0.75rem; color: var(--admin-text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.lab-admin-file {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px; border: 1px dashed var(--admin-border); border-radius: 10px;
+}
+.lab-admin-file > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.lab-admin-file a { color: var(--admin-accent); font-weight: 600; word-break: break-all; }
+.lab-admin-meta { font-size: 0.8rem; color: var(--admin-text-muted); }
+.lab-admin-missing { color: #f59e0b; font-size: 0.9rem; }
+.lab-admin-add { display: flex; gap: 10px; margin: 6px 0 4px; }
+.lab-admin-leads-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 28px 0 12px; }
+.lab-admin-leads-head h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 1.1rem; }
+
+@media (max-width: 768px) {
+  .lab-admin-card { flex-direction: column; padding: 14px; gap: 16px; }
+  .lab-admin-qr { width: 100%; }
+  .lab-admin-qr-btns { flex-direction: row; }
+  .lab-admin-add { flex-direction: column; }
+}
+@media (max-width: 1024px) {
+  .t-leads td:nth-child(1) { grid-column: 1 / -1; }
+  .t-leads td:nth-child(4) { text-align: right; }
+}
