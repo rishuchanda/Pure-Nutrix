@@ -110,6 +110,9 @@ const CartPage = ({ cartItems, onUpdateQuantity, onRemoveItem, onCheckout, onBac
                     <span>₹{subtotal}</span>
                   </div>
                 </div>
+                <p className="cart-coupon-hint" style={{ margin: '14px 0 0', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
+                  Have a coupon code? You can apply it on the next step.
+                </p>
                 <button className="btn-primary checkout-btn" onClick={onCheckout}>
                   Proceed to Checkout
                 </button>

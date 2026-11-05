@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, CreditCard, Wallet, Truck, ShieldCheck, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, CreditCard, Wallet, Truck, ShieldCheck, XCircle, Tag } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { findCoupon, couponDiscount } from '../utils/coupons';
 import './OrderPage.css';
 
 const OrderPage = ({ product, cartItems, onBack }) => {
@@ -198,9 +199,36 @@ const OrderPage = ({ product, cartItems, onBack }) => {
     }, 0);
     
     const isTestOrder = orderItems.some(item => String(item.product.category).toUpperCase() === 'TEST' || Number(item.product.price) === 10);
+    // Free-shipping threshold is checked on the price before the coupon,
+    // so applying a coupon never adds a shipping charge.
     const shippingFee = (totalPrice < 499 && !isTestOrder) ? 28 : 0;
     const codFee = paymentMethod === 'cod' ? 19 : 0;
-    const finalTotal = totalPrice + shippingFee + codFee;
+
+    // ── Coupon (e.g. PUREJOY10 = 10% off every product) ──
+    const [couponInput, setCouponInput] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
+    const [couponMessage, setCouponMessage] = useState(null); // { ok: boolean, text }
+    const discountAmount = couponDiscount(appliedCoupon, totalPrice);
+    const finalTotal = totalPrice - discountAmount + shippingFee + codFee;
+
+    const applyCoupon = () => {
+      const coupon = findCoupon(couponInput);
+      if (!couponInput.trim()) {
+        setCouponMessage({ ok: false, text: 'Please enter a coupon code.' });
+      } else if (!coupon) {
+        setAppliedCoupon(null);
+        setCouponMessage({ ok: false, text: 'This coupon code is not valid.' });
+      } else {
+        setAppliedCoupon(coupon);
+        setCouponInput(coupon.code);
+        setCouponMessage({ ok: true, text: `${coupon.code} applied — ${coupon.label}.` });
+      }
+    };
+    const removeCoupon = () => {
+      setAppliedCoupon(null);
+      setCouponInput('');
+      setCouponMessage(null);
+    };
     
     // BOGO: Every item gets a free copy.
 
@@ -304,25 +332,28 @@ const OrderPage = ({ product, cartItems, onBack }) => {
       const firstProductImage = orderItems.length > 0 ? (orderItems[0].product.image_urls || orderItems[0].product.images || [])[0] || '' : '';
       
       const saveOrderToDB = async (user, addressString, finalProductName, firstProductImage) => {
-        const { error } = await supabase
-          .from('orders')
-          .insert([
-            {
-              user_id: user.id,
-              customer_name: formData.name,
-              customer_mobile: formData.mobile,
-              customer_email: user.email,
-              shipping_address: addressString,
-              city: formData.city,
-              state: formData.state,
-              pincode: formData.pincode,
-              product_name: finalProductName,
-              price: finalTotal,
-              qty: totalQuantity,
-              image: firstProductImage,
-              status: 'Processing'
-            }
-          ]);
+        const orderRow = {
+          user_id: user.id,
+          customer_name: formData.name,
+          customer_mobile: formData.mobile,
+          customer_email: user.email,
+          shipping_address: addressString,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          product_name: finalProductName,
+          price: finalTotal,
+          qty: totalQuantity,
+          image: firstProductImage,
+          status: 'Processing'
+        };
+        const couponFields = appliedCoupon ? { coupon_code: appliedCoupon.code, discount_amount: discountAmount } : {};
+        let { error } = await supabase.from('orders').insert([{ ...orderRow, ...couponFields }]);
+        if (error && appliedCoupon && (error.code === '42703' || error.code === 'PGRST204' || /coupon_code|discount_amount/i.test(error.message || ''))) {
+          // Coupon columns not added yet — still save the order (the price already includes the discount).
+          console.warn('orders.coupon_code / discount_amount columns are missing; order saved without them.');
+          ({ error } = await supabase.from('orders').insert([{ ...orderRow, product_name: `${finalProductName} | Coupon ${appliedCoupon.code} (-₹${discountAmount})` }]));
+        }
 
         if (error) throw error;
 
@@ -401,6 +432,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                     <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
                       <strong>Order Details:</strong><br/>
                       Items: ${finalProductName}<br/>
+                      ${appliedCoupon ? `Coupon: ${appliedCoupon.code} (-₹${discountAmount})<br/>` : ''}
                       Total Amount: ₹${finalTotal}<br/>
                       Shipping Address: ${addressString}
                     </div>
@@ -743,11 +775,45 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                     );
                   })}
 
+                  <div className="coupon-box">
+                    {appliedCoupon ? (
+                      <div className="coupon-applied">
+                        <Tag size={16} />
+                        <span><strong>{appliedCoupon.code}</strong> applied · you save ₹{discountAmount}</span>
+                        <button type="button" className="coupon-remove" onClick={removeCoupon}>Remove</button>
+                      </div>
+                    ) : (
+                      <div className="coupon-form">
+                        <input
+                          type="text"
+                          value={couponInput}
+                          onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponMessage(null); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                          placeholder="Have a coupon code?"
+                          aria-label="Coupon code"
+                          autoCapitalize="characters"
+                          autoComplete="off"
+                          disabled={isProcessing}
+                        />
+                        <button type="button" className="coupon-apply" onClick={applyCoupon} disabled={isProcessing}>Apply</button>
+                      </div>
+                    )}
+                    {couponMessage && !appliedCoupon && (
+                      <p className={`coupon-message ${couponMessage.ok ? 'ok' : 'error'}`}>{couponMessage.text}</p>
+                    )}
+                  </div>
+
                   <div className="summary-calculations">
                     <div className="calc-row">
                       <span>Subtotal</span>
                       <span>₹{totalPrice}</span>
                     </div>
+                    {appliedCoupon && discountAmount > 0 && (
+                      <div className="calc-row coupon-row">
+                        <span>Coupon ({appliedCoupon.code})</span>
+                        <span>−₹{discountAmount}</span>
+                      </div>
+                    )}
                     <div className="calc-row">
                       <span>Shipping</span>
                       {shippingFee > 0 ? (
