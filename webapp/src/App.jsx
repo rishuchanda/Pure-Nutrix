@@ -9,6 +9,7 @@ import AuthModal from './components/AuthModal';
 import OrderPage from './components/OrderPage';
 import AccountPage from './components/AccountPage';
 import AdminDashboard from './components/AdminDashboard';
+import LabReportPage from './components/LabReportPage';
 import ProductsPage from './components/ProductsPage';
 import ProductDetailsPage from './components/ProductDetailsPage';
 import CartPage from './components/CartPage';
@@ -67,7 +68,7 @@ function App() {
         if (state.product) setSelectedProduct(state.product);
       } else {
         const { view, slug: productSlug } = parsePath(window.location.pathname);
-        const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'privacy-policy', 'support', 'whatsapp'];
+        const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'privacy-policy', 'support', 'whatsapp', 'lab-report'];
         
         if (validViews.includes(view)) {
           if ((view === 'pdp' || view === 'order') && productSlug) {
@@ -109,7 +110,7 @@ function App() {
     // Initial load
     const isPathAdmin = window.location.pathname === '/admin';
     const { view: initialView, slug: initialSlug } = parsePath(window.location.pathname);
-    const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'privacy-policy', 'support', 'whatsapp'];
+    const validViews = ['home', 'order', 'account', 'products', 'pdp', 'cart', 'quality-standards', 'legal-policy', 'privacy-policy', 'support', 'whatsapp', 'lab-report'];
 
     if (isPathAdmin) {
       // Do nothing to the hash if we are on the admin page
@@ -606,6 +607,15 @@ function App() {
             transition={{ duration: 0.5 }}
           >
             <SupportPage onBack={handleBackToHome} />
+          </motion.div>
+        ) : currentView === 'lab-report' ? (
+          <motion.div
+            key="lab-report"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <LabReportPage slug={parsePath(window.location.pathname).slug} />
           </motion.div>
         ) : currentView === 'whatsapp' ? (
           <motion.div
