@@ -3,6 +3,19 @@
 
 <head>
   <meta charset="UTF-8" />
+  <script>
+    // Old links and printed QR codes use the former hash URLs
+    // (e.g. https://purenutrix.in/#whatsapp). Turn them into the current
+    // path URLs (/whatsapp) before the app starts, so they keep working.
+    (function () {
+      var h = (location.hash || '').replace(/^#\/?/, '');
+      var first = h.split(/[/?]/)[0];
+      var known = ['whatsapp', 'products', 'cart', 'account', 'quality', 'legal', 'privacy-policy', 'support', 'product', 'pdp', 'buy', 'lab-report'];
+      if ((location.pathname === '/' || location.pathname === '/index.html') && first && known.indexOf(first) !== -1) {
+        history.replaceState(null, '', '/' + h);
+      }
+    })();
+  </script>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
