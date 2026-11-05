@@ -4,7 +4,7 @@ import {
   Users, Package, Truck, BarChart2, ShieldCheck, Lock,
   Moon, Sun, LogOut, Search, ChevronRight, ShoppingBag, 
   Upload, Trash2, Image as ImageIcon, Bell, Settings, Edit,
-  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus, Save, Menu, X, MessageCircle, FileText, Star, Globe
+  ArrowUpRight, ArrowDownRight, RefreshCcw, Plus, Save, Menu, X, MessageCircle, FileText, Star, Globe, FlaskConical
 } from 'lucide-react';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../supabaseClient';
 import { createClient } from '@supabase/supabase-js';
@@ -12,6 +12,7 @@ import CRMTab from './CRMTab';
 import GSTModule from './GSTModule';
 import ReviewsTab from './ReviewsTab';
 import SEOTab from './SEOTab';
+import LabReportsTab from './LabReportsTab';
 import './AdminDashboard.css';
 
 const AdminDashboard = ({ user }) => {
@@ -375,6 +376,7 @@ const AdminDashboard = ({ user }) => {
     { id: 'gst', label: 'GST & Tax Module', icon: FileText },
     { id: 'reviews', label: 'Product Reviews & Ratings', icon: Star },
     { id: 'seo', label: 'Google SEO & Rankings', icon: Globe },
+    { id: 'lab-reports', label: 'Lab Reports & QR', icon: FlaskConical },
   ];
 
   if (adminRole === 'super_admin') {
@@ -942,6 +944,9 @@ const AdminDashboard = ({ user }) => {
               {activeTab === 'seo' && (
                 <SEOTab showNotification={(msg) => alert(msg)} />
               )}
+
+              {/* === LAB REPORTS & QR === */}
+              {activeTab === 'lab-reports' && <LabReportsTab />}
             </motion.div>
           </AnimatePresence>
         </main>

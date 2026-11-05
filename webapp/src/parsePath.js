@@ -21,6 +21,7 @@ export const parsePath = (path) => {
   
   if (segment === 'product' || segment === 'pdp') return { view: 'pdp', slug: parts[1] };
   if (segment === 'buy' || segment === 'order') return { view: 'order', slug: parts[1] };
+  if (segment === 'lab-report' && parts[1]) return { view: 'lab-report', slug: parts[1] };
 
   return { view: 'home', slug: null };
 };
@@ -38,6 +39,7 @@ export const getPathForView = (view, slug = null) => {
     'whatsapp': '/whatsapp',
     'pdp': `/product/${slug}`,
     'order': `/buy/${slug}`,
+    'lab-report': `/lab-report/${slug}`,
   };
   return routeMap[view] || '/';
 };
