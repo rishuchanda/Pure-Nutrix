@@ -120,6 +120,9 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
           {product.description || 'Premium formulation for maximum efficacy.'}
         </p>
 
+        {getProductReviews(product).isNew ? (
+          <div className="product-rating-minimal" style={{ fontSize: 12, color: '#555' }}>New launch</div>
+        ) : (
         <div className="product-rating-minimal">
           <Star size={12} className="star-icon" fill="#111" color="#111" />
           <Star size={12} className="star-icon" fill="#111" color="#111" />
@@ -127,6 +130,7 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
           <Star size={12} className="star-icon" fill="#111" color="#111" />
           <Star size={12} className="star-icon" color="#111" />
         </div>
+        )}
 
         <div className="product-meta-minimal">
           <span className="product-price-minimal">
