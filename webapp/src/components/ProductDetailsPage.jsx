@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp, Share2 } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp, Share2, FlaskConical } from 'lucide-react';
 import { getProductReviews, addCustomerReview } from '../utils/mockReviews';
 import { getProductDetails } from '../utils/productDetailsData';
 import { supabase } from '../supabaseClient';
@@ -251,13 +251,15 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
           {/* RIGHT COLUMN - PRODUCT INFO */}
           <div className="pdp-info-column">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <span className="pdp-badge-best-seller">Best Seller</span>
+              <span className="pdp-badge-best-seller">{reviewData.isNew ? 'New Launch' : 'Best Seller'}</span>
               <button 
                 className="pdp-share-btn"
                 onClick={async () => {
                   const shareData = {
                     title: `Pure Nutrix - ${product.name}`,
-                    text: `Hey! Check out this amazing product from Pure Nutrix: ${product.name}. 🌿\n\nIt's a best-seller and highly rated!`,
+                    text: reviewData.isNew
+                      ? `Hey! Check out this new product from Pure Nutrix: ${product.name}. 🌿`
+                      : `Hey! Check out this amazing product from Pure Nutrix: ${product.name}. 🌿\n\nIt's a best-seller and highly rated!`,
                     url: window.location.href,
                   };
                   try {
@@ -282,6 +284,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
             <p className="pdp-subtitle">{details.subtitle}</p>
 
             <div className="pdp-star-summary" onClick={() => document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' })}>
+              {reviewData.totalCount > 0 && (
               <div className="pdp-stars">
                 <Star size={16} fill="#fbbf24" stroke="none" />
                 <Star size={16} fill="#fbbf24" stroke="none" />
@@ -289,7 +292,8 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
                 <Star size={16} fill="#fbbf24" stroke="none" />
                 <Star size={16} fill="#fbbf24" stroke="none" />
               </div>
-              <span>{reviewData.rating} ({reviewData.totalCount} reviews)</span>
+              )}
+              <span>{reviewData.totalCount > 0 ? `${reviewData.rating} (${reviewData.totalCount} reviews)` : 'New launch · be the first to review'}</span>
             </div>
 
             <div className="pdp-price-row">
@@ -309,6 +313,17 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
                 <span key={idx} className="pdp-tag">{tag}</span>
               ))}
             </div>
+
+            {details.labReportSlug && (
+              <a className="pdp-lab-report" href={`/lab-report/${details.labReportSlug}`}>
+                <FlaskConical size={18} />
+                <span>
+                  <strong>Lab tested — see the report</strong>
+                  <small>Same report as the QR code on the jar</small>
+                </span>
+                <ChevronRight size={18} />
+              </a>
+            )}
 
             <div className="pdp-actions">
               <button className="btn-add-cart" onClick={() => onAddToCart && onAddToCart(product)}>
@@ -379,7 +394,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
           )}
 
           <div className="pdp-ai-summary">
-            <h3>✨ AI Generated Review Summary</h3>
+            <h3>{reviewData.isNew ? '✨ Product Highlights' : '✨ AI Generated Review Summary'}</h3>
             <p>{details.aiSummary.text}</p>
             <div className="pdp-ai-topics">
               {details.aiSummary.topics.map((topic, idx) => (
@@ -387,6 +402,10 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
               ))}
             </div>
           </div>
+
+          {reviewData.reviewsList.length === 0 && (
+            <p style={{ color: '#555', margin: '10px 0 30px' }}>No reviews yet. Bought this product? Tap “Write a Review” to share your experience.</p>
+          )}
 
           <div className="pdp-reviews-list">
             {(showAllReviews ? reviewData.reviewsList : reviewData.reviewsList.slice(0, 4)).map((review, idx) => (

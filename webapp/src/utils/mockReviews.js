@@ -134,9 +134,22 @@ export const toggleVerifiedBuyer = (id) => {
 };
 
 // Backwards-compatible getter used by storefront pages (ProductDetailsPage, ProductsPage, etc.)
+// Products launched without any seeded review text. They show only real,
+// approved customer reviews (none at launch) and a "New Launch" badge.
+const NEW_LAUNCH_KEYWORDS = ['liposomal'];
+
 export const getProductReviews = (product) => {
   const allStored = getStoredReviews();
   const productName = product?.name?.toLowerCase() || '';
+
+  const newKey = NEW_LAUNCH_KEYWORDS.find(k => productName.includes(k));
+  if (newKey) {
+    const real = allStored
+      .filter(rev => rev.status === 'Approved' && (rev.productName || '').toLowerCase().includes(newKey))
+      .map(rev => ({ id: rev.id, name: rev.customerName, rating: rev.rating, date: rev.date, comment: rev.comment, verified: rev.verifiedBuyer, photos: rev.photos || [] }));
+    const avg = real.length ? Math.round((real.reduce((a, r) => a + (Number(r.rating) || 0), 0) / real.length) * 10) / 10 : null;
+    return { totalCount: real.length, rating: avg, reviewsList: real, isNew: true };
+  }
   const isGlutathione = productName.includes('glutathione');
   const isAshwagandha = productName.includes('ashwagandha');
   const isCollagen = productName.includes('collagen');

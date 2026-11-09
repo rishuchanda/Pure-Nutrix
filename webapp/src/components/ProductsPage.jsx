@@ -81,7 +81,7 @@ const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
                   style={{ cursor: 'pointer' }}
                 >
                   <div className="product-item-image-wrap">
-                    <span className="badge-best-seller">Best Seller</span>
+                    <span className="badge-best-seller">{reviewData.isNew ? 'New Launch' : 'Best Seller'}</span>
                     {product.image_urls && product.image_urls.length > 0 ? (
                       <img src={product.image_urls[0]} alt={product.name} />
                     ) : (
@@ -107,14 +107,18 @@ const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
                     </h2>
                     <p className="product-item-subtitle">{dynamicDetails.subtitle}</p>
 
-                    <div className="product-item-stars">
-                      <div style={{ display: 'flex' }}>
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} size={14} fill="#fbbf24" stroke="none" className="star-icon" />
-                        ))}
+                    {reviewData.totalCount > 0 ? (
+                      <div className="product-item-stars">
+                        <div style={{ display: 'flex' }}>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} size={14} fill="#fbbf24" stroke="none" className="star-icon" />
+                          ))}
+                        </div>
+                        <span>{reviewData.rating} ({reviewData.totalCount} reviews)</span>
                       </div>
-                      <span>{reviewData.rating} ({reviewData.totalCount} reviews)</span>
-                    </div>
+                    ) : (
+                      <div className="product-item-stars"><span>New launch · no reviews yet</span></div>
+                    )}
 
                     <div className="product-item-price">
                       <span>₹{product.price}</span>

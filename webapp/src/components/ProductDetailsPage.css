@@ -287,6 +287,7 @@
 
 .pdp-tags {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 30px;
 }
@@ -301,6 +302,23 @@
   font-size: 0.85rem;
   color: #555555;
 }
+
+.pdp-lab-report {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -14px 0 26px;
+  padding: 12px 14px;
+  border: 1px solid #c7d7ee;
+  background: #f3f7fd;
+  border-radius: 10px;
+  color: #12305a;
+  text-decoration: none;
+}
+.pdp-lab-report span { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.pdp-lab-report strong { font-size: 0.95rem; }
+.pdp-lab-report small { font-size: 0.8rem; color: #4b5d78; }
+.pdp-lab-report:hover { background: #e8f0fb; }
 
 .pdp-accordions {
   border-top: 1px solid #e5e5e5;
