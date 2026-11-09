@@ -42,8 +42,58 @@ export const getProductDetails = (productName) => {
     ]
   };
 
+  // Match Liposomal Glutathione (checked before plain Glutathione).
+  // Text follows the jar label; keep claims to "supports", no cure/treatment words.
+  if (name.includes('liposomal') && name.includes('glutathione')) {
+    details = {
+      subtitle: "600 mg Liposomal Glutathione (85% purity) per capsule, wrapped in sunflower-lecithin liposomes. One veg capsule a day for skin radiance and antioxidant support.",
+      tags: ["✨ Skin Radiance", "🌱 Veg Capsule (HPMC)", "🧪 Lab Report on QR"],
+      labReportSlug: 'liposomal-glutathione',
+      whatMakesItSpecial: {
+        description: "Glutathione is the body's own master antioxidant. In this formula each capsule carries 600 mg of Liposomal Glutathione, providing 510 mg of L-Glutathione (85%), held inside a nano-sized phospholipid (liposome) layer from sunflower lecithin.",
+        bullets: [
+          "600 mg Liposomal Glutathione per capsule, providing 510 mg L-Glutathione (85%)",
+          "Nano-liposomal delivery: glutathione wrapped in a protective phospholipid layer",
+          "Supports natural skin glow and a healthy-looking complexion",
+          "Antioxidant support that helps the body fight oxidative stress",
+          "Just 1 capsule a day — 1 jar lasts 30 days",
+          "Vegetarian HPMC capsule, no soy, zero sugar",
+          "Batch lab report available — scan the QR on the jar"
+        ]
+      },
+      howToUse: {
+        steps: [
+          { title: "Step 1", desc: "Take 1 capsule daily." },
+          { title: "Step 2", desc: "Take it on an empty stomach, in the morning before breakfast, with water." },
+          { title: "Step 3", desc: "Use regularly every day; do not exceed the recommended daily usage." }
+        ],
+        note: "If pregnant, nursing or on medication, consult your doctor before use. Keep out of reach of children. Not for medicinal use."
+      },
+      scienceAndIngredients: {
+        keyIngredients: "Liposomal L-Glutathione 600 mg (Reduced L-Glutathione, Phospholipids) providing L-Glutathione 510 mg (85%). Other ingredients: Vegetable Cellulose Capsule (HPMC).",
+        description: "A liposome is a tiny sphere made of phospholipids — the same kind of material as the body's cell walls. Placing glutathione inside this layer is designed to protect it from stomach acid and enzymes on the way to absorption. Per capsule (approx.): Energy 2.9 kcal, Protein 0.5 g, Carbohydrate 0 g, Sugars 0 g, Fat 0.1 g, Sodium 0 mg."
+      },
+      specs: {
+        form: "Veg Capsule (HPMC)",
+        quantity: "30 Capsules (PET jar)",
+        packOf: "1",
+        shelfLife: "See Best Before date on the jar"
+      },
+      aiSummary: {
+        text: "This is a new product, so customer reviews are still coming in. Highlights from the label: 600 mg liposomal glutathione at 85% purity, one capsule a day, vegetarian capsule, and a batch lab report you can open from the QR code on the jar.",
+        topics: ["Liposomal", "85% Purity", "1 Capsule Daily", "Lab Report QR"]
+      },
+      faq: [
+        { q: "What does 'liposomal' mean?", a: "The glutathione is wrapped in a very small phospholipid bubble (a liposome) made from sunflower lecithin. This layer is designed to protect it in the stomach and help it get absorbed." },
+        { q: "How do I take it?", a: "1 capsule a day on an empty stomach, in the morning before breakfast, with water — or as advised by your healthcare professional." },
+        { q: "Is it vegetarian?", a: "Yes. The capsule shell is vegetable cellulose (HPMC) and the liposomes are made from sunflower lecithin. It contains no soy and no sugar." },
+        { q: "Where can I see the lab report?", a: "Scan the 'Lab Report' QR code on the jar, or open purenutrix.in/lab-report/liposomal-glutathione." },
+        { q: "Can men use it?", a: "Yes, it is for adult men and women. If you are pregnant, nursing or on medication, please ask your doctor first." }
+      ]
+    };
+  }
   // Match Glutathione
-  if (name.includes('glutathione')) {
+  else if (name.includes('glutathione')) {
     details = {
       subtitle: "ADVANCED SKIN RADIANCE FORMULA: Repairs dull skin and promotes a youthful, luminous radiance.",
       tags: ["✨ Skin Brightening", "🌱 Vegetarian", "🔬 Clinically Proven"],
