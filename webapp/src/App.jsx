@@ -9,6 +9,9 @@ import HelpCta from './components/HelpCta';
 import RecentlyViewed from './components/RecentlyViewed';
 import ProductShowcase from './components/ProductShowcase';
 import WhyChooseUs from './components/WhyChooseUs';
+import HowItWorks from './components/HowItWorks';
+import HomeFaq from './components/HomeFaq';
+import MarketplaceStrip from './components/MarketplaceStrip';
 import TrustSection from './components/TrustSection';
 import Footer from './components/Footer';
 import { supabase } from './supabaseClient';
@@ -531,8 +534,11 @@ function App() {
 
               <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} onAddToCart={handleAddToCart} />
               <RecentlyViewed onProductClick={handleOpenProductDetails} />
+              <HowItWorks />
               <WhyChooseUs />
               <TrustSection />
+              <HomeFaq />
+              <MarketplaceStrip />
               <HelpCta />
             </main>
             <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} onOpenPrivacyPolicy={handleOpenPrivacyPolicy} onOpenSupport={handleOpenSupport} onOpenProducts={handleOpenProducts} />

@@ -17,6 +17,21 @@
     })();
   </script>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="manifest" id="pn-manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Pure Nutrix" />
+  <script>
+    // The admin page installs as its own home-screen app ("PN Admin") so the
+    // owner's phone opens straight into /admin and can receive order alerts.
+    if (location.pathname === '/admin') {
+      document.getElementById('pn-manifest').setAttribute('href', '/admin-manifest.json');
+      document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute('content', 'PN Admin');
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://fhxlzzjsoalrmkykhacz.supabase.co" crossorigin />
@@ -144,26 +159,58 @@
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "What makes Pure Nutrix supplements different from other brands in India?",
+        "name": "How soon will my order arrive?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Pure Nutrix products are 100% clinically researched, FSSAI compliant, manufactured in GMP certified facilities, and undergo independent third-party lab testing for purity and potency."
+          "text": "We dispatch from our Jaipur warehouse within 24–48 hours (except Sundays and public holidays). Delivery takes 2–5 business days in metro cities and 5–7 business days elsewhere in India."
         }
       },
       {
         "@type": "Question",
-        "name": "How long does L-Glutathione take to show skin brightening results?",
+        "name": "Is Cash on Delivery available?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Take it daily as directed on the label and use it consistently; results differ from person to person. Pure Nutrix Ultra L-Glutathione has 500mg per capsule with Vitamin C, and Liposomal Glutathione has 600mg per capsule."
+          "text": "Yes. Choose Cash on Delivery at checkout — a ₹19 handling fee applies. You can also pay online with UPI, card or net banking."
         }
       },
       {
         "@type": "Question",
-        "name": "Is COD (Cash on Delivery) and free shipping available on Pure Nutrix orders?",
+        "name": "How does Buy 1 Get 1 work?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes, we offer express PAN India delivery with Cash on Delivery (COD) as well as prepaid discounts across all major cities and pincodes in India."
+          "text": "For every jar you buy, one more of the same product is added free. It is applied automatically in your cart — no code needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is shipping free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Shipping is free on orders of ₹499 and above. Below ₹499, a ₹28 shipping fee is added at checkout."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I check the lab report?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Scan the QR code on your jar. It opens the lab report page for that product on purenutrix.in."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I return a product?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Supplements are not returnable once delivered, for hygiene reasons. If your parcel arrives damaged, expired or with the wrong product, message us within 48 hours of delivery with an uncut unboxing video and we will replace it or refund you."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How should I take it?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Follow the dose printed on the label. If you are pregnant, breastfeeding, taking medicines or have a medical condition, please ask your doctor before starting any supplement."
         }
       }
     ]
@@ -187,10 +234,10 @@
   src="https://www.facebook.com/tr?id=927392026297937&ev=PageView&noscript=1"
   /></noscript>
   <!-- End Meta Pixel Code -->
-  <script type="module" crossorigin src="/assets/index-BPWh0T2y.js"></script>
+  <script type="module" crossorigin src="/assets/index-C9q7osaL.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-CNC7AqOf.js">
   <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-CQkYJER1.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-CTZGImjg.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-00N1O55q.css">
 </head>
 
 <body>
