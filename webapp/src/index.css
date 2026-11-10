@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+/* DM Sans is loaded from index.html (preconnect + stylesheet link) so it does not block the CSS. */
 
 :root {
   --color-bg-primary: #ffffff;
@@ -155,3 +155,19 @@ h1, h2, h3, h4, h5, h6 {
   transform-origin: 0%;
   z-index: 9999;
 }
+
+/* Add-to-cart confirmation (replaces the blocking browser alert) */
+.cart-toast {
+  position: fixed; left: 50%; top: 88px; transform: translateX(-50%);
+  z-index: 10000; display: flex; align-items: center; gap: 14px;
+  background: #111; color: #fff; padding: 12px 14px 12px 18px; border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25); font-size: 0.92rem; max-width: calc(100vw - 32px);
+  animation: cartToastIn 0.25s ease-out;
+}
+@media (max-width: 768px) { .cart-toast { top: 66px; } }
+.cart-toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cart-toast button {
+  flex-shrink: 0; background: #fff; color: #111; border: none; border-radius: 999px;
+  padding: 7px 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+@keyframes cartToastIn { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }

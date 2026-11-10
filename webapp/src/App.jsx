@@ -1,22 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import Hero3D from './components/Hero3D';
 import ProductShowcase from './components/ProductShowcase';
 import WhyChooseUs from './components/WhyChooseUs';
 import TrustSection from './components/TrustSection';
 import Footer from './components/Footer';
-import AuthModal from './components/AuthModal';
-import OrderPage from './components/OrderPage';
-import AccountPage from './components/AccountPage';
-import AdminDashboard from './components/AdminDashboard';
-import LabReportPage from './components/LabReportPage';
-import ProductsPage from './components/ProductsPage';
-import ProductDetailsPage from './components/ProductDetailsPage';
-import CartPage from './components/CartPage';
-import QualityStandardsPage from './components/QualityStandardsPage';
-import LegalPolicyPage from './components/LegalPolicyPage';
-import PrivacyPolicyPage from './components/PrivacyPolicyPage';
-import SupportPage from './components/SupportPage';
 import { supabase } from './supabaseClient';
 import { requestPushPermissionAndSubscribe } from './pushNotifications';
 import Lenis from 'lenis';
@@ -27,6 +15,32 @@ import { parsePath, getPathForView } from './parsePath';
 
 
 import ChatbotWidget from './components/ChatbotWidget';
+
+// Pages that are not needed for the first screen are loaded on demand, so the
+// home page downloads far less JavaScript (admin, CRM, GST, PDF code etc.).
+const loadProducts = () => import('./components/ProductsPage');
+const loadPdp = () => import('./components/ProductDetailsPage');
+const loadCart = () => import('./components/CartPage');
+const loadOrder = () => import('./components/OrderPage');
+const AuthModal = lazy(() => import('./components/AuthModal'));
+const OrderPage = lazy(loadOrder);
+const AccountPage = lazy(() => import('./components/AccountPage'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const LabReportPage = lazy(() => import('./components/LabReportPage'));
+const ProductsPage = lazy(loadProducts);
+const ProductDetailsPage = lazy(loadPdp);
+const CartPage = lazy(loadCart);
+const QualityStandardsPage = lazy(() => import('./components/QualityStandardsPage'));
+const LegalPolicyPage = lazy(() => import('./components/LegalPolicyPage'));
+const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
+const SupportPage = lazy(() => import('./components/SupportPage'));
+
+const PageLoader = () => (
+  <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="spinning" style={{ width: 36, height: 36, border: '3px solid #111', borderTopColor: 'transparent', borderRadius: '50%' }} />
+  </div>
+);
+const Lazy = ({ children }) => <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 
 function App() {
   const { scrollYProgress } = useScroll();
@@ -43,6 +57,21 @@ function App() {
   // The cart used to live only in memory, so a refresh - or coming back later -
   // silently emptied it, and abandoned-cart recovery was impossible.
   const CART_STORAGE_KEY = 'pn_cart';
+  const [cartToast, setCartToast] = useState(null);
+  useEffect(() => {
+    if (!cartToast) return undefined;
+    const t = setTimeout(() => setCartToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [cartToast]);
+
+  // After the first screen is ready, quietly fetch the shop pages in the
+  // background so opening a product or the cart feels instant.
+  useEffect(() => {
+    const warm = () => { loadProducts(); loadPdp(); loadCart(); };
+    if ('requestIdleCallback' in window) { const id = window.requestIdleCallback(warm, { timeout: 4000 }); return () => window.cancelIdleCallback?.(id); }
+    const t = setTimeout(warm, 2500); return () => clearTimeout(t);
+  }, []);
+
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]');
@@ -182,8 +211,8 @@ function App() {
       });
     }
 
-    // Visual feedback handled by alert for now, or just let them know
-    alert('Added to cart!');
+    // Small non-blocking confirmation instead of a browser alert
+    setCartToast({ name: product.name?.length > 40 ? product.name.slice(0, 38) + '…' : product.name, at: Date.now() });
   };
 
   const handleUpdateCartQty = (productId, qty) => {
@@ -374,8 +403,8 @@ function App() {
       case 'products':
         return {
           title: "Buy Premium Nutraceuticals & Supplements Online | Pure Nutrix Products",
-          description: "Explore Pure Nutrix 100% science-backed product range: Ashwagandha Root Extract 500mg, L-Glutathione skin glow tablets, Gold Standard Whey Isolate, Multivitamins, and Collagen Peptides.",
-          keywords: "ashwagandha root extract capsules buy online, buy glutathione online, whey protein isolate price india, best collagen supplement india, pure nutrix products, stress relief supplement",
+          description: "Shop the Pure Nutrix range: Liposomal Glutathione 600mg, Ultra L-Glutathione with Vitamin C, Advanced Collagen & Biotin, Himalayan Sea Buckthorn Juice and Ashwagandha Root Extract 500mg. Buy 1 Get 1 FREE.",
+          keywords: "liposomal glutathione buy online, ashwagandha root extract capsules buy online, buy glutathione online, collagen biotin capsules india, sea buckthorn juice, pure nutrix products",
           canonical: "https://purenutrix.in/products"
         };
       case 'pdp':
@@ -430,8 +459,8 @@ function App() {
       default:
         return {
           title: liveSEO.defaultTitle || "Pure Nutrix | India's #1 Premium Nutraceuticals, Skin Glow & Health Supplements",
-          description: liveSEO.defaultDescription || "Pure Nutrix is India's leading brand for clinically proven health supplements, L-Glutathione 1000mg skin radiance tablets, 100% Whey Protein Isolate, Collagen Peptides, and Organic Supergreens.",
-          keywords: liveSEO.defaultKeywords || "Pure Nutrix, pure nutrix supplements, l-glutathione tablets buy online india, glutathione skin glow, whey protein isolate 2kg price, collagen peptide complex india, best nutraceutical brand india",
+          description: liveSEO.defaultDescription || "Pure Nutrix nutraceuticals: Liposomal Glutathione 600mg, Ultra L-Glutathione with Vitamin C, Advanced Collagen & Biotin, Himalayan Sea Buckthorn Juice and Ashwagandha Root Extract 500mg. FSSAI licensed, made in India.",
+          keywords: liveSEO.defaultKeywords || "Pure Nutrix, pure nutrix supplements, liposomal glutathione 600mg, glutathione capsules india, collagen biotin capsules, sea buckthorn juice, ashwagandha root extract 500mg",
           canonical: canonicalForCurrentPath()
         };
     }
@@ -507,7 +536,7 @@ function App() {
                 <p>Loading Order Details...</p>
               </div>
             ) : (
-              <OrderPage product={selectedProduct} cartItems={currentView === 'order' && !selectedProduct ? cartItems : null} onBack={handleBackToHome} />
+              <Lazy><OrderPage product={selectedProduct} cartItems={currentView === 'order' && !selectedProduct ? cartItems : null} onBack={handleBackToHome} /></Lazy>
             )}
           </motion.div>
         ) : currentView === 'cart' ? (
@@ -517,7 +546,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <CartPage
+            <Lazy><CartPage
               cartItems={cartItems}
               onUpdateQuantity={handleUpdateCartQty}
               onRemoveItem={handleRemoveFromCart}
@@ -527,7 +556,7 @@ function App() {
                 setCurrentView('order');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-            />
+            /></Lazy>
           </motion.div>
         ) : currentView === 'admin' ? (
           <motion.div
@@ -536,7 +565,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <AdminDashboard user={user} onBack={handleBackToHome} />
+            <Lazy><AdminDashboard user={user} onBack={handleBackToHome} /></Lazy>
           </motion.div>
         ) : currentView === 'account' ? (
           <motion.div
@@ -545,7 +574,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <AccountPage user={user} onBack={handleBackToHome} onSignOut={() => supabase.auth.signOut()} />
+            <Lazy><AccountPage user={user} onBack={handleBackToHome} onSignOut={() => supabase.auth.signOut()} /></Lazy>
           </motion.div>
         ) : currentView === 'products' ? (
           <motion.div
@@ -554,7 +583,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <ProductsPage onProductClick={handleOpenProductDetails} onBack={handleBackToHome} onOrder={handleOrder} onAddToCart={handleAddToCart} />
+            <Lazy><ProductsPage onProductClick={handleOpenProductDetails} onBack={handleBackToHome} onOrder={handleOrder} onAddToCart={handleAddToCart} /></Lazy>
           </motion.div>
         ) : currentView === 'pdp' ? (
           <motion.div
@@ -569,7 +598,7 @@ function App() {
                 <p>Loading Product Details...</p>
               </div>
             ) : (
-              <ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} onProductClick={handleOpenProductDetails} />
+              <Lazy><ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} onProductClick={handleOpenProductDetails} /></Lazy>
             )}
           </motion.div>
         ) : currentView === 'quality-standards' ? (
@@ -579,7 +608,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <QualityStandardsPage onBack={handleBackToHome} onExplore={handleOpenProducts} />
+            <Lazy><QualityStandardsPage onBack={handleBackToHome} onExplore={handleOpenProducts} /></Lazy>
           </motion.div>
         ) : currentView === 'legal-policy' ? (
           <motion.div
@@ -588,7 +617,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <LegalPolicyPage onBack={handleBackToHome} />
+            <Lazy><LegalPolicyPage onBack={handleBackToHome} /></Lazy>
           </motion.div>
         ) : currentView === 'privacy-policy' ? (
           <motion.div
@@ -597,7 +626,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <PrivacyPolicyPage onBack={handleBackToHome} />
+            <Lazy><PrivacyPolicyPage onBack={handleBackToHome} /></Lazy>
           </motion.div>
         ) : currentView === 'support' ? (
           <motion.div
@@ -606,7 +635,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <SupportPage onBack={handleBackToHome} />
+            <Lazy><SupportPage onBack={handleBackToHome} /></Lazy>
           </motion.div>
         ) : currentView === 'lab-report' ? (
           <motion.div
@@ -615,7 +644,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
           >
-            <LabReportPage slug={parsePath(window.location.pathname).slug} />
+            <Lazy><LabReportPage slug={parsePath(window.location.pathname).slug} /></Lazy>
           </motion.div>
         ) : currentView === 'whatsapp' ? (
           <motion.div
@@ -631,10 +660,20 @@ function App() {
           </motion.div>
         ) : null}
       </AnimatePresence>
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
+      {isAuthModalOpen && (
+        <Suspense fallback={null}>
+          <AuthModal
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
+          />
+        </Suspense>
+      )}
+      {cartToast && (
+        <div className="cart-toast" role="status" aria-live="polite">
+          <span>✓ Added to cart{cartToast.name ? `: ${cartToast.name}` : ''}</span>
+          <button onClick={() => { setCartToast(null); handleOpenCart(); }}>View cart</button>
+        </div>
+      )}
       {currentView !== 'admin' && <ChatbotWidget defaultMessage="Hi, I need help with Pure Nutrix products." />}
     </>
   );
