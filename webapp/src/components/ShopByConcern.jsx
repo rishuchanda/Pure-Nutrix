@@ -27,7 +27,7 @@ const ShopByConcern = ({ onProductClick, onOpenProducts }) => {
       <div className="sbc-wrap">
         <div className="sbc-head">
           <span className="sbc-eyebrow">Shop by need</span>
-          <h2 className="sbc-title">What do you need today?</h2>
+          <h2 className="sbc-title">What do you <em className="serif-accent">need</em> today?</h2>
         </div>
         <div className="sbc-grid">
           {TILES.map((t, i) => {

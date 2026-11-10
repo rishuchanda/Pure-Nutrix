@@ -6,9 +6,28 @@ import { getProductReviews } from '../utils/mockReviews';
 import { getProductDetails } from '../utils/productDetailsData';
 import './ProductsPage.css';
 
+// Category chips match words in the product name (no extra DB column needed).
+const CATEGORIES = [
+  { key: 'all', label: 'All', match: [] },
+  { key: 'skin', label: 'Skin Glow', match: ['glutathione'] },
+  { key: 'hair', label: 'Skin & Hair', match: ['collagen', 'biotin'] },
+  { key: 'wellness', label: 'Wellness', match: ['buckthorn', 'ashwagandha'] },
+];
+const SORTS = { featured: 'Featured', low: 'Price: Low to High', high: 'Price: High to Low' };
+
 const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState('all');
+  const [sort, setSort] = useState('featured');
+  const [addedId, setAddedId] = useState(null);
+  useEffect(() => { if (!addedId) return undefined; const t = setTimeout(() => setAddedId(null), 1600); return () => clearTimeout(t); }, [addedId]);
+
+  const cat = CATEGORIES.find(c => c.key === category);
+  const visible = products
+    .filter(p => !cat.match.length || cat.match.some(m => (p.name || '').toLowerCase().includes(m)))
+    .slice()
+    .sort((a, b) => (sort === 'low' ? a.price - b.price : sort === 'high' ? b.price - a.price : 0));
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -54,19 +73,27 @@ const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
           </motion.p>
         </div>
 
+        <div className="products-chips" role="tablist" aria-label="Categories">
+          {CATEGORIES.map(c => (
+            <button key={c.key} role="tab" aria-selected={category === c.key} className={`pchip ${category === c.key ? 'is-active' : ''}`} onClick={() => setCategory(c.key)}>{c.label}</button>
+          ))}
+        </div>
+
         <div className="products-top-bar">
-          <div>Showing {products.length} products</div>
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <span>Filter</span>
-            <span>Sort By</span>
-          </div>
+          <div>Showing {visible.length} {visible.length === 1 ? 'product' : 'products'}</div>
+          <label className="products-sort">
+            <span>Sort</span>
+            <select value={sort} onChange={(e) => setSort(e.target.value)}>
+              {Object.entries(SORTS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </label>
         </div>
 
         {loading ? (
           <div style={{ padding: '40px 0', color: '#555' }}>Loading collection...</div>
         ) : (
           <div className="products-grid">
-            {products.map((product, index) => {
+            {visible.map((product, index) => {
               const reviewData = getProductReviews(product);
               const dynamicDetails = getProductDetails(product.name);
 
@@ -82,6 +109,9 @@ const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
                 >
                   <div className="product-item-image-wrap">
                     <span className="badge-best-seller">{reviewData.isNew ? 'New Launch' : 'Best Seller'}</span>
+                    {product.original_price > product.price && (
+                      <span className="badge-save">−{Math.round((1 - product.price / product.original_price) * 100)}%</span>
+                    )}
                     {product.image_urls && product.image_urls.length > 0 ? (
                       <img src={product.image_urls[0]} alt={product.name} loading={index < 4 ? "eager" : "lazy"} decoding="async" width="600" height="600" />
                     ) : (
@@ -128,13 +158,14 @@ const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
                     </div>
 
                     <button
-                      className="btn-add-to-cart"
+                      className={`btn-add-to-cart ${addedId === product.id ? 'is-added' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         onAddToCart && onAddToCart(product);
+                        setAddedId(product.id);
                       }}
                     >
-                      Add to cart
+                      {addedId === product.id ? '✓ Added' : 'Add to cart'}
                     </button>
                   </div>
                 </motion.div>

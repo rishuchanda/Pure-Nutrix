@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Menu, X, User, Search } from 'lucide-react';
+import { ShoppingCart, Menu, X, User, Search, Home, LayoutGrid, ShieldCheck, FlaskConical, Headphones, ChevronRight, Gift, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import './Navbar.css';
 import SearchPopup from './SearchPopup';
@@ -33,7 +33,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
           <a href="/" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); }}>Home</a>
           <a href="/products" className="nav-link" onClick={(e) => { e.preventDefault(); onOpenProducts(); }}>Products</a>
           <a href="/quality" className="nav-link" onClick={(e) => { e.preventDefault(); onOpenQuality(); }}>Quality</a>
-          <a href="/#about" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); setTimeout(() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Our Science</a>
+          <a href="/#science" className="nav-link" onClick={(e) => { e.preventDefault(); onGoHome(); setTimeout(() => document.getElementById('science')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Our Science</a>
           <a href="/support" className="nav-link" onClick={(e) => { e.preventDefault(); onOpenSupport(); }}>Contact</a>
         </div>
 
@@ -78,7 +78,7 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
             onClick={onOpenCart}
           >
             <ShoppingCart size={20} />
-            <span className="cart-count">{cartCount}</span>
+            <span className="cart-count pn-bump" key={cartCount}>{cartCount}</span>
           </button>
 
           <button
@@ -90,18 +90,30 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu (drawer) */}
       {mobileMenuOpen && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22 }}
           className="mobile-menu glass"
         >
-          <a href="/" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); }}>Home</a>
-          <a href="/products" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenProducts(); }}>Products</a>
-          <a href="/quality" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenQuality(); }}>Quality</a>
-          <a href="/#about" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onGoHome(); setTimeout(() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Our Science</a>
-          <a href="/support" className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onOpenSupport(); }}>Contact</a>
+          <div className="mm-offer"><Gift size={16} /> Buy 1 Get 1 FREE on every product</div>
+          {[
+            { label: 'Home', icon: Home, href: '/', go: onGoHome },
+            { label: 'All Products', icon: LayoutGrid, href: '/products', go: onOpenProducts },
+            { label: 'Quality & Lab Reports', icon: ShieldCheck, href: '/quality', go: onOpenQuality },
+            { label: 'Our Science', icon: FlaskConical, href: '/#science', go: () => { onGoHome(); setTimeout(() => document.getElementById('science')?.scrollIntoView({ behavior: 'smooth' }), 150); } },
+            { label: 'Help & Contact', icon: Headphones, href: '/support', go: onOpenSupport },
+          ].map(({ label, icon: Icon, href, go }) => (
+            <a key={label} href={href} className="mobile-nav-link" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); go(); }}>
+              <span className="mm-ico"><Icon size={18} /></span>
+              <span className="mm-label">{label}</span>
+              <ChevronRight size={18} className="mm-chev" />
+            </a>
+          ))}
+
+          <a href="/whatsapp" className="mm-wa"><MessageCircle size={18} /> Chat with us on WhatsApp</a>
 
           <div className="mobile-menu-auth-actions">
             {user ? (
@@ -115,8 +127,8 @@ const Navbar = ({ user, onOpenAuth, onSignOut, onOpenAccount, onGoHome, onOpenPr
                 </button>
               </>
             ) : (
-              <button className="btn-outline mobile-full-btn" onClick={() => { setMobileMenuOpen(false); onOpenAuth(); }}>
-                Sign In
+              <button className="btn-outline mobile-full-btn mm-signin" onClick={() => { setMobileMenuOpen(false); onOpenAuth(); }}>
+                <User size={18} /> Sign In / Create account
               </button>
             )}
           </div>

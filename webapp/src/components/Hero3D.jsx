@@ -42,6 +42,7 @@ const Hero3D = ({ onProductClick, onOpenProducts }) => {
       eyebrow: <><Sparkles size={14} /> New launch</>,
       title: <>Liposomal<br />Glutathione</>,
       text: '600 mg per capsule · 85% purity · Nano-liposomal delivery. One veg capsule a day for skin radiance and antioxidant support.',
+      chips: ['600 mg', '85% purity', '1 capsule daily'],
       price: lipo ? { now: lipo.price, mrp: lipo.original_price } : null,
       cta: { label: 'Shop now', href: `/product/${LIPO_SLUG}`, onClick: openLipo },
       visual: (
@@ -56,6 +57,7 @@ const Hero3D = ({ onProductClick, onOpenProducts }) => {
       eyebrow: <><Gift size={14} /> On every order</>,
       title: <>Buy 1<br />Get 1 FREE</>,
       text: 'On every Pure Nutrix product. The free jar is added to your cart automatically — no code needed.',
+      chips: ['No code needed', 'Every product', 'COD available'],
       cta: { label: 'Shop all products', href: '/products', onClick: openProducts },
       visual: (
         <div className="hs-visual hs-visual-row">
@@ -72,6 +74,7 @@ const Hero3D = ({ onProductClick, onOpenProducts }) => {
       eyebrow: <><FlaskConical size={14} /> Transparency you can check</>,
       title: <>Lab tested.<br />Scan &amp; see.</>,
       text: 'Every Liposomal Glutathione jar carries a QR code. Scan it to open the latest lab report.',
+      chips: ['QR on every jar', 'FSSAI licensed', 'Made in India'],
       cta: { label: 'View lab report', href: '/lab-report/liposomal-glutathione' },
       visual: (
         <div className="hs-visual hs-visual-lab">
@@ -125,6 +128,11 @@ const Hero3D = ({ onProductClick, onOpenProducts }) => {
                 <span className="hs-eyebrow">{s.eyebrow}</span>
                 <h2 className="hs-title">{s.title}</h2>
                 <p className="hs-text">{s.text}</p>
+                {s.chips && (
+                  <ul className="hs-chips">
+                    {s.chips.map(c => <li key={c}>{c}</li>)}
+                  </ul>
+                )}
                 {s.price && s.price.now ? (
                   <p className="hs-price">
                     <strong>{formatINR(s.price.now)}</strong>

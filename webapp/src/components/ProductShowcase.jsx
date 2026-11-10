@@ -22,6 +22,8 @@ const ProductIngredients = ({ ingredients }) => {
 
 const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) => {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
+  const [added, setAdded] = useState(false);
+  useEffect(() => { if (!added) return undefined; const t = setTimeout(() => setAdded(false), 1600); return () => clearTimeout(t); }, [added]);
 
   const imagesList = product.image_urls || product.images || [];
 
@@ -148,10 +150,10 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
 
         <div className="product-actions">
           <button
-            className="add-to-cart-btn-minimal"
-            onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); }}
+            className={`add-to-cart-btn-minimal ${added ? 'is-added' : ''}`}
+            onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); setAdded(true); }}
           >
-            Add to Cart
+            {added ? '✓ Added' : 'Add to Cart'}
           </button>
         </div>
       </div>
@@ -195,13 +197,20 @@ const ProductShowcase = ({ onOrder, onProductClick, onAddToCart }) => {
           transition={{ duration: 0.8 }}
         >
           <span className="section-eyebrow">Bestsellers &amp; new launches</span>
-          <h2 className="section-title">Our Premium <span className="text-gradient">Products</span></h2>
+          <h2 className="section-title">Our <em className="serif-accent">Premium</em> Products</h2>
           <p className="section-subtitle">Buy 1 Get 1 FREE on every product — the free jar is added at checkout.</p>
         </motion.div>
 
         <div className="products-grid">
           {loading ? (
-            <div style={{ textAlign: 'center', width: '100%', padding: '40px' }}>Loading premium products...</div>
+            [0, 1, 2, 3].map(i => (
+              <div key={i} className="product-tile skeleton-tile" aria-hidden="true">
+                <div className="pn-skeleton" style={{ aspectRatio: '1 / 1', marginBottom: 12 }} />
+                <div className="pn-skeleton" style={{ height: 14, width: '85%', marginBottom: 8 }} />
+                <div className="pn-skeleton" style={{ height: 14, width: '50%', marginBottom: 14 }} />
+                <div className="pn-skeleton" style={{ height: 40, borderRadius: 999 }} />
+              </div>
+            ))
           ) : (
             products.map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} onOrder={onOrder} onProductClick={onProductClick} onAddToCart={onAddToCart} />

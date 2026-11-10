@@ -275,3 +275,34 @@
   }
 }
 
+
+/* Refresh (Nov 2026): calmer colours; cards instead of a table on phones */
+.wcu-title-highlight { background: none !important; -webkit-text-fill-color: #111 !important; color: #111 !important; }
+.wcu-title .serif-accent { color: #8a6a2f; }
+@media (max-width: 768px) {
+  .why-choose-us.section-padding { padding: 48px 0 24px; }
+  .why-choose-us .container { padding: 0 16px; }
+  .wcu-title { font-size: 1.9rem !important; }
+  .wcu-subtitle { font-size: 0.9rem !important; }
+  .wcu-table-container { background: transparent !important; box-shadow: none !important; border: none !important; padding: 0 !important; overflow: visible !important; }
+  .wcu-table, .wcu-table tbody { display: block; width: 100%; }
+  .wcu-table thead { display: none; }
+  .wcu-table tr {
+    display: flex !important; flex-direction: column; gap: 8px; margin-bottom: 10px; padding: 14px 16px;
+    background: #fff; border: 1px solid #efefec; border-radius: 16px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+  }
+  .wcu-table td { display: block; padding: 0 !important; border: none !important; background: none !important; text-align: left !important; }
+  .wcu-td-feature { order: 1; }
+  .wcu-td-pure { order: 2; }
+  .wcu-td-other { order: 3; }
+  .wcu-feature-inner { justify-content: flex-start !important; flex-direction: row !important; gap: 8px !important; font-weight: 700; font-size: 0.98rem; text-align: left !important; }
+  .wcu-td-content { display: flex !important; align-items: flex-start !important; justify-content: flex-start !important; gap: 8px !important; text-align: left !important; flex-direction: row !important; }
+  .wcu-td-pure .wcu-td-content span { font-size: 0.88rem; font-weight: 600; color: #111; }
+  .wcu-td-other .wcu-td-content span { font-size: 0.8rem; color: #888; }
+  .wcu-check-icon, .wcu-cross-icon { width: 16px !important; height: 16px !important; flex-shrink: 0; margin-top: 2px; }
+}
+@media (max-width: 768px) {
+  .wcu-feature-inner svg { margin: 0 !important; width: 18px !important; height: 18px !important; }
+  .wcu-feature-inner span, .wcu-td-content span { text-align: left !important; }
+  .wcu-table { table-layout: auto !important; border-spacing: 0 !important; }
+}

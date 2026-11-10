@@ -1,0 +1,14 @@
+.recent-section { padding: 8px 0 24px; background: #fff; font-family: var(--font-primary); }
+.recent-wrap { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.recent-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 700; color: #111; margin: 0 0 12px; }
+.recent-row { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+.recent-row::-webkit-scrollbar { display: none; }
+.recent-card { flex: 0 0 150px; display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: #111; }
+.recent-img { width: 100%; aspect-ratio: 1; border-radius: 14px; background: #f6f6f4; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.recent-img img { width: 85%; height: 85%; object-fit: contain; mix-blend-mode: multiply; }
+.recent-name { font-size: 0.8rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.recent-price { font-size: 0.88rem; font-weight: 700; }
+@media (max-width: 768px) {
+  .recent-wrap { padding: 0 16px; }
+  .recent-card { flex-basis: 120px; }
+}

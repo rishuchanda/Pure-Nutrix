@@ -67,7 +67,7 @@ const TrustSection = () => {
           viewport={{ once: false, margin: "-50px" }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="trust-title">Trusted by Science. Certified for You.</h2>
+          <h2 className="trust-title">Trusted by <em className="serif-accent">Science</em>. Certified for You.</h2>
           <p className="trust-subtitle">
             We never compromise on quality. Every Pure Nutrix product undergoes rigorous testing to ensure it is safe, effective, and pure.
           </p>
