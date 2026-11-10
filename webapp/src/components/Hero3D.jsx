@@ -1,140 +1,153 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import QRCode from 'qrcode';
+import { ChevronLeft, ChevronRight, ArrowRight, FlaskConical, Gift, Sparkles } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { ShoppingBag } from 'lucide-react';
 import './Hero3D.css';
 
-const Hero3D = ({ onOrder }) => {
-  const [products, setProducts] = useState([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+// Home page hero: three clean, on-brand slides built in code (no baked-in
+// poster images), so text stays sharp, loads fast and is easy to change.
+const LIPO_SLUG = 'liposomal-glutathione-600mg-30-veg-capsules';
+const LAB_URL = 'https://purenutrix.in/lab-report/liposomal-glutathione';
+const P = '/assets/products';
 
-  const slides = [
-    { src: '/assets/hero-slider/1.jpg', keyword: 'sea buckthorn' },
-    { src: '/assets/hero-slider/2.jpg', keyword: 'collagen' },
-    { src: '/assets/hero-slider/3.jpg', keyword: 'glutathione' }
-  ];
+const formatINR = (n) => (typeof n === 'number' ? `₹${n.toLocaleString('en-IN')}` : '');
+
+const Hero3D = ({ onProductClick, onOpenProducts }) => {
+  const [products, setProducts] = useState([]);
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [qrSvg, setQrSvg] = useState('');
+  const touchX = useRef(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*');
-        if (data) setProducts(data);
-      } catch (e) {
-        console.error("Failed to fetch products for hero slider", e);
-      }
-    };
-    fetchProducts();
+    supabase.from('products').select('*').then(({ data }) => { if (data) setProducts(data); });
+    QRCode.toString(LAB_URL, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#111111', light: '#ffffff' } })
+      .then(setQrSvg).catch(() => setQrSvg(''));
   }, []);
 
-  // Automatic image slider
+  const lipo = products.find(p => p.slug === LIPO_SLUG);
+
+  const openLipo = (e) => {
+    if (lipo && onProductClick) { e?.preventDefault(); onProductClick(lipo); }
+  };
+  const openProducts = (e) => {
+    if (onOpenProducts) { e?.preventDefault(); onOpenProducts(); }
+  };
+
+  const slides = [
+    {
+      key: 'launch',
+      theme: 'navy',
+      eyebrow: <><Sparkles size={14} /> New launch</>,
+      title: <>Liposomal<br />Glutathione</>,
+      text: '600 mg per capsule · 85% purity · Nano-liposomal delivery. One veg capsule a day for skin radiance and antioxidant support.',
+      price: lipo ? { now: lipo.price, mrp: lipo.original_price } : null,
+      cta: { label: 'Shop now', href: `/product/${LIPO_SLUG}`, onClick: openLipo },
+      visual: (
+        <div className="hs-visual hs-visual-single">
+          <img src={`${P}/liposomal-glutathione/1.jpg`} alt="Pure Nutrix Liposomal Glutathione 600mg, 30 veg capsules" />
+        </div>
+      ),
+    },
+    {
+      key: 'bogo',
+      theme: 'sand',
+      eyebrow: <><Gift size={14} /> On every order</>,
+      title: <>Buy 1<br />Get 1 FREE</>,
+      text: 'On every Pure Nutrix product. The free jar is added to your cart automatically — no code needed.',
+      cta: { label: 'Shop all products', href: '/products', onClick: openProducts },
+      visual: (
+        <div className="hs-visual hs-visual-row">
+          <img src={`${P}/collagen/collagen 1.jpg`} alt="Advanced Collagen & Biotin" />
+          <img src={`${P}/liposomal-glutathione/1.jpg`} alt="Liposomal Glutathione" />
+          <img src={`${P}/sea_buckthorn/1.png`} alt="Himalayan Sea Buckthorn Juice" />
+          <span className="hs-free-tag">+1 FREE</span>
+        </div>
+      ),
+    },
+    {
+      key: 'lab',
+      theme: 'mint',
+      eyebrow: <><FlaskConical size={14} /> Transparency you can check</>,
+      title: <>Lab tested.<br />Scan &amp; see.</>,
+      text: 'Every Liposomal Glutathione jar carries a QR code. Scan it to open the latest lab report.',
+      cta: { label: 'View lab report', href: '/lab-report/liposomal-glutathione' },
+      visual: (
+        <div className="hs-visual hs-visual-lab">
+          <img src={`${P}/liposomal-glutathione/1.jpg`} alt="Liposomal Glutathione jar" />
+          <div className="hs-qr-card">
+            {qrSvg ? <div className="hs-qr" dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <div className="hs-qr" />}
+            <span>Scan for lab report</span>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const count = slides.length;
+  const go = useCallback((i) => setIndex(((i % count) + count) % count), [count]);
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % slides.length);
-    }, 7000); // Changed from 4s to 7s for slower scrolling
-    return () => clearInterval(interval);
-  }, [slides.length]);
-
-  const handleNext = (e) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % slides.length);
-  };
-
-  const handlePrev = (e) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
-  const handleShopNow = () => {
-    if (products.length > 0 && onOrder) {
-      // Find the product that matches the current slide's keyword
-      const keyword = slides[currentImageIndex].keyword;
-      const matchedProduct = products.find(p => p.name.toLowerCase().includes(keyword));
-
-      // If we found a match, order it. Otherwise, fallback to the first product.
-      if (matchedProduct) {
-        onOrder(matchedProduct);
-      } else {
-        onOrder(products[currentImageIndex % products.length]);
-      }
-    }
-  };
+    if (paused) return undefined;
+    const t = setInterval(() => setIndex(i => (i + 1) % count), 6500);
+    return () => clearInterval(t);
+  }, [paused, count]);
 
   return (
-    <section className="hero-section-interactive" id="home" style={{ minHeight: 'auto', display: 'block' }}>
+    <section
+      className="hero-slider"
+      id="home"
+      aria-roledescription="carousel"
+      aria-label="Pure Nutrix highlights"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => {
+        if (touchX.current == null) return;
+        const dx = e.changedTouches[0].clientX - touchX.current;
+        if (Math.abs(dx) > 50) go(index + (dx < 0 ? 1 : -1));
+        touchX.current = null;
+      }}
+    >
+      <div className="hs-track">
+        {slides.map((s, i) => (
+          <div
+            key={s.key}
+            className={`hs-slide hs-${s.theme} ${i === index ? 'is-active' : ''}`}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${i + 1} of ${count}`}
+            aria-hidden={i !== index}
+          >
+            <div className="hs-inner">
+              <div className="hs-copy">
+                <span className="hs-eyebrow">{s.eyebrow}</span>
+                <h2 className="hs-title">{s.title}</h2>
+                <p className="hs-text">{s.text}</p>
+                {s.price && s.price.now ? (
+                  <p className="hs-price">
+                    <strong>{formatINR(s.price.now)}</strong>
+                    {s.price.mrp > s.price.now && <s>{formatINR(s.price.mrp)}</s>}
+                  </p>
+                ) : null}
+                <a className="hs-cta" href={s.cta.href} onClick={s.cta.onClick} tabIndex={i === index ? 0 : -1}>
+                  {s.cta.label} <ArrowRight size={18} />
+                </a>
+              </div>
+              {s.visual}
+            </div>
+          </div>
+        ))}
+      </div>
 
-      <motion.div
-        className="hero-poster-container"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        style={{
-          position: 'relative',
-          width: '100%',
-          cursor: 'pointer',
-          zIndex: 10,
-          pointerEvents: 'auto',
-          overflow: 'hidden'
-        }}
-        onClick={handleShopNow}
-      >
-        <div style={{ position: 'relative', width: '100%' }}>
-          {slides.map((slide, index) => (
-            <img
-              key={slide.src}
-              src={slide.src}
-              alt={`Premium Product Slide ${index + 1}`}
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-                maxWidth: 'none',
-                position: index === 0 ? 'relative' : 'absolute',
-                top: 0,
-                left: 0,
-                opacity: currentImageIndex === index ? 1 : 0,
-                transition: 'opacity 1s ease-in-out',
-                zIndex: currentImageIndex === index ? 2 : 1
-              }}
-            />
-          ))}
-        </div>
+      <button className="hs-arrow hs-prev" onClick={() => go(index - 1)} aria-label="Previous slide"><ChevronLeft size={20} /></button>
+      <button className="hs-arrow hs-next" onClick={() => go(index + 1)} aria-label="Next slide"><ChevronRight size={20} /></button>
 
-        {/* Manual Navigation Arrows */}
-        <button
-          onClick={handlePrev}
-          style={{
-            position: 'absolute', left: '2%', top: '50%', transform: 'translateY(-50%)',
-            background: 'rgba(0,0,0,0.15)', color: 'rgba(255,255,255,0.8)', border: 'none',
-            borderRadius: '50%', width: '35px', height: '35px', fontSize: '16px',
-            cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'blur(3px)', transition: 'background 0.3s ease'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.4)'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.15)'}
-        >
-          &#10094;
-        </button>
-        <button
-          onClick={handleNext}
-          style={{
-            position: 'absolute', right: '2%', top: '50%', transform: 'translateY(-50%)',
-            background: 'rgba(0,0,0,0.15)', color: 'rgba(255,255,255,0.8)', border: 'none',
-            borderRadius: '50%', width: '35px', height: '35px', fontSize: '16px',
-            cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'blur(3px)', transition: 'background 0.3s ease'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.4)'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.15)'}
-        >
-          &#10095;
-        </button>
-      </motion.div>
-
-
-
+      <div className="hs-dots">
+        {slides.map((s, i) => (
+          <button key={s.key} className={i === index ? 'is-active' : ''} onClick={() => go(i)} aria-label={`Go to slide ${i + 1}`} />
+        ))}
+      </div>
     </section>
   );
 };

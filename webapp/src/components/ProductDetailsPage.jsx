@@ -305,7 +305,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
             </div>
 
             <div className="pdp-offers-box">
-              <div className="pdp-offer-item"><strong>Offer:</strong> Monsoon Refresh Sale: Buy 1 Get 1 FREE Automatically Applied!</div>
+              <div className="pdp-offer-item"><strong>Offer:</strong> Buy 1 Get 1 FREE — the free jar is added to your cart automatically.</div>
             </div>
 
             <div className="pdp-tags">

@@ -656,10 +656,16 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
         <h1 className="page-main-title">Offers for You</h1>
         
         <div className="offer-card premium-shadow">
-          <div className="offer-badge">FLAT 20% OFF</div>
-          <h3>Monsoon VIP Discount</h3>
-          <p>Use code <strong>MONSOON20</strong> at checkout on orders above ₹1499.</p>
-          <button className="btn-outline-premium" onClick={() => { navigator.clipboard.writeText('MONSOON20'); alert('Code MONSOON20 copied!'); }}>Copy Code</button>
+          <div className="offer-badge">10% OFF</div>
+          <h3>Extra 10% off on all products</h3>
+          <p>Use code <strong>PUREJOY10</strong> at checkout.</p>
+          <button className="btn-outline-premium" onClick={() => { navigator.clipboard?.writeText('PUREJOY10'); alert('Code PUREJOY10 copied!'); }}>Copy Code</button>
+        </div>
+
+        <div className="offer-card premium-shadow">
+          <div className="offer-badge">BUY 1 GET 1</div>
+          <h3>Buy 1 Get 1 FREE</h3>
+          <p>On every product. The free jar is added to your cart automatically — no code needed.</p>
         </div>
       </div>
     </motion.div>

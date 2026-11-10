@@ -486,7 +486,7 @@ function App() {
             transition={{ duration: 0.5 }}
           >
             <main>
-              <Hero3D onOrder={handleOrder} />
+              <Hero3D onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
 
               <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} onAddToCart={handleAddToCart} />
               <WhyChooseUs />
