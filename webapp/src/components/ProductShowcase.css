@@ -26,8 +26,8 @@
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 24px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -377,7 +377,7 @@
 
 @media (max-width: 992px) {
   .products-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
 
@@ -469,4 +469,46 @@
   outline: 2px solid currentColor;
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* Card polish (Nov 2026) */
+.section-eyebrow {
+  display: inline-block; margin-bottom: 10px;
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #777;
+}
+.product-tile {
+  padding: 14px 14px 18px;
+  border-radius: 20px;
+  transition: transform 0.35s ease, box-shadow 0.35s ease, background-color 0.35s ease;
+}
+.product-tile:hover {
+  transform: translateY(-4px);
+  background-color: #fafafa;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.07);
+}
+.product-image-container { background: #f6f6f4; border-radius: 16px; overflow: hidden; }
+.product-image-container img { mix-blend-mode: multiply; }
+.save-badge {
+  position: absolute; top: 10px; left: 10px; z-index: 6;
+  background: #111; color: #fff; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em;
+  padding: 5px 10px; border-radius: 999px;
+}
+.add-to-cart-btn-minimal { border-radius: 999px !important; transition: transform 0.2s ease, background 0.2s ease; }
+.add-to-cart-btn-minimal:hover { transform: translateY(-1px); }
+@media (max-width: 768px) {
+  .product-tile { padding: 8px 8px 12px; border-radius: 16px; }
+  .save-badge { top: 8px; left: 8px; font-size: 0.66rem; padding: 4px 8px; }
+}
+
+.products-grid > .product-tile { min-width: 0; }
+@media (min-width: 1100px) {
+  .products-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); max-width: 1240px; }
+}
+
+/* Scoped: ProductsPage.css also styles .products-grid and loads later */
+.product-showcase .products-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 24px; max-width: 1240px; margin: 0 auto;
+}
+@media (max-width: 768px) {
+  .product-showcase .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 }
