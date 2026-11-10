@@ -1,11 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, Mail, MapPin, MessageSquare, Truck, HelpCircle, ChevronDown, Send } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 import './SupportPage.css';
 
 const SupportPage = ({ initialTab = 'contact', onBack }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [openFaq, setOpenFaq] = useState(null);
+  const [contact, setContact] = useState({ name: '', email: '', phone: '', orderId: '', message: '' });
+  const [sendState, setSendState] = useState({ status: 'idle', error: '' }); // idle | sending | sent | error
+  const setField = (k) => (e) => { setContact(c => ({ ...c, [k]: e.target.value })); if (sendState.status === 'error') setSendState({ status: 'idle', error: '' }); };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setSendState({ status: 'sending', error: '' });
+    const { error } = await supabase.rpc('submit_contact_message', {
+      p_name: contact.name, p_email: contact.email, p_phone: contact.phone, p_order_id: contact.orderId, p_message: contact.message,
+    });
+    if (error) {
+      const msg = /too_many/.test(error.message) ? 'You have sent several messages already. We will reply soon, or WhatsApp us for a faster answer.'
+        : /invalid_email/.test(error.message) ? 'Please check your email address.'
+        : 'Could not send right now. Please try again, or WhatsApp us.';
+      setSendState({ status: 'error', error: msg });
+      return;
+    }
+    setSendState({ status: 'sent', error: '' });
+    setContact({ name: '', email: '', phone: '', orderId: '', message: '' });
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -135,29 +156,38 @@ const SupportPage = ({ initialTab = 'contact', onBack }) => {
 
               <div className="contact-form-container glass-card">
                 <h3>Send us a Message</h3>
-                <form className="contact-form" onSubmit={(e) => { e.preventDefault(); alert("Thanks for your message! We will get back to you soon."); }}>
+                {sendState.status === 'sent' ? (
+                  <div className="contact-sent" role="status">
+                    <strong>Thank you! Your message has been received.</strong>
+                    <p>Our team will get back to you soon on your phone or email.</p>
+                    <button type="button" className="btn-primary form-submit-btn" onClick={() => setSendState({ status: 'idle', error: '' })}><span>Send another message</span></button>
+                  </div>
+                ) : (
+                <form className="contact-form" onSubmit={handleContactSubmit}>
                   <div className="input-group">
-                    <input type="text" placeholder="Full Name" required />
+                    <input type="text" placeholder="Full Name" required maxLength={80} value={contact.name} onChange={setField('name')} autoComplete="name" />
                   </div>
                   <div className="input-row">
                     <div className="input-group">
-                      <input type="email" placeholder="Email Address" required />
+                      <input type="email" placeholder="Email Address" required maxLength={120} value={contact.email} onChange={setField('email')} autoComplete="email" />
                     </div>
                     <div className="input-group">
-                      <input type="tel" placeholder="Phone Number" required />
+                      <input type="tel" placeholder="Phone Number" required maxLength={16} value={contact.phone} onChange={setField('phone')} autoComplete="tel" />
                     </div>
                   </div>
                   <div className="input-group">
-                    <input type="text" placeholder="Order ID (Optional)" />
+                    <input type="text" placeholder="Order ID (Optional)" maxLength={60} value={contact.orderId} onChange={setField('orderId')} />
                   </div>
                   <div className="input-group">
-                    <textarea placeholder="How can we help you?" rows="4" required></textarea>
+                    <textarea placeholder="How can we help you?" rows="4" required maxLength={2000} value={contact.message} onChange={setField('message')}></textarea>
                   </div>
-                  <button type="submit" className="btn-primary form-submit-btn">
-                    <span>Submit</span>
+                  {sendState.status === 'error' && <p className="contact-error" role="alert">{sendState.error}</p>}
+                  <button type="submit" className="btn-primary form-submit-btn" disabled={sendState.status === 'sending'}>
+                    <span>{sendState.status === 'sending' ? 'Sending…' : 'Submit'}</span>
                     <Send size={18} />
                   </button>
                 </form>
+                )}
               </div>
             </div>
           </motion.div>

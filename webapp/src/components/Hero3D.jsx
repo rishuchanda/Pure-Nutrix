@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import QRCode from 'qrcode';
 import { ChevronLeft, ChevronRight, ArrowRight, FlaskConical, Gift, Sparkles } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import './Hero3D.css';
@@ -21,7 +20,9 @@ const Hero3D = ({ onProductClick, onOpenProducts }) => {
 
   useEffect(() => {
     supabase.from('products').select('*').then(({ data }) => { if (data) setProducts(data); });
-    QRCode.toString(LAB_URL, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#111111', light: '#ffffff' } })
+    // QR library is loaded only when needed, so it is not part of the first download.
+    import('qrcode')
+      .then(({ default: QRCode }) => QRCode.toString(LAB_URL, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#111111', light: '#ffffff' } }))
       .then(setQrSvg).catch(() => setQrSvg(''));
   }, []);
 
@@ -60,7 +61,7 @@ const Hero3D = ({ onProductClick, onOpenProducts }) => {
         <div className="hs-visual hs-visual-row">
           <img src={`${P}/collagen/collagen 1.jpg`} alt="Advanced Collagen & Biotin" />
           <img src={`${P}/liposomal-glutathione/1.jpg`} alt="Liposomal Glutathione" />
-          <img src={`${P}/sea_buckthorn/1.png`} alt="Himalayan Sea Buckthorn Juice" />
+          <img src={`${P}/sea_buckthorn/1.jpg`} alt="Himalayan Sea Buckthorn Juice" />
           <span className="hs-free-tag">+1 FREE</span>
         </div>
       ),

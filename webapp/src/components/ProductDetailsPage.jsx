@@ -43,6 +43,12 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
   }, []);
 
   useEffect(() => {
+    if (window.location.hash !== '#reviews') return undefined;
+    const t = setTimeout(() => document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' }), 600);
+    return () => clearTimeout(t);
+  }, [product?.id]);
+
+  useEffect(() => {
     setShowAllReviews(false);
     window.scrollTo(0, 0);
     if (window.lenis) window.lenis.scrollTo(0, { immediate: true });
@@ -157,19 +163,19 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
     <div className="pdp-wrapper">
       <Helmet>
         <meta property="og:type" content="product" />
-        {product.image_urls && product.image_urls[0] && <meta property="og:image" content={product.image_urls[0]} />}
+        {product.image_urls && product.image_urls[0] && <meta property="og:image" content={product.image_urls[0].startsWith('http') ? product.image_urls[0] : `https://purenutrix.in${product.image_urls[0]}`} />}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:title" content={`${product.name} | Buy Online at Best Price - Pure Nutrix India`} />
         <meta property="twitter:description" content={details.subtitle || `Buy 100% genuine ${product.name} at Pure Nutrix.`} />
-        {product.image_urls && product.image_urls[0] && <meta property="twitter:image" content={product.image_urls[0]} />}
+        {product.image_urls && product.image_urls[0] && <meta property="twitter:image" content={product.image_urls[0].startsWith('http') ? product.image_urls[0] : `https://purenutrix.in${product.image_urls[0]}`} />}
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org/",
             "@type": "Product",
             "name": product.name,
-            "image": product.image_urls || ["https://purenutrix.in/assets/logo.png"],
+            "image": (product.image_urls && product.image_urls.length ? product.image_urls : ["/assets/og-image.jpg"]).map(u => (u.startsWith('http') ? u : `https://purenutrix.in${u}`)),
             "description": details.subtitle || `Buy ${product.name} at Pure Nutrix.`,
-            "sku": `PN-${product.id || '001'}`,
+            "sku": product.slug || String(product.id),
             "brand": {
               "@type": "Brand",
               "name": "Pure Nutrix"
@@ -178,10 +184,10 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
               "@type": "Offer",
               "url": `https://purenutrix.in/product/${product.slug || product.id}`,
               "priceCurrency": "INR",
-              "price": product.price || 1499,
+              "price": product.price,
               "priceValidUntil": "2027-12-31",
               "itemCondition": "https://schema.org/NewCondition",
-              "availability": "https://schema.org/InStock",
+              "availability": (product.stock === 0 ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"),
               "seller": {
                 "@type": "Organization",
                 "name": "Pure Nutrix"
@@ -241,7 +247,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
                     className={`pdp-thumbnail ${activeImage === idx ? 'active' : ''}`}
                     onClick={() => setActiveImage(idx)}
                   >
-                    <img src={img} alt={`Thumbnail ${idx}`} />
+                    <img src={img} alt={`${product.name} image ${idx + 1}`} loading="lazy" decoding="async" />
                   </div>
                 ))}
               </div>
@@ -487,7 +493,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
                   <div key={op.id} className="product-item" onClick={() => { window.scrollTo(0, 0); onProductClick && onProductClick(op); }} style={{ cursor: 'pointer' }}>
                     <div className="product-item-image-wrap">
                       {op.image_urls && op.image_urls.length > 0 ? (
-                        <img src={op.image_urls[0]} alt={op.name} />
+                        <img src={op.image_urls[0]} alt={op.name} loading="lazy" decoding="async" />
                       ) : (
                         <div style={{ padding: '40px', color: '#888' }}>No Image</div>
                       )}
