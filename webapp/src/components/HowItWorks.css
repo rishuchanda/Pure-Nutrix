@@ -1,0 +1,36 @@
+.how-works { padding: 48px 0 8px; background: #fff; font-family: var(--font-primary); }
+.hw-wrap { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.hw-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+.hw-head h2 { margin: 0; font-size: clamp(1.5rem, 2.6vw, 2.1rem); font-weight: 700; letter-spacing: -0.02em; color: #111; }
+.hw-head p { margin: 0; color: #666; font-size: 0.92rem; }
+.hw-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; counter-reset: none; }
+.hw-step {
+  position: relative; display: flex; align-items: center; gap: 14px; padding: 20px;
+  border-radius: 20px; background: linear-gradient(180deg, #fbfaf6 0%, #f4f2ec 100%); border: 1px solid #ece9df;
+}
+.hw-badge {
+  position: absolute; top: 12px; right: 14px; font-size: 0.72rem; font-weight: 700; color: #b9b4a4; letter-spacing: 0.06em;
+}
+.hw-badge::before { content: 'STEP '; }
+.hw-icon { width: 48px; height: 48px; flex-shrink: 0; border-radius: 14px; background: #111; color: #e9cf7d; display: flex; align-items: center; justify-content: center; }
+.hw-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding-right: 36px; }
+.hw-text strong { font-size: 1rem; color: #111; }
+.hw-text small { font-size: 0.84rem; color: #5f5f5f; line-height: 1.45; }
+
+@media (max-width: 768px) {
+  .how-works { padding: 32px 0 4px; }
+  .hw-wrap { padding: 0 16px; }
+  .hw-head { flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 14px; }
+  .hw-head p { font-size: 0.82rem; }
+  .hw-steps { grid-template-columns: 1fr; gap: 0; position: relative; }
+  .hw-step { background: none; border: none; border-radius: 0; padding: 10px 0; gap: 14px; }
+  .hw-step:not(:last-child)::after {
+    content: ''; position: absolute; left: 23px; top: 58px; bottom: -10px; width: 2px;
+    background: repeating-linear-gradient(#d9d4c3 0 4px, transparent 4px 8px);
+  }
+  .hw-badge { display: none; }
+  .hw-icon { width: 46px; height: 46px; border-radius: 50%; position: relative; z-index: 1; }
+  .hw-text { padding-right: 0; }
+  .hw-text strong { font-size: 0.95rem; }
+  .hw-text small { font-size: 0.8rem; }
+}

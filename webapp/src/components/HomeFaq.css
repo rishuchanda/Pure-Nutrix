@@ -1,0 +1,32 @@
+.home-faq { padding: 64px 0 24px; background: #fff; font-family: var(--font-primary); }
+.faq-wrap { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 48px; align-items: start; }
+.faq-side { position: sticky; top: 110px; }
+.faq-eyebrow { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: #8a6d1f; font-weight: 700; }
+.faq-side h2 { margin: 10px 0 10px; font-size: clamp(1.8rem, 3.2vw, 2.6rem); font-weight: 700; letter-spacing: -0.02em; color: #111; line-height: 1.1; }
+.faq-side p { margin: 0; color: #666; font-size: 0.95rem; line-height: 1.6; }
+.faq-side a { color: #111; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+.faq-list { display: flex; flex-direction: column; gap: 10px; }
+.faq-item { border-radius: 18px; background: #f7f7f5; border: 1px solid #efefec; transition: background 0.25s ease, border-color 0.25s ease; }
+.faq-item.is-open { background: #fff; border-color: #e3e0d5; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.05); }
+.faq-item h3 { margin: 0; font-size: inherit; }
+.faq-q {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 20px;
+  background: none; border: none; text-align: left; cursor: pointer; font-family: inherit; font-size: 1rem; font-weight: 600; color: #111;
+  -webkit-tap-highlight-color: transparent;
+}
+.faq-plus { flex-shrink: 0; width: 30px; height: 30px; padding: 6px; border-radius: 50%; background: #fff; border: 1px solid #e6e6e1; transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease; }
+.faq-item.is-open .faq-plus { transform: rotate(45deg); background: #111; color: #fff; border-color: #111; }
+.faq-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.32s ease; }
+.faq-item.is-open .faq-a { grid-template-rows: 1fr; }
+.faq-a-inner { overflow: hidden; }
+.faq-a p { margin: 0; padding: 0 20px 18px; color: #555; font-size: 0.92rem; line-height: 1.6; }
+
+@media (max-width: 768px) {
+  .home-faq { padding: 40px 0 12px; }
+  .faq-wrap { grid-template-columns: 1fr; gap: 18px; padding: 0 16px; }
+  .faq-side { position: static; }
+  .faq-side p { font-size: 0.86rem; }
+  .faq-q { padding: 15px 16px; font-size: 0.92rem; }
+  .faq-a p { padding: 0 16px 15px; font-size: 0.85rem; }
+}

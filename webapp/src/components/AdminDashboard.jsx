@@ -14,6 +14,7 @@ import ReviewsTab from './ReviewsTab';
 import SEOTab from './SEOTab';
 import LabReportsTab from './LabReportsTab';
 import MessagesTab from './MessagesTab';
+import OrderAlertsCard from './OrderAlertsCard';
 import './AdminDashboard.css';
 
 const AdminDashboard = ({ user }) => {
@@ -507,6 +508,8 @@ const AdminDashboard = ({ user }) => {
                       <p>Welcome back, here's what's happening with your store today.</p>
                     </div>
                   </div>
+
+                  <OrderAlertsCard adminEmail={user?.email || email} />
 
                   {/* KPIs */}
                   <div className="admin-grid">
