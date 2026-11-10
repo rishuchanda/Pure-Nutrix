@@ -5,6 +5,7 @@ import './Footer.css';
 // Google could not reach /products, /quality, /legal, /privacy-policy or
 // /support at all, and customers could not open the return & refund policy.
 const PRODUCT_LINKS = [
+  { label: 'Liposomal Glutathione', href: '/product/liposomal-glutathione-600mg-30-veg-capsules' },
   { label: 'Ultra L-Glutathione', href: '/product/ultra-l-glutathione-500mg-with-vitamin-c' },
   { label: 'Advanced Collagen', href: '/product/advanced-collagen-biotin-with-hyaluronic-acid-vitamin-c-zinc' },
   { label: 'Sea Buckthorn Juice', href: '/product/pure-nutrix-himalayan-sea-buckthorn-juice-500-ml-supports-immunity-glowing-skin-gut-health-with-omega-3-6-7-9' },

@@ -50,6 +50,9 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
       onClick={() => onProductClick(product)}
     >
       <div className="product-image-container">
+        {product.original_price > product.price && (
+          <span className="save-badge">Save {Math.round((1 - product.price / product.original_price) * 100)}%</span>
+        )}
         {/* Left Arrow */}
         <button className="carousel-btn prev-btn" onClick={prevImage}>
           <ChevronLeft size={20} />
@@ -119,7 +122,7 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
         </h2>
 
         <p className="product-desc-minimal">
-          {product.description || 'Premium formulation for maximum efficacy.'}
+          {product.short_description || product.description || 'Premium formulation for maximum efficacy.'}
         </p>
 
         {getProductReviews(product).isNew ? (
@@ -191,8 +194,9 @@ const ProductShowcase = ({ onOrder, onProductClick, onAddToCart }) => {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
         >
+          <span className="section-eyebrow">Bestsellers &amp; new launches</span>
           <h2 className="section-title">Our Premium <span className="text-gradient">Products</span></h2>
-          <p className="section-subtitle">Scientifically backed ingredients for visible, lasting results.</p>
+          <p className="section-subtitle">Buy 1 Get 1 FREE on every product — the free jar is added at checkout.</p>
         </motion.div>
 
         <div className="products-grid">

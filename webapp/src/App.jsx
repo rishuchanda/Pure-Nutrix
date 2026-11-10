@@ -1,6 +1,8 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import Hero3D from './components/Hero3D';
+import PromoTicker from './components/PromoTicker';
+import ShopByConcern from './components/ShopByConcern';
 import ProductShowcase from './components/ProductShowcase';
 import WhyChooseUs from './components/WhyChooseUs';
 import TrustSection from './components/TrustSection';
@@ -516,6 +518,8 @@ function App() {
           >
             <main>
               <Hero3D onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
+              <PromoTicker />
+              <ShopByConcern onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
 
               <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} onAddToCart={handleAddToCart} />
               <WhyChooseUs />

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp, Share2, FlaskConical } from 'lucide-react';
@@ -139,6 +140,23 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
       });
     }
   }, [product]);
+
+  // Mobile: show a slim "Add to cart" bar once the main buttons scroll away.
+  const actionsRef = useRef(null);
+  const [showStickyBuy, setShowStickyBuy] = useState(false);
+  useEffect(() => {
+    const el = actionsRef.current;
+    if (!el || !('IntersectionObserver' in window)) return undefined;
+    const io = new IntersectionObserver(([entry]) => {
+      setShowStickyBuy(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [product?.id]);
+  useEffect(() => {
+    document.body.classList.toggle('pn-sticky-buy', showStickyBuy);
+    return () => document.body.classList.remove('pn-sticky-buy');
+  }, [showStickyBuy]);
 
   if (!product) return null;
 
@@ -331,7 +349,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
               </a>
             )}
 
-            <div className="pdp-actions">
+            <div className="pdp-actions" ref={actionsRef}>
               <button className="btn-add-cart" onClick={() => onAddToCart && onAddToCart(product)}>
                 Add to Cart
               </button>
@@ -656,6 +674,19 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
           </div>
         </div>
       )}
+      {createPortal(
+      <div className={`pdp-sticky-buy ${showStickyBuy ? 'is-visible' : ''}`} aria-hidden={!showStickyBuy}>
+        {product.image_urls?.[0] && <img src={product.image_urls[0]} alt="" />}
+        <div className="pdp-sticky-info">
+          <span className="pdp-sticky-name">{product.name}</span>
+          <span className="pdp-sticky-price">
+            ₹{product.price}
+            {product.original_price > product.price && <s>₹{product.original_price}</s>}
+          </span>
+        </div>
+        <button className="pdp-sticky-btn" tabIndex={showStickyBuy ? 0 : -1} onClick={() => onAddToCart && onAddToCart(product)}>Add to Cart</button>
+      </div>,
+      document.body)}
     </div>
   );
 };
