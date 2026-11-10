@@ -18,7 +18,21 @@ import OrderAlertsCard from './OrderAlertsCard';
 import './AdminDashboard.css';
 
 const AdminDashboard = ({ user }) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // ?tab=crm (from a WhatsApp phone alert) opens that tab directly
+  const [activeTab, setActiveTab] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('tab') || 'dashboard'; } catch { return 'dashboard'; }
+  });
+
+  // Tapping a phone alert while the admin app is already open
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return undefined;
+    const onMsg = (e) => {
+      if (e.data?.type !== 'pn-open') return;
+      try { const tab = new URL(e.data.url, window.location.origin).searchParams.get('tab'); if (tab) setActiveTab(tab); } catch { /* ignore */ }
+    };
+    navigator.serviceWorker.addEventListener('message', onMsg);
+    return () => navigator.serviceWorker.removeEventListener('message', onMsg);
+  }, []);
   const [theme, setTheme] = useState('dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   

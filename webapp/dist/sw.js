@@ -29,7 +29,10 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const c of all) {
-      if (new URL(c.url).pathname === new URL(url).pathname && 'focus' in c) return c.focus();
+      if (new URL(c.url).pathname === new URL(url).pathname && 'focus' in c) {
+        c.postMessage({ type: 'pn-open', url }); // e.g. switch admin to the WhatsApp CRM tab
+        return c.focus();
+      }
     }
     return self.clients.openWindow(url);
   })());
