@@ -1,3 +1,4 @@
+import { getApprovedReviewsCache, loadApprovedReviews } from './reviewsStore';
 // ─── Customer Reviews & Rating Store (LocalStorage + Seed Data) ─────────────
 
 const DEFAULT_REVIEWS = [
@@ -139,7 +140,9 @@ export const toggleVerifiedBuyer = (id) => {
 const NEW_LAUNCH_KEYWORDS = ['liposomal'];
 
 export const getProductReviews = (product) => {
-  const allStored = getStoredReviews();
+  // Real approved reviews from the database (loaded once, then cached).
+  loadApprovedReviews();
+  const allStored = getApprovedReviewsCache().filter(rev => !product?.id || !rev.productId || rev.productId === product.id);
   const productName = product?.name?.toLowerCase() || '';
 
   const newKey = NEW_LAUNCH_KEYWORDS.find(k => productName.includes(k));
