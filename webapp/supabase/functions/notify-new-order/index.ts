@@ -7,6 +7,8 @@
 //   { action: "test" }       admin page sends a test alert (admin login required)
 //   { status_order_id }      from the trigger on orders.status (shipped / out for
 //                            delivery / delivered) -> WhatsApp update to the customer
+//   { inbound_message_id }   from the trigger on whatsapp_messages (customer wrote
+//                            to the business number) -> phone alert to the owner
 //
 // New orders also get a WhatsApp confirmation to the customer (approved Meta
 // template "order_confirmation"), sent once per order (orders.whatsapp_confirmed_at).
@@ -268,6 +270,36 @@ async function handleStatus(orderId: string) {
   return json({ ok: true, whatsapp });
 }
 
+// ---------- customer WhatsApp message -> owner phone alert ----------
+const INBOUND_LABEL: Record<string, string> = {
+  image: '📷 Sent a photo', video: '🎥 Sent a video', audio: '🎤 Sent a voice note', document: '📄 Sent a document',
+  sticker: 'Sent a sticker', location: '📍 Sent a location', contacts: 'Sent a contact',
+  unsupported: "Sent a message type WhatsApp can't show in the CRM",
+};
+
+async function handleInbound(messageId: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(messageId)) return json({ error: 'bad message id' }, 400);
+  // Claim: only the first call for a message gets the row back.
+  const claimed = await db(`whatsapp_messages?id=eq.${messageId}&direction=eq.inbound&owner_notified_at=is.null&select=id,contact_phone,message_body,message_type,created_at`, {
+    method: 'PATCH',
+    body: JSON.stringify({ owner_notified_at: new Date().toISOString() }),
+  });
+  const m = claimed?.[0];
+  if (!m) return json({ ok: true, skipped: 'already notified or not inbound' });
+  // Quiet period: one alert per customer every 2 minutes (bursts of messages = 1 alert).
+  const since = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const recent = await db(`whatsapp_messages?contact_phone=eq.${encodeURIComponent(m.contact_phone)}&direction=eq.inbound&id=neq.${m.id}&owner_alerted=is.true&owner_notified_at=gte.${encodeURIComponent(since)}&select=id&limit=1`);
+  if (recent?.length) return json({ ok: true, skipped: 'quiet period' });
+
+  const contact = (await db(`whatsapp_contacts?phone_number=eq.${encodeURIComponent(m.contact_phone)}&select=name`))?.[0];
+  const who = waText(contact?.name, 40) !== '-' ? waText(contact?.name, 40) : `+${m.contact_phone}`;
+  const type = String(m.message_type || 'text').toLowerCase();
+  const text = type === 'text' ? waText(m.message_body, 140) : (INBOUND_LABEL[type] || waText(m.message_body, 140));
+  const push = await pushToAdmins({ title: `💬 WhatsApp · ${who}`, body: text, url: '/admin?tab=crm', tag: `wa-${m.contact_phone}` });
+  await db(`whatsapp_messages?id=eq.${m.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_alerted: true }) });
+  return json({ ok: true, push });
+}
+
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 const inr = (n: unknown) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
@@ -331,6 +363,7 @@ export async function handler(req: Request) {
     }
     if (body.order_id) return await handleOrder(String(body.order_id));
     if (body.status_order_id) return await handleStatus(String(body.status_order_id));
+    if (body.inbound_message_id) return await handleInbound(String(body.inbound_message_id));
     return json({ error: 'nothing to do' }, 400);
   } catch (e) {
     console.error(e);
