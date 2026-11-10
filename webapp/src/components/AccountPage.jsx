@@ -1,902 +1,478 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import ProfessionalInvoice from './ProfessionalInvoice';
-import { 
-  ChevronLeft, Search, Package, CheckCircle, Layers, 
-  Tag, Gift, Star, Heart, Headphones, User, MapPin, 
-  ChevronRight, LogOut, Camera, Copy, Plus, XCircle
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ChevronLeft, ChevronRight, Package, Star, MapPin, User, LogOut, MessageCircle, RotateCcw,
+  FileText, FlaskConical, Gift, Copy, Check, Plus, Pencil, Trash2, Clock, Truck, Home, XCircle, Pill
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import ProfessionalInvoice from './ProfessionalInvoice';
+import { getProductDetails } from '../utils/productDetailsData';
+import { fetchMyReviews } from '../utils/reviewsStore';
 import './AccountPage.css';
 
-const AccountPage = ({ user, onBack, onSignOut }) => {
+// My Account: orders (status timeline, invoice, buy again, WhatsApp help),
+// my products (how to take + lab report), my reviews, addresses, profile.
+// Everything shown here is real data from Supabase — no placeholder features.
+
+const WA_NUMBER = '919057607030';
+const VIEWS = ['dashboard', 'orders', 'order', 'reviews', 'addresses', 'profile'];
+const STEPS = [
+  { key: 'placed', label: 'Placed', icon: Check },
+  { key: 'processing', label: 'Packed', icon: Package },
+  { key: 'shipped', label: 'Shipped', icon: Truck },
+  { key: 'out_for_delivery', label: 'Out for delivery', icon: Truck },
+  { key: 'delivered', label: 'Delivered', icon: Home },
+];
+const STATUS_TEXT = {
+  pending: 'Order placed', processing: 'Being packed', shipped: 'Shipped', out_for_delivery: 'Out for delivery',
+  delivered: 'Delivered', cancelled: 'Cancelled', returned: 'Returned',
+};
+const EMPTY_ADDR = { name: '', mobile: '', email: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' };
+
+const fmtDate = (iso) => { try { return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return ''; } };
+const shortId = (id) => String(id || '').split('-')[0].toUpperCase();
+const statusKey = (s) => String(s || 'processing').toLowerCase();
+const stepIndex = (s) => {
+  const k = statusKey(s);
+  if (k === 'pending') return 0;
+  const i = STEPS.findIndex(x => x.key === k);
+  return i === -1 ? 1 : i;
+};
+const freeJars = (name) => [...String(name || '').matchAll(/\+\s*(\d+)x\s*Free/gi)].reduce((a, m) => a + Number(m[1]), 0);
+const waHelp = (order) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi Pure Nutrix, I need help with my order #${shortId(order.id)} (${fmtDate(order.created_at)}).`)}`;
+
+const Timeline = ({ status }) => {
+  const k = statusKey(status);
+  if (k === 'cancelled' || k === 'returned') {
+    return <div className="acc-timeline-stop"><XCircle size={16} /> {STATUS_TEXT[k]}</div>;
+  }
+  const at = stepIndex(status);
+  return (
+    <ol className="acc-timeline" aria-label={`Order status: ${STATUS_TEXT[k] || status}`}>
+      {STEPS.map((s, i) => (
+        <li key={s.key} className={i < at ? 'done' : i === at ? 'current' : ''}>
+          <span className="acc-dot">{i <= at ? <Check size={11} strokeWidth={3} /> : null}</span>
+          <span className="acc-step-label">{s.label}</span>
+        </li>
+      ))}
+    </ol>
+  );
+};
+
+const Stars = ({ n }) => (
+  <span className="acc-stars" aria-label={`${n} out of 5 stars`}>
+    {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ color: i <= n ? '#f5b301' : '#d6d6d6' }}>★</span>)}
+  </span>
+);
+
+const AccountPage = ({ user, onBack, onSignOut, onProductClick, onOpenAuth }) => {
   const [view, setView] = useState('dashboard');
-  const [orders, setOrders] = useState([]);
-  const [loadingOrders, setLoadingOrders] = useState(true);
-  const [allProducts, setAllProducts] = useState([]);
+  const [orders, setOrders] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [addresses, setAddresses] = useState(null);
+  const [reviews, setReviews] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
-  const [wishlist, setWishlist] = useState([]);
-  const [showInvoiceForOrder, setShowInvoiceForOrder] = useState(null);
-  
-  const [addresses, setAddresses] = useState([]);
-  const [loadingAddresses, setLoadingAddresses] = useState(true);
-  const [isAddingAddress, setIsAddingAddress] = useState(false);
-  const [editingAddressId, setEditingAddressId] = useState(null);
-  const [newAddress, setNewAddress] = useState({ name: '', mobile: '', email: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' });
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
+  const [addrForm, setAddrForm] = useState(null); // null = list, {..} = editing
+  const [addrId, setAddrId] = useState(null);
+  const [profileName, setProfileName] = useState('');
+  const [note, setNote] = useState('');
+  const [copied, setCopied] = useState(false);
 
-  // Persistent Routine State
-  const [routineChecked, setRoutineChecked] = useState({});
-
-  // Load routing from URL on mount and listen to popstate
+  // ---------- routing: /account, /account/orders, /account/order/<id> ... ----------
   useEffect(() => {
-    const handlePopState = () => {
-      const hashPath = window.location.pathname.replace('/', '');
-      const [mainView, subView] = hashPath.split('/');
-      
-      if (mainView === 'account') {
-        setView(subView || 'dashboard');
-        if (subView !== 'order-details') setActiveOrder(null);
-      }
+    const read = () => {
+      const [, main, sub, id] = window.location.pathname.split('/');
+      if (main !== 'account') return;
+      setView(VIEWS.includes(sub) ? sub : 'dashboard');
+      if (sub !== 'order') setActiveOrder(null);
+      if (sub === 'order' && id) setActiveOrder(prev => prev || { id, _pending: true });
     };
-
-    handlePopState();
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    read();
+    window.addEventListener('popstate', read);
+    return () => window.removeEventListener('popstate', read);
   }, []);
 
-  const navigateTo = (newView) => {
-    setView(newView);
-    if (newView === 'dashboard') {
-      window.history.pushState({ view: 'account' }, '', '#account');
-    } else {
-      window.history.pushState({ view: 'account', subView: newView }, '', `#account/${newView}`);
-    }
+  const go = (v, extra = '') => {
+    setView(v);
+    setNote('');
+    window.history.pushState({ view: 'account' }, '', v === 'dashboard' ? '/account' : `/account/${v}${extra}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.lenis) window.lenis.scrollTo(0, { immediate: true });
   };
 
-  const handleOrderDetails = (order) => {
-    setActiveOrder(order);
-    navigateTo('order-details');
-  };
-
-  const handleDownloadInvoice = (orderItem, e) => {
-    if (e) e.stopPropagation();
-    setShowInvoiceForOrder(orderItem);
-  };
-
-  // Routine Persistence
+  // ---------- data ----------
   useEffect(() => {
-    const storedRoutine = localStorage.getItem('purenutrix_routine');
-    if (storedRoutine) {
-      try {
-        setRoutineChecked(JSON.parse(storedRoutine));
-      } catch (e) {
-        console.error("Could not parse routine");
-      }
-    }
-  }, []);
-
-  const toggleRoutine = (key) => {
-    const updated = { ...routineChecked, [key]: !routineChecked[key] };
-    setRoutineChecked(updated);
-    localStorage.setItem('purenutrix_routine', JSON.stringify(updated));
-  };
-
-  // Data Fetching
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-      try {
-        const [ordersRes, productsRes, addressesRes] = await Promise.all([
-          supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-          supabase.from('products').select('*'),
-          supabase.from('user_addresses').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
-        ]);
-        if (ordersRes.error) throw ordersRes.error;
-        if (productsRes.error) throw productsRes.error;
-        if (addressesRes.error) throw addressesRes.error;
-        
-        setOrders(ordersRes.data || []);
-        setAllProducts(productsRes.data || []);
-        setAddresses(addressesRes.data || []);
-      } catch (error) {
-        console.error('Error fetching data:', error.message);
-      } finally {
-        setLoadingOrders(false);
-        setLoadingAddresses(false);
-      }
-    };
-    fetchData();
+    if (!user) return;
+    (async () => {
+      const [o, p, a] = await Promise.all([
+        supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('products').select('id, name, slug, price, original_price, image_urls'),
+        supabase.from('user_addresses').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+      ]);
+      setOrders(o.data || []);
+      setProducts(p.data || []);
+      setAddresses(a.data || []);
+    })();
+    fetchMyReviews().then(setReviews).catch(() => setReviews([]));
   }, [user]);
 
-  const handleSaveAddress = async (e) => {
+  // resolve /account/order/<id> after orders load
+  useEffect(() => {
+    if (activeOrder?._pending && orders) setActiveOrder(orders.find(o => shortId(o.id) === shortId(activeOrder.id)) || null);
+  }, [orders, activeOrder]);
+
+  const meta = user?.user_metadata || {};
+  const realEmail = user?.email && !user.email.includes('@whatsapp') ? user.email : '';
+  const phone = meta.phone_number || (user?.email?.includes('@whatsapp') ? user.email.split('@')[0].replace(/\D/g, '').slice(-10) : '') || addresses?.[0]?.mobile || '';
+  const displayName = meta.full_name || addresses?.[0]?.name || orders?.[0]?.customer_name || 'Pure Nutrix customer';
+  const initials = displayName.split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'PN';
+
+  // products this customer bought (matched by product name inside the order line)
+  const boughtProducts = useMemo(() => {
+    if (!orders?.length || !products.length) return [];
+    const valid = orders.filter(o => !['cancelled', 'returned'].includes(statusKey(o.status)));
+    return products
+      .filter(p => valid.some(o => String(o.product_name || '').toLowerCase().includes(p.name.toLowerCase())))
+      .map(p => ({ ...p, details: getProductDetails(p.name) }));
+  }, [orders, products]);
+
+  const productsInOrder = (order) => products.filter(p => String(order.product_name || '').toLowerCase().includes(p.name.toLowerCase()));
+  const reviewedIds = new Set((reviews || []).map(r => r.productId));
+  const toReview = boughtProducts.filter(p => !reviewedIds.has(p.id));
+  const stats = useMemo(() => {
+    const valid = (orders || []).filter(o => !['cancelled', 'returned'].includes(statusKey(o.status)));
+    return { count: (orders || []).length, free: valid.reduce((a, o) => a + freeJars(o.product_name), 0), active: valid.filter(o => statusKey(o.status) !== 'delivered').length };
+  }, [orders]);
+
+  const openOrder = (o) => { setActiveOrder(o); go('order', `/${shortId(o.id)}`); };
+  const buyAgain = (order) => {
+    const p = productsInOrder(order)[0];
+    if (p && onProductClick) onProductClick(p);
+    else window.location.href = '/products';
+  };
+  const openProduct = (p, hash = '') => {
+    if (hash) { window.location.href = `/product/${p.slug || p.id}${hash}`; return; }
+    if (onProductClick) onProductClick(p); else window.location.href = `/product/${p.slug || p.id}`;
+  };
+
+  // ---------- addresses ----------
+  const saveAddress = async (e) => {
     e.preventDefault();
-    try {
-      if (editingAddressId) {
-        const { data, error } = await supabase.from('user_addresses').update(newAddress).eq('id', editingAddressId).select();
-        if (error) throw error;
-        setAddresses(addresses.map(a => a.id === editingAddressId ? data[0] : a));
-        alert('Address updated successfully!');
-      } else {
-        const { data, error } = await supabase.from('user_addresses').insert([{
-          user_id: user.id,
-          ...newAddress
-        }]).select();
-        if (error) throw error;
-        setAddresses([data[0], ...addresses]);
-        alert('Address saved successfully!');
-      }
-      setIsAddingAddress(false);
-      setEditingAddressId(null);
-      setNewAddress({ name: '', mobile: '', email: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' });
-    } catch (error) {
-      console.error('Error saving address:', error.message);
-      alert('Failed to save address.');
-    }
+    const row = { ...addrForm };
+    if (!/^[6-9]\d{9}$/.test(row.mobile)) { setNote('Please enter a valid 10-digit mobile number.'); return; }
+    if (!/^\d{6}$/.test(row.pincode)) { setNote('Please enter a valid 6-digit pincode.'); return; }
+    const res = addrId
+      ? await supabase.from('user_addresses').update(row).eq('id', addrId).select()
+      : await supabase.from('user_addresses').insert([{ ...row, user_id: user.id }]).select();
+    if (res.error) { setNote('Could not save: ' + res.error.message); return; }
+    setAddresses(prev => addrId ? prev.map(a => a.id === addrId ? res.data[0] : a) : [res.data[0], ...prev]);
+    setAddrForm(null); setAddrId(null); setNote('Address saved.');
+  };
+  const deleteAddress = async (id) => {
+    if (!window.confirm('Delete this address?')) return;
+    const { error } = await supabase.from('user_addresses').delete().eq('id', id);
+    if (error) { setNote('Could not delete: ' + error.message); return; }
+    setAddresses(prev => prev.filter(a => a.id !== id));
   };
 
-  const handleEditAddress = (addr) => {
-    setEditingAddressId(addr.id);
-    setNewAddress({
-      name: addr.name, mobile: addr.mobile, email: addr.email || '', 
-      flat: addr.flat, area: addr.area, landmark: addr.landmark || '', 
-      city: addr.city, state: addr.state, pincode: addr.pincode
-    });
-    setIsAddingAddress(true);
+  // ---------- profile ----------
+  const saveProfile = async (e) => {
+    e.preventDefault();
+    const name = profileName.trim();
+    if (name.length < 2) { setNote('Please enter your name.'); return; }
+    const { error } = await supabase.auth.updateUser({ data: { full_name: name } });
+    setNote(error ? 'Could not save: ' + error.message : 'Profile updated.');
   };
 
-  const handleDeleteAddress = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this address?')) return;
-    try {
-      const { error } = await supabase.from('user_addresses').delete().eq('id', id);
-      if (error) throw error;
-      setAddresses(addresses.filter(a => a.id !== id));
-    } catch (error) {
-      console.error('Error deleting address:', error.message);
-      alert('Failed to delete address.');
-    }
+  const copyCode = () => {
+    navigator.clipboard?.writeText('PUREJOY10');
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleAddressChange = (e) => {
-    setNewAddress({ ...newAddress, [e.target.name]: e.target.value });
-  };
-
-  const userEmail = user?.email || 'premium.member@purenutrix.com';
-  const userName = userEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ') || 'Valued Member';
-  const displayUserName = userName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-
-  const handleCopyReferral = () => {
-    const code = `NUTRIX-${user?.id?.substring(0,6).toUpperCase() || 'VIP26'}`;
-    navigator.clipboard.writeText(code);
-    alert('Referral Code Copied: ' + code);
-  };
-
-  // Extract unique products bought by user for the Routine
-  const getRoutineItems = () => {
-    const uniqueProductNames = [...new Set(orders.map(o => o.product_name))].filter(Boolean);
-    return uniqueProductNames;
-  };
-
-  const renderDashboardGrid = () => (
-    <motion.div 
-      className="mobile-dashboard premium-dashboard"
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      key="dashboard"
-    >
-      <div className="dashboard-header mobile-only">
-        <button className="back-btn-header" onClick={onBack}>
-          <ChevronLeft size={24} />
-        </button>
-        <span className="header-title">My Account</span>
-        <div style={{ width: 24 }}></div> 
-      </div>
-
-      <div className="profile-section clean-profile mobile-only">
-        <div className="wave-bg">
-          <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-            <path fill="url(#grad1)" fillOpacity="1" d="M0,128L48,138.7C96,149,192,171,288,160C384,149,480,107,576,96C672,85,768,107,864,133.3C960,160,1056,192,1152,192C1248,192,1344,160,1392,144L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
-            <defs>
-              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style={{ stopColor: '#e6004c', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#ff0055', stopOpacity: 1 }} />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        
-        <div className="avatar-wrapper">
-          <div className="avatar-circle premium-shadow">
-            <User size={40} color="#333" strokeWidth={1.5} />
-          </div>
-          <button className="camera-btn">
-            <Camera size={14} color="#fff" />
-          </button>
-        </div>
-        <h2 className="profile-name">{displayUserName}</h2>
-      </div>
-
-      <div className="dashboard-content premium-content">
-        <div className="premium-grid">
-          <div className="premium-grid-card" onClick={() => navigateTo('orders')}>
-            <div className="grid-icon-wrap"><Package size={28} strokeWidth={1.5} color="#333" /></div>
-            <span>My Orders</span>
-          </div>
-          <div className="premium-grid-card" onClick={() => navigateTo('routine')}>
-            <div className="grid-icon-wrap"><CheckCircle size={28} strokeWidth={1.5} color="#333" /></div>
-            <span>Daily Routine</span>
-          </div>
-          <div className="premium-grid-card" onClick={() => navigateTo('stacks')}>
-            <div className="grid-icon-wrap"><Layers size={28} strokeWidth={1.5} color="#333" /></div>
-            <span>Saved Stacks</span>
-          </div>
-          <div className="premium-grid-card" onClick={() => navigateTo('offers')}>
-            <div className="grid-icon-wrap"><Tag size={28} strokeWidth={1.5} color="#333" /></div>
-            <span>Offers for You</span>
-          </div>
-          <div className="premium-grid-card" onClick={() => navigateTo('refer')}>
-            <div className="grid-icon-wrap"><Gift size={28} strokeWidth={1.5} color="#333" /></div>
-            <span>Refer & Earn</span>
-          </div>
-          <div className="premium-grid-card" onClick={() => navigateTo('reviews')}>
-            <div className="grid-icon-wrap"><Star size={28} strokeWidth={1.5} color="#333" /></div>
-            <span>My Reviews</span>
-          </div>
-        </div>
-
-        <div className="premium-menu-list mobile-only">
-          <div className="menu-item" onClick={() => navigateTo('wishlist')}>
-            <div className="menu-left">
-              <div className="menu-icon"><Heart size={20} color="#555" /></div>
-              <span className="menu-text">Wishlist</span>
-            </div>
-            <ChevronRight size={20} color="#ccc" />
-          </div>
-          {/* <div className="menu-item" onClick={() => alert('Redirecting to Customer Care...')}>
-            <div className="menu-left">
-              <div className="menu-icon"><Headphones size={20} color="#555" /></div>
-              <span className="menu-text">Customer Care</span>
-            </div>
-            <ChevronRight size={20} color="#ccc" />
-          </div> */}
-          <div className="menu-item" onClick={() => navigateTo('profile')}>
-            <div className="menu-left">
-              <div className="menu-icon"><User size={20} color="#555" /></div>
-              <span className="menu-text">Edit Profile</span>
-            </div>
-            <ChevronRight size={20} color="#ccc" />
-          </div>
-          <div className="menu-item" onClick={() => navigateTo('address')}>
-            <div className="menu-left">
-              <div className="menu-icon"><MapPin size={20} color="#555" /></div>
-              <span className="menu-text">Shipping Address</span>
-            </div>
-            <ChevronRight size={20} color="#ccc" />
-          </div>
-        </div>
-      </div>
-
-      <div className="logout-wrapper mobile-only">
-        <button className="logout-btn" onClick={onSignOut}>
-          <LogOut size={20} />
-          <span>Logout securely</span>
-        </button>
-      </div>
-    </motion.div>
+  const Header = ({ title, back = 'dashboard' }) => (
+    <div className="acc-subhead">
+      <button type="button" className="acc-icon-btn" aria-label="Back" onClick={() => (back === 'home' ? onBack() : go(back))}><ChevronLeft size={22} /></button>
+      <h1>{title}</h1>
+    </div>
   );
 
-  const renderOrdersList = () => (
-    <motion.div 
-      className="mobile-orders"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      key="orders"
-    >
-      <div className="dashboard-header orders-header">
-        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}>
-          <ChevronLeft size={24} />
-        </button>
-        <button className="search-btn-header">
-          <Search size={24} />
-        </button>
-      </div>
-
-      <div className="orders-page-content">
-        <h1 className="page-main-title">All Orders</h1>
-        
-        <div className="orders-list-cards" style={{marginTop: 20}}>
-          {loadingOrders ? (
-            <p className="loading-text">Loading orders...</p>
-          ) : orders.length === 0 ? (
-            <div className="premium-empty-state">
-              <Package size={40} color="#ccc" />
-              <p>No orders found.</p>
-            </div>
-          ) : (
-            orders.map(order => {
-              const dateObj = new Date(order.created_at);
-              const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
-              const statusStr = order.status.toLowerCase();
-              const isDelivered = statusStr === 'delivered';
-              const isCancelled = statusStr === 'cancelled';
-              const isReturned = statusStr === 'returned';
-              
-              let statusMsg = "Order Processing";
-              if (isDelivered) statusMsg = "Order Delivered";
-              else if (isCancelled) statusMsg = "Order Cancelled";
-              else if (isReturned) statusMsg = "Order Returned";
-              else if (statusStr === 'shipped') statusMsg = "Order Shipped";
-              else if (statusStr === 'out_for_delivery') statusMsg = "Out for Delivery";
-              
-              return (
-                <div key={order.id} className="order-card-new premium-shadow">
-                  <div className="order-card-top">
-                    <span className="order-no">Order No: {order.id.split('-')[0].toUpperCase()}</span>
-                    <span className="order-date">{formattedDate}</span>
-                  </div>
-                  <div className="order-card-middle">
-                    <div className="tracking-row" style={{display: 'flex', gap: 12, alignItems: 'center'}}>
-                      {order.image ? (
-                        <img src={order.image} alt="product" style={{width: 56, height: 56, borderRadius: 12, objectFit: 'cover'}} />
-                      ) : (
-                        <div style={{width: 56, height: 56, borderRadius: 12, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Package size={24} color="#ccc" /></div>
-                      )}
-                      <div>
-                        <span className="label">Item:</span>
-                        <span className="value" style={{display: 'block', marginTop: 4, lineHeight: 1.3}}>{order.product_name}</span>
-                      </div>
-                    </div>
-                    <div className="qty-amount-row" style={{marginTop: 12}}>
-                      <span className="label">Quantity: <span className="value">{order.qty || 1}</span></span>
-                      <span className="label">Total: <span className="value bold">₹{order.price || order.total_amount || '0'}</span></span>
-                    </div>
-                  </div>
-                  <div className="order-card-bottom" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button className="details-btn" onClick={() => handleOrderDetails(order)}>Details</button>
-                    <button 
-                      className="details-btn" 
-                      style={{ background: '#f8f9fa', color: '#111', border: '1px solid #ddd' }}
-                      onClick={(e) => handleDownloadInvoice(order, e)}
-                    >
-                      Invoice
-                    </button>
-                    <span className={`status-text ${order.status.toLowerCase()}`} style={{ marginLeft: 'auto' }}>
-                      {statusMsg}
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const renderOrderDetails = () => {
-    if (!activeOrder) return null;
-    const dateObj = new Date(activeOrder.created_at);
-    const formattedDate = `${dateObj.getDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`;
-    const status = activeOrder.status.toLowerCase();
-    
-    const isCancelled = status === 'cancelled';
-    const isReturned = status === 'returned';
-    const isProcessing = status === 'processing' || status === 'shipped' || status === 'out_for_delivery' || status === 'delivered';
-    const isShipped = status === 'shipped' || status === 'out_for_delivery' || status === 'delivered';
-    const isOutForDelivery = status === 'out_for_delivery' || status === 'delivered';
-    const isDelivered = status === 'delivered';
-
-    const orderAddress = activeOrder.shipping_address 
-      ? `${activeOrder.shipping_address}, ${activeOrder.city || ''}, ${activeOrder.state || ''} - ${activeOrder.pincode || ''}`
-      : "No address provided";
-
+  const OrderCard = ({ o, compact }) => {
+    const k = statusKey(o.status);
     return (
-      <motion.div 
-        className="mobile-orders"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        key="order-details"
-      >
-        <div className="dashboard-header orders-header">
-          <button className="back-btn-header" onClick={() => navigateTo('orders')}>
-            <ChevronLeft size={24} />
-          </button>
-          <span className="header-title">Order Details</span>
-          <div style={{ width: 24 }}></div> 
-        </div>
-
-        <div className="orders-page-content">
-          <div className="order-detail-header premium-shadow">
-            <div className="odh-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3>Order ID: {activeOrder.id.split('-')[0].toUpperCase()}</h3>
-                <p>Placed on {formattedDate}</p>
-              </div>
-              <button 
-                className="print-hide" 
-                style={{ background: '#111', color: '#fff', border: 'none', padding: '8px 16px', fontSize: '13px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                onClick={(e) => handleDownloadInvoice(activeOrder, e)}
-              >
-                View Invoice
-              </button>
-            </div>
-            <div className="odh-item" style={{display: 'flex', gap: 16, marginTop: 16}}>
-              {activeOrder.image ? (
-                <img src={activeOrder.image} alt="product" style={{width: 64, height: 64, borderRadius: 12, objectFit: 'cover'}} />
-              ) : (
-                <div style={{width: 64, height: 64, borderRadius: 12, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Package size={24} color="#ccc" /></div>
-              )}
-              <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-                <p className="odh-name">{activeOrder.product_name}</p>
-                <p className="odh-price">₹{activeOrder.price || activeOrder.total_amount || '0'}</p>
-              </div>
-            </div>
+      <article className="acc-order">
+        <button type="button" className="acc-order-main" onClick={() => openOrder(o)}>
+          {o.image ? <img src={o.image} alt="" loading="lazy" /> : <span className="acc-order-ph"><Package size={22} /></span>}
+          <span className="acc-order-info">
+            <span className="acc-order-top">
+              <strong>#{shortId(o.id)}</strong>
+              <span className={`acc-chip st-${k}`}>{STATUS_TEXT[k] || o.status}</span>
+            </span>
+            <span className="acc-order-items">{o.product_name}</span>
+            <span className="acc-order-meta">{fmtDate(o.created_at)} · ₹{Number(o.price || 0).toLocaleString('en-IN')} · {o.payment_method === 'COD' ? 'Cash on Delivery' : 'Paid online'}</span>
+          </span>
+          <ChevronRight size={18} className="acc-chev" />
+        </button>
+        {!compact && <Timeline status={o.status} />}
+        {!compact && (
+          <div className="acc-order-actions">
+            <button type="button" onClick={() => buyAgain(o)}><RotateCcw size={15} /> Buy again</button>
+            <button type="button" onClick={() => setInvoiceOrder(o)}><FileText size={15} /> Invoice</button>
+            <a href={waHelp(o)} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> Help</a>
           </div>
-
-          <div className="tracking-container premium-shadow print-hide">
-            <h3 className="tracking-title">Track Order</h3>
-            
-            <div className="tracking-timeline">
-              {/* Step 1: Order Placed */}
-              <div className="tracking-step">
-                <div className={`t-icon active`}>
-                  <CheckCircle size={16} />
-                </div>
-                <div className="t-content">
-                  <h4>Order Placed</h4>
-                  <p>We have received your order</p>
-                </div>
-              </div>
-              <div className={`t-line ${isProcessing || isCancelled || isReturned ? 'active' : ''}`}></div>
-
-              {/* Step 2: Processing */}
-              <div className="tracking-step">
-                <div className={`t-icon ${isProcessing || isCancelled || isReturned ? 'active' : ''}`}>
-                  <CheckCircle size={16} />
-                </div>
-                <div className="t-content">
-                  <h4>Order Processing</h4>
-                  <p>Your items are being prepared</p>
-                </div>
-              </div>
-              <div className={`t-line ${isShipped || isCancelled || isReturned ? 'active' : ''}`}></div>
-
-              {/* Step 3: Shipped / Cancelled / Returned */}
-              {isCancelled ? (
-                <div className="tracking-step">
-                  <div className="t-icon active red">
-                    <XCircle size={16} />
-                  </div>
-                  <div className="t-content">
-                    <h4 className="red-text">Order Cancelled</h4>
-                    <p>This order was cancelled.</p>
-                  </div>
-                </div>
-              ) : isReturned ? (
-                <div className="tracking-step">
-                  <div className="t-icon active yellow">
-                    <XCircle size={16} />
-                  </div>
-                  <div className="t-content">
-                    <h4 className="yellow-text">Order Returned</h4>
-                    <p>Order has been returned.</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="tracking-step">
-                    <div className={`t-icon ${isShipped ? 'active' : ''}`}>
-                      <CheckCircle size={16} />
-                    </div>
-                    <div className="t-content">
-                      <h4>Shipped</h4>
-                      <p>Package handed to courier</p>
-                    </div>
-                  </div>
-                  <div className={`t-line ${isOutForDelivery ? 'active' : ''}`}></div>
-
-                  {/* Step 4: Out for Delivery */}
-                  <div className="tracking-step">
-                    <div className={`t-icon ${isOutForDelivery ? 'active' : ''}`}>
-                      <CheckCircle size={16} />
-                    </div>
-                    <div className="t-content">
-                      <h4>Out for Delivery</h4>
-                      <p>Package is on the way</p>
-                    </div>
-                  </div>
-                  <div className={`t-line ${isDelivered ? 'active' : ''}`}></div>
-
-                  {/* Step 5: Delivered */}
-                  <div className="tracking-step">
-                    <div className={`t-icon ${isDelivered ? 'active' : ''}`}>
-                      <CheckCircle size={16} />
-                    </div>
-                    <div className="t-content">
-                      <h4>Delivered</h4>
-                      <p>Package handed to customer</p>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          
-          <div className="order-address-box premium-shadow">
-            <h4>Shipping Information</h4>
-            <p className="address-text">{orderAddress}</p>
-            {activeOrder.tracking_id && (
-              <div className="tracking-id-box">
-                <strong>Courier Tracking ID:</strong> {activeOrder.tracking_id}
-              </div>
-            )}
-          </div>
-
-          {isDelivered && (
-            <div className="order-address-box premium-shadow print-hide" style={{marginTop: 24}}>
-              <h4>Rate this Product</h4>
-              <p className="address-text" style={{marginBottom: 12}}>How was your experience with {activeOrder.product_name}?</p>
-              <button 
-                className="btn-outline-premium" 
-                style={{ background: '#111', color: '#fff', border: 'none', padding: '12px' }}
-                onClick={() => {
-                  const match = (allProducts || []).find(p => p.name === activeOrder.product_name);
-                  window.location.href = match ? `/product/${match.slug || match.id}#reviews` : '/products';
-                }}
-              >
-                Write a Review
-              </button>
-            </div>
-          )}
-
-          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }} className="print-hide">
-            <button 
-              style={{ padding: '14px 32px', fontSize: '15px', borderRadius: '12px', background: '#111', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
-              onClick={(e) => handleDownloadInvoice(activeOrder, e)}
-            >
-              📄 View Full GST Invoice
-            </button>
-          </div>
-
-          {allProducts.length > 0 && (
-            <div className="order-address-box premium-shadow print-hide" style={{marginTop: 24, paddingBottom: 16}}>
-              <h4>You might also like</h4>
-              <div style={{display: 'flex', gap: 12, overflowX: 'auto', paddingTop: 8, paddingBottom: 8}}>
-                {allProducts.slice(0, 4).map(p => (
-                  <div key={p.id} style={{minWidth: 120, border: '1px solid #eee', borderRadius: 12, padding: 8, cursor: 'pointer'}} onClick={() => alert('Redirect to product!')}>
-                    <div style={{height: 80, background: '#f8f9fa', borderRadius: 8, marginBottom: 8}}>
-                      {/* image placeholder */}
-                    </div>
-                    <p style={{margin: '0 0 4px', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{p.name}</p>
-                    <p style={{margin: 0, fontSize: 13, color: '#ff0055', fontWeight: 700}}>₹{p.price}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-        </div>
-      </motion.div>
+        )}
+      </article>
     );
   };
 
-  const renderRoutineTracker = () => {
-    const routineItems = getRoutineItems();
-    
-    return (
-      <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="routine">
-        <div className="dashboard-header orders-header">
-          <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
+  // ---------- views ----------
+  const renderDashboard = () => (
+    <>
+      <div className="acc-hero">
+        <button type="button" className="acc-icon-btn acc-hero-back" aria-label="Back to shop" onClick={onBack}><ChevronLeft size={22} /></button>
+        <div className="acc-avatar" aria-hidden="true">{initials}</div>
+        <div className="acc-hero-text">
+          <span className="acc-hello">Hello,</span>
+          <h1>{displayName}</h1>
+          <span className="acc-contact">{[phone && `+91 ${phone}`, realEmail].filter(Boolean).join(' · ')}</span>
         </div>
-        <div className="orders-page-content">
-          <h1 className="page-main-title">Daily Routine</h1>
-          <p className="premium-subtitle">Track your actual supplement intake based on your past orders.</p>
-          
-          <div className="routine-list">
-            {routineItems.length === 0 ? (
-              <div className="premium-empty-state">
-                <CheckCircle size={40} color="#ccc" />
-                <p>Buy products to build your daily routine!</p>
-              </div>
-            ) : (
-              routineItems.map((item, idx) => {
-                const key = `routine_${idx}`;
-                return (
-                  <div key={idx} className={`routine-card premium-shadow ${routineChecked[key] ? 'completed' : ''}`} onClick={() => toggleRoutine(key)}>
-                    <div className="routine-info">
-                      <h3>Daily Dosage</h3>
-                      <p>{item}</p>
-                    </div>
-                    <div className="check-circle-ui">{routineChecked[key] && <CheckCircle size={20} color="#fff" />}</div>
-                  </div>
-                )
-              })
-            )}
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
-  const renderReferAndEarn = () => (
-    <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="refer">
-      <div className="dashboard-header orders-header">
-        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
-      </div>
-      <div className="orders-page-content" style={{textAlign: 'center'}}>
-        <div className="referral-icon-large"><Gift size={48} color="#ff0055" /></div>
-        <h1 className="page-main-title" style={{textAlign: 'center', marginTop: 20}}>Refer & Earn ₹100</h1>
-        <p className="premium-subtitle">Give your friends ₹100 off their first order, and you get ₹100 when they buy.</p>
-        
-        <div className="referral-code-box premium-shadow">
-          <span className="code-text">NUTRIX-{user?.id?.substring(0,6).toUpperCase() || 'VIP26'}</span>
-          <button className="copy-btn" onClick={handleCopyReferral}><Copy size={18} /> Copy</button>
-        </div>
-        
-        <div className="referral-stats premium-shadow">
-          <div className="stat-item">
-            <h4>0</h4>
-            <p>Friends Joined</p>
-          </div>
-          <div className="stat-item">
-            <h4>₹0</h4>
-            <p>Earned</p>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const renderOffers = () => (
-    <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="offers">
-      <div className="dashboard-header orders-header">
-        <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
-      </div>
-      <div className="orders-page-content">
-        <h1 className="page-main-title">Offers for You</h1>
-        
-        <div className="offer-card premium-shadow">
-          <div className="offer-badge">10% OFF</div>
-          <h3>Extra 10% off on all products</h3>
-          <p>Use code <strong>PUREJOY10</strong> at checkout.</p>
-          <button className="btn-outline-premium" onClick={() => { navigator.clipboard?.writeText('PUREJOY10'); alert('Code PUREJOY10 copied!'); }}>Copy Code</button>
-        </div>
-
-        <div className="offer-card premium-shadow">
-          <div className="offer-badge">BUY 1 GET 1</div>
-          <h3>Buy 1 Get 1 FREE</h3>
-          <p>On every product. The free jar is added to your cart automatically — no code needed.</p>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const renderSavedStacks = () => {
-    // Take real products from allProducts. 
-    // We will build a couple of mock stacks using actual names and prices from DB if they exist.
-    const product1 = allProducts[0];
-    const product2 = allProducts[1];
-    
-    return (
-      <motion.div className="mobile-orders" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="stacks">
-        <div className="dashboard-header orders-header">
-          <button className="back-btn-header" onClick={() => navigateTo('dashboard')}><ChevronLeft size={24} /></button>
-        </div>
-        <div className="orders-page-content">
-          <h1 className="page-main-title">Saved Stacks</h1>
-          <p className="premium-subtitle">Bundle your favorite supplements for 1-click checkout.</p>
-          
-          <div className="orders-list-cards">
-            {product1 && (
-              <div className="stack-card premium-shadow">
-                <div className="stack-header">
-                  <h3>Essential Stack</h3>
-                  <span className="stack-price">₹{product1.price}</span>
-                </div>
-                <p className="stack-desc">{product1.name} - {product1.description?.substring(0, 50)}...</p>
-                <a className="btn-primary stack-add-btn" href={`/product/${product1.slug || product1.id}`} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Plus size={16} /> View &amp; Add to Cart
-                </a>
-              </div>
-            )}
-
-            {product2 && (
-              <div className="stack-card premium-shadow">
-                <div className="stack-header">
-                  <h3>Pro Performance Stack</h3>
-                  <span className="stack-price">₹{product2.price}</span>
-                </div>
-                <p className="stack-desc">{product2.name} - {product2.description?.substring(0, 50)}...</p>
-                <a className="btn-primary stack-add-btn" href={`/product/${product2.slug || product2.id}`} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Plus size={16} /> View &amp; Add to Cart
-                </a>
-              </div>
-            )}
-            
-            {!product1 && !product2 && (
-              <p className="loading-text">No active products to build stacks.</p>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
-  return (
-    <div className="account-redesign-wrapper">
-      
-      {/* Desktop Sidebar */}
-      <div className="desktop-sidebar">
-        <div className="desktop-profile-card premium-shadow">
-          <div className="avatar-circle">
-            <User size={50} color="#333" strokeWidth={1.5} />
-          </div>
-          <h2>{displayUserName}</h2>
-        </div>
-        
-        <div className="premium-menu-list desktop-menu">
-          <div className={`menu-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => navigateTo('dashboard')}>
-            <div className="menu-left">
-              <div className="menu-icon"><Package size={20} color={view === 'dashboard' ? '#ff0055' : '#555'} /></div>
-              <span className="menu-text">Dashboard</span>
-            </div>
-          </div>
-          <div className={`menu-item ${view === 'wishlist' ? 'active' : ''}`} onClick={() => navigateTo('wishlist')}>
-            <div className="menu-left">
-              <div className="menu-icon"><Heart size={20} color={view === 'wishlist' ? '#ff0055' : '#555'} /></div>
-              <span className="menu-text">Wishlist</span>
-            </div>
-          </div>
-          {/* <div className="menu-item" onClick={() => alert('Redirecting to Customer Care...')}>
-            <div className="menu-left">
-              <div className="menu-icon"><Headphones size={20} color="#555" /></div>
-              <span className="menu-text">Customer Care</span>
-            </div>
-          </div> */}
-          <div className={`menu-item ${view === 'profile' ? 'active' : ''}`} onClick={() => navigateTo('profile')}>
-            <div className="menu-left">
-              <div className="menu-icon"><User size={20} color={view === 'profile' ? '#ff0055' : '#555'} /></div>
-              <span className="menu-text">Edit Profile</span>
-            </div>
-          </div>
-          <div className={`menu-item ${view === 'address' ? 'active' : ''}`} onClick={() => navigateTo('address')}>
-            <div className="menu-left">
-              <div className="menu-icon"><MapPin size={20} color={view === 'address' ? '#ff0055' : '#555'} /></div>
-              <span className="menu-text">Shipping Address</span>
-            </div>
-          </div>
-          <div className="menu-item" onClick={onSignOut}>
-            <div className="menu-left">
-              <div className="menu-icon"><LogOut size={20} color="#555" /></div>
-              <span className="menu-text">Logout</span>
-            </div>
-          </div>
+        <div className="acc-stats">
+          <div><strong>{stats.count}</strong><span>Orders</span></div>
+          <div><strong>{stats.free}</strong><span>Free jars (BOGO)</span></div>
+          <div><strong>{reviews ? reviews.length : '–'}</strong><span>Reviews</span></div>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="desktop-main-content">
-        <AnimatePresence mode="wait">
-          {view === 'dashboard' && renderDashboardGrid()}
-          {view === 'orders' && renderOrdersList()}
-          {view === 'order-details' && renderOrderDetails()}
-          {view === 'routine' && renderRoutineTracker()}
-          {view === 'refer' && renderReferAndEarn()}
-          {view === 'offers' && renderOffers()}
-          {view === 'stacks' && renderSavedStacks()}
-          
-          {(view === 'profile' || view === 'wishlist' || view === 'reviews') && (
-            <motion.div 
-              className="mobile-orders"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              key="placeholder"
-            >
-              <div className="dashboard-header orders-header">
-                <button className="back-btn-header" onClick={() => navigateTo('dashboard')}>
-                  <ChevronLeft size={24} />
-                </button>
-              </div>
-              <div className="orders-page-content" style={{textAlign: 'center', paddingTop: 60}}>
-                <h1 className="page-main-title">{view.charAt(0).toUpperCase() + view.slice(1)}</h1>
-                <p className="premium-subtitle">This premium feature is currently being tailored for you.</p>
-              </div>
-            </motion.div>
-          )}
-
-          {view === 'address' && (
-            <motion.div 
-              className="mobile-orders"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              key="address"
-            >
-              <div className="dashboard-header orders-header">
-                <button className="back-btn-header" onClick={() => navigateTo('dashboard')}>
-                  <ChevronLeft size={24} />
-                </button>
-                <div style={{ width: 24 }}></div>
-              </div>
-              <div className="orders-page-content">
-                <h1 className="page-main-title" style={{ marginBottom: 20 }}>Shipping Addresses</h1>
-                
-                {!isAddingAddress ? (
-                  <>
-                    <button className="gold-btn-solid" style={{ width: '100%', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => setIsAddingAddress(true)}>
-                      <Plus size={18} /> Add New Address
-                    </button>
-                    
-                    {loadingAddresses ? (
-                      <p style={{ textAlign: 'center' }}>Loading addresses...</p>
-                    ) : addresses.length === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '40px 20px', background: '#f9f9f9', borderRadius: '12px', border: '1px dashed #ccc' }}>
-                        <MapPin size={48} color="#ccc" style={{ marginBottom: 16, margin: '0 auto' }} />
-                        <p style={{ color: '#666' }}>No saved addresses found.</p>
-                      </div>
-                    ) : (
-                      <div className="addresses-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {addresses.map(addr => (
-                          <div key={addr.id} className="address-card premium-shadow" style={{ padding: '16px', borderRadius: '12px', background: '#fff', position: 'relative' }}>
-                            <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: '8px' }}>
-                              <button onClick={() => handleEditAddress(addr)} style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', padding: 0 }} title="Edit Address">
-                                <span style={{ fontSize: '1.2rem' }}>✎</span>
-                              </button>
-                              <button onClick={() => handleDeleteAddress(addr.id)} style={{ background: 'transparent', border: 'none', color: '#ff4d4f', cursor: 'pointer', padding: 0 }} title="Delete Address">
-                                <XCircle size={20} />
-                              </button>
-                            </div>
-                            <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem' }}>{addr.name}</h4>
-                            <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: '#555' }}>📞 {addr.mobile}</p>
-                            <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: '#555' }}>✉️ {addr.email || 'N/A'}</p>
-                            <p style={{ margin: '0', fontSize: '0.9rem', color: '#333', lineHeight: '1.4' }}>
-                              {addr.flat}, {addr.area}<br/>
-                              {addr.landmark && <>{addr.landmark}<br/></>}
-                              {addr.city}, {addr.state} - {addr.pincode}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="add-address-form premium-shadow" style={{ padding: '20px', borderRadius: '12px', background: '#fff' }}>
-                    <h3 style={{ marginBottom: 20 }}>{editingAddressId ? 'Edit Address' : 'Add New Address'}</h3>
-                    <form onSubmit={handleSaveAddress} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <input type="text" name="name" value={newAddress.name} onChange={handleAddressChange} placeholder="Full Name" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                      <input type="tel" name="mobile" value={newAddress.mobile} onChange={handleAddressChange} placeholder="Mobile Number" maxLength="10" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                      <input type="email" name="email" value={newAddress.email} onChange={handleAddressChange} placeholder="Email Address" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                      <input type="text" name="flat" value={newAddress.flat} onChange={handleAddressChange} placeholder="House/Flat/Office No." required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                      <input type="text" name="area" value={newAddress.area} onChange={handleAddressChange} placeholder="Area/Street" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                      <input type="text" name="landmark" value={newAddress.landmark} onChange={handleAddressChange} placeholder="Landmark (Optional)" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                      <input type="text" name="city" value={newAddress.city} onChange={handleAddressChange} placeholder="City" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                      <input type="text" name="state" value={newAddress.state} onChange={handleAddressChange} placeholder="State" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                      <input type="text" name="pincode" value={newAddress.pincode} onChange={handleAddressChange} placeholder="Pincode" maxLength="6" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                      
-                      <div style={{ display: 'flex', gap: '10px', marginTop: 10 }}>
-                        <button type="button" onClick={() => { setIsAddingAddress(false); setEditingAddressId(null); setNewAddress({ name: '', mobile: '', email: '', flat: '', area: '', landmark: '', city: '', state: '', pincode: '' }); }} style={{ flex: 1, padding: '12px', background: '#f1f1f1', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
-                        <button type="submit" className="gold-btn-solid" style={{ flex: 1 }}>{editingAddressId ? 'Update Address' : 'Save Address'}</button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {showInvoiceForOrder && (
-        <ProfessionalInvoice 
-          order={showInvoiceForOrder} 
-          onClose={() => setShowInvoiceForOrder(null)} 
-        />
+      {orders?.[0] && (
+        <section className="acc-section">
+          <div className="acc-section-head"><h2>Latest order</h2><button type="button" onClick={() => go('orders')}>All orders <ChevronRight size={15} /></button></div>
+          <OrderCard o={orders[0]} />
+        </section>
       )}
 
+      {orders && orders.length === 0 && (
+        <section className="acc-empty">
+          <Package size={34} />
+          <p>No orders yet. Every product comes with Buy 1 Get 1 FREE.</p>
+          <a className="acc-btn-dark" href="/products">Shop now</a>
+        </section>
+      )}
+
+      {boughtProducts.length > 0 && (
+        <section className="acc-section">
+          <div className="acc-section-head"><h2>My products</h2></div>
+          <div className="acc-products">
+            {boughtProducts.map(p => (
+              <article key={p.id} className="acc-product">
+                <button type="button" className="acc-product-top" onClick={() => openProduct(p)}>
+                  {p.image_urls?.[0] && <img src={p.image_urls[0]} alt="" loading="lazy" />}
+                  <strong>{p.name}</strong>
+                </button>
+                <div className="acc-howto">
+                  <span className="acc-howto-title"><Pill size={14} /> How to take</span>
+                  <ul>{(p.details.howToUse?.steps || []).slice(0, 3).map((s, i) => <li key={i}>{s.desc}</li>)}</ul>
+                </div>
+                <div className="acc-product-links">
+                  {p.details.labReportSlug && <a href={`/lab-report/${p.details.labReportSlug}`}><FlaskConical size={14} /> Lab report</a>}
+                  {!reviewedIds.has(p.id) && <button type="button" onClick={() => openProduct(p, '#reviews')}><Star size={14} /> Write a review</button>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="acc-offer">
+        <Gift size={22} />
+        <div><strong>Extra 10% off with PUREJOY10</strong><span>Plus Buy 1 Get 1 FREE on every product.</span></div>
+        <button type="button" onClick={copyCode}>{copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}</button>
+      </section>
+
+      <nav className="acc-menu" aria-label="Account">
+        <button type="button" onClick={() => go('orders')}><Package size={19} /><span>My orders</span>{stats.active > 0 && <em>{stats.active} active</em>}<ChevronRight size={18} /></button>
+        <button type="button" onClick={() => go('reviews')}><Star size={19} /><span>My reviews</span>{toReview.length > 0 && <em>{toReview.length} to write</em>}<ChevronRight size={18} /></button>
+        <button type="button" onClick={() => go('addresses')}><MapPin size={19} /><span>Saved addresses</span><ChevronRight size={18} /></button>
+        <button type="button" onClick={() => { setProfileName(displayName === 'Pure Nutrix customer' ? '' : displayName); go('profile'); }}><User size={19} /><span>Edit profile</span><ChevronRight size={18} /></button>
+        <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hi Pure Nutrix, I need help.')}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={19} /><span>Help on WhatsApp</span><ChevronRight size={18} /></a>
+        <button type="button" className="acc-logout" onClick={onSignOut}><LogOut size={19} /><span>Log out</span></button>
+      </nav>
+    </>
+  );
+
+  const renderOrders = () => (
+    <>
+      <Header title="My orders" />
+      {orders === null ? <p className="acc-muted">Loading…</p> : orders.length === 0 ? (
+        <section className="acc-empty"><Package size={34} /><p>No orders yet.</p><a className="acc-btn-dark" href="/products">Shop now</a></section>
+      ) : <div className="acc-list">{orders.map(o => <OrderCard key={o.id} o={o} />)}</div>}
+    </>
+  );
+
+  const renderOrder = () => {
+    const o = activeOrder && !activeOrder._pending ? activeOrder : null;
+    if (!o) return <><Header title="Order" back="orders" /><p className="acc-muted">{orders ? 'Order not found.' : 'Loading…'}</p></>;
+    const k = statusKey(o.status);
+    return (
+      <>
+        <Header title={`Order #${shortId(o.id)}`} back="orders" />
+        <section className="acc-card">
+          <div className="acc-order-top"><span className="acc-muted">Placed on {fmtDate(o.created_at)}</span><span className={`acc-chip st-${k}`}>{STATUS_TEXT[k] || o.status}</span></div>
+          <Timeline status={o.status} />
+          {k !== 'delivered' && k !== 'cancelled' && k !== 'returned' && (
+            <p className="acc-hint"><Clock size={14} /> We dispatch in 24–48 hours. Delivery takes 2–7 business days. You get WhatsApp updates when it ships.</p>
+          )}
+        </section>
+        <section className="acc-card">
+          <h3>Items</h3>
+          <div className="acc-items">
+            {o.image && <img src={o.image} alt="" />}
+            <p>{o.product_name}</p>
+          </div>
+          <dl className="acc-bill">
+            <div><dt>Quantity</dt><dd>{o.qty || 1}</dd></div>
+            {o.coupon_code && <div><dt>Coupon {o.coupon_code}</dt><dd>−₹{Number(o.discount_amount || 0).toLocaleString('en-IN')}</dd></div>}
+            <div><dt>Payment</dt><dd>{o.payment_method === 'COD' ? 'Cash on Delivery' : 'Paid online'}</dd></div>
+            <div className="acc-total"><dt>Total</dt><dd>₹{Number(o.price || 0).toLocaleString('en-IN')}</dd></div>
+          </dl>
+        </section>
+        <section className="acc-card">
+          <h3>Delivery address</h3>
+          <p className="acc-addr">{o.customer_name}<br />{o.shipping_address}<br />{[o.city, o.state].filter(Boolean).join(', ')} {o.pincode}<br />{o.customer_mobile && `+91 ${o.customer_mobile}`}</p>
+        </section>
+        <div className="acc-order-actions acc-order-actions-lg">
+          <button type="button" onClick={() => buyAgain(o)}><RotateCcw size={16} /> Buy again</button>
+          <button type="button" onClick={() => setInvoiceOrder(o)}><FileText size={16} /> Invoice</button>
+          <a href={waHelp(o)} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /> Help with this order</a>
+        </div>
+      </>
+    );
+  };
+
+  const renderReviews = () => (
+    <>
+      <Header title="My reviews" />
+      {toReview.length > 0 && (
+        <section className="acc-section">
+          <div className="acc-section-head"><h2>Waiting for your review</h2></div>
+          <div className="acc-list">
+            {toReview.map(p => (
+              <button type="button" key={p.id} className="acc-row" onClick={() => openProduct(p, '#reviews')}>
+                {p.image_urls?.[0] && <img src={p.image_urls[0]} alt="" />}
+                <span>{p.name}</span>
+                <em><Star size={14} /> Review</em>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+      {reviews === null ? <p className="acc-muted">Loading…</p> : reviews.length === 0 ? (
+        <section className="acc-empty"><Star size={34} /><p>You haven't written a review yet.</p></section>
+      ) : (
+        <div className="acc-list">
+          {reviews.map(r => (
+            <article key={r.id} className="acc-card acc-review">
+              <div className="acc-order-top"><strong>{r.productName}</strong>
+                <span className={`acc-chip ${r.status === 'Approved' ? 'st-delivered' : r.status === 'Rejected' ? 'st-cancelled' : 'st-processing'}`}>
+                  {r.status === 'Approved' ? 'Live' : r.status === 'Rejected' ? 'Not published' : 'Being checked'}
+                </span>
+              </div>
+              <Stars n={r.rating} />
+              <p>{r.comment}</p>
+              {r.photos?.length > 0 && <div className="acc-review-photos">{r.photos.map(u => <img key={u} src={u} alt="" loading="lazy" />)}</div>}
+              <span className="acc-muted">{r.date}</span>
+            </article>
+          ))}
+        </div>
+      )}
+    </>
+  );
+
+  const renderAddresses = () => (
+    <>
+      <Header title="Saved addresses" />
+      {addrForm ? (
+        <form className="acc-card acc-form" onSubmit={saveAddress}>
+          <h3>{addrId ? 'Edit address' : 'New address'}</h3>
+          {[
+            ['name', 'Full name', 'text', true], ['mobile', 'Mobile number (10 digits)', 'tel', true], ['email', 'Email (optional)', 'email', false],
+            ['flat', 'House / flat / building', 'text', true], ['area', 'Area / street', 'text', true], ['landmark', 'Landmark (optional)', 'text', false],
+            ['city', 'City', 'text', true], ['state', 'State', 'text', true], ['pincode', 'Pincode', 'text', true],
+          ].map(([k, label, type, req]) => (
+            <label key={k}><span>{label}</span>
+              <input type={type} required={req} value={addrForm[k] || ''} inputMode={k === 'mobile' || k === 'pincode' ? 'numeric' : undefined}
+                maxLength={k === 'mobile' ? 10 : k === 'pincode' ? 6 : 120}
+                onChange={e => setAddrForm({ ...addrForm, [k]: k === 'mobile' || k === 'pincode' ? e.target.value.replace(/\D/g, '') : e.target.value })} />
+            </label>
+          ))}
+          <div className="acc-form-actions">
+            <button type="button" className="acc-btn-light" onClick={() => { setAddrForm(null); setAddrId(null); }}>Cancel</button>
+            <button type="submit" className="acc-btn-dark">Save address</button>
+          </div>
+        </form>
+      ) : (
+        <>
+          <button type="button" className="acc-btn-dark acc-btn-block" onClick={() => { setAddrId(null); setAddrForm({ ...EMPTY_ADDR, name: meta.full_name || '', mobile: phone || '' }); }}><Plus size={16} /> Add new address</button>
+          {addresses === null ? <p className="acc-muted">Loading…</p> : addresses.length === 0 ? (
+            <section className="acc-empty"><MapPin size={34} /><p>No saved addresses yet.</p></section>
+          ) : (
+            <div className="acc-list">
+              {addresses.map(a => (
+                <article key={a.id} className="acc-card acc-address">
+                  <div>
+                    <strong>{a.name}</strong>
+                    <p className="acc-addr">{a.flat}, {a.area}{a.landmark ? `, ${a.landmark}` : ''}<br />{a.city}, {a.state} {a.pincode}<br />+91 {a.mobile}</p>
+                  </div>
+                  <div className="acc-address-actions">
+                    <button type="button" aria-label="Edit address" onClick={() => { setAddrId(a.id); setAddrForm({ ...EMPTY_ADDR, ...a, id: undefined, user_id: undefined, created_at: undefined }); }}><Pencil size={16} /></button>
+                    <button type="button" aria-label="Delete address" onClick={() => deleteAddress(a.id)}><Trash2 size={16} /></button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+
+  const renderProfile = () => (
+    <>
+      <Header title="Edit profile" />
+      <form className="acc-card acc-form" onSubmit={saveProfile}>
+        <label><span>Your name</span><input type="text" value={profileName} onChange={e => setProfileName(e.target.value)} maxLength={60} required /></label>
+        <label><span>Mobile</span><input type="text" value={phone ? `+91 ${phone}` : 'Not added'} disabled /></label>
+        <label><span>Email</span><input type="text" value={realEmail || 'Not added'} disabled /></label>
+        <p className="acc-muted">To change your mobile number or email, message us on WhatsApp.</p>
+        <div className="acc-form-actions"><button type="submit" className="acc-btn-dark">Save</button></div>
+      </form>
+    </>
+  );
+
+  if (!user) {
+    return (
+      <div className="acc-page">
+        <div className="acc-wrap">
+          <section className="acc-empty">
+            <User size={34} />
+            <p>Log in to see your orders, track delivery and write reviews.</p>
+            <button type="button" className="acc-btn-dark" onClick={() => onOpenAuth && onOpenAuth()}>Log in</button>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="acc-page">
+      <div className="acc-wrap">
+        {view === 'dashboard' && renderDashboard()}
+        {view === 'orders' && renderOrders()}
+        {view === 'order' && renderOrder()}
+        {view === 'reviews' && renderReviews()}
+        {view === 'addresses' && renderAddresses()}
+        {view === 'profile' && renderProfile()}
+        {note && <p className="acc-note" role="status">{note}</p>}
+      </div>
+      {invoiceOrder && <ProfessionalInvoice order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />}
     </div>
   );
 };

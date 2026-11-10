@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp, Share2, FlaskConical, Truck, Wallet, ShieldCheck } from 'lucide-react';
-import { getProductReviews, addCustomerReview } from '../utils/mockReviews';
+import { getProductReviews } from '../utils/mockReviews';
+import { submitReview, loadApprovedReviews } from '../utils/reviewsStore';
 import { getProductDetails } from '../utils/productDetailsData';
 import { supabase } from '../supabaseClient';
 import './ProductDetailsPage.css';
@@ -21,17 +22,19 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
   );
 };
 
-const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductClick }) => {
+const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductClick, onOpenAuth }) => {
+  const [shareCopied, setShareCopied] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [direction, setDirection] = useState(0);
   const [otherProducts, setOtherProducts] = useState([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewerName, setReviewerName] = useState('');
-  const [reviewerEmail, setReviewerEmail] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [reviewPhotos, setReviewPhotos] = useState([]);
-  const [photoUrlInput, setPhotoUrlInput] = useState('');
+  const [reviewFiles, setReviewFiles] = useState([]);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState('');
   const [reviewSubmittedSuccess, setReviewSubmittedSuccess] = useState(false);
   const [selectedReviewPhoto, setSelectedReviewPhoto] = useState(null);
   const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
@@ -42,6 +45,13 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
     window.addEventListener('pn_reviews_updated', handleReviewUpdate);
     return () => window.removeEventListener('pn_reviews_updated', handleReviewUpdate);
   }, []);
+
+  useEffect(() => {
+    // Real approved reviews from the database; re-render once they arrive.
+    let alive = true;
+    loadApprovedReviews().then(() => { if (alive) setReviewRefreshTrigger(t => t + 1); });
+    return () => { alive = false; };
+  }, [product?.id]);
 
   useEffect(() => {
     // Remember this product for the "Recently viewed" row on the home page
@@ -67,58 +77,46 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
   }, [product?.id]);
 
   const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setReviewPhotos(prev => [...prev, reader.result]);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+    e.target.value = '';
+    const room = Math.max(0, 3 - reviewFiles.length);
+    const picked = files.slice(0, room);
+    setReviewFiles(prev => [...prev, ...picked]);
+    setReviewPhotos(prev => [...prev, ...picked.map(f => URL.createObjectURL(f))]);
   };
 
-  const handleAddPhotoUrl = () => {
-    if (photoUrlInput.trim()) {
-      setReviewPhotos(prev => [...prev, photoUrlInput.trim()]);
-      setPhotoUrlInput('');
-    }
+  const removeReviewPhoto = (idx) => {
+    setReviewFiles(prev => prev.filter((_, i) => i !== idx));
+    setReviewPhotos(prev => { const url = prev[idx]; if (url) URL.revokeObjectURL(url); return prev.filter((_, i) => i !== idx); });
   };
 
-  const handleAddSamplePhoto = () => {
-    const samples = [
-      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1550572017-edd951b55104?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=600&q=80"
-    ];
-    const randomImg = samples[Math.floor(Math.random() * samples.length)];
-    setReviewPhotos(prev => [...prev, randomImg]);
+  const openReviewForm = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { onOpenAuth ? onOpenAuth() : alert('Please log in to write a review.'); return; }
+    if (!reviewerName) setReviewerName(user.user_metadata?.full_name || user.user_metadata?.name || '');
+    setReviewError('');
+    setShowReviewModal(true);
   };
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
-    if (!reviewerName.trim() || !reviewComment.trim()) return;
-
-    addCustomerReview({
-      productName: product?.name || 'Pure Nutrix Product',
-      customerName: reviewerName.trim(),
-      customerEmail: reviewerEmail.trim(),
-      rating: reviewRating,
-      comment: reviewComment.trim(),
-      photos: reviewPhotos
-    });
-
-    setReviewSubmittedSuccess(true);
-    setTimeout(() => {
-      setReviewSubmittedSuccess(false);
+    if (reviewSubmitting) return;
+    setReviewError('');
+    setReviewSubmitting(true);
+    try {
+      await submitReview({ productId: product.id, name: reviewerName.trim(), rating: reviewRating, comment: reviewComment.trim(), files: reviewFiles });
       setShowReviewModal(false);
-      setReviewerName('');
-      setReviewerEmail('');
+      setReviewSubmittedSuccess(true);
       setReviewComment('');
+      reviewPhotos.forEach(u => URL.revokeObjectURL(u));
       setReviewPhotos([]);
-      setPhotoUrlInput('');
-    }, 3000);
+      setReviewFiles([]);
+      setTimeout(() => setReviewSubmittedSuccess(false), 8000);
+    } catch (err) {
+      setReviewError(err.message || 'Could not submit the review. Please try again.');
+    } finally {
+      setReviewSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -304,31 +302,30 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
           <div className="pdp-info-column">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <span className="pdp-badge-best-seller">{reviewData.isNew ? 'New Launch' : 'Best Seller'}</span>
-              <button 
+              <button
+                type="button"
                 className="pdp-share-btn"
+                aria-label={`Share ${product.name}`}
                 onClick={async () => {
                   const shareData = {
                     title: `Pure Nutrix - ${product.name}`,
-                    text: reviewData.isNew
-                      ? `Hey! Check out this new product from Pure Nutrix: ${product.name}. 🌿`
-                      : `Hey! Check out this amazing product from Pure Nutrix: ${product.name}. 🌿\n\nIt's a best-seller and highly rated!`,
-                    url: window.location.href,
+                    text: `Check out ${product.name} from Pure Nutrix 🌿 Buy 1 Get 1 FREE on purenutrix.in`,
+                    url: window.location.href.split('#')[0],
                   };
                   try {
                     if (navigator.share) {
                       await navigator.share(shareData);
                     } else {
-                      // Fallback for desktop
-                      await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
-                      alert("Link and message copied to clipboard! You can now paste and share it anywhere.");
+                      await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+                      setShareCopied(true);
+                      setTimeout(() => setShareCopied(false), 2200);
                     }
                   } catch (err) {
-                    console.log('Error sharing:', err);
+                    // user closed the share sheet — nothing to do
                   }
                 }}
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
               >
-                <Share2 size={14} /> Share
+                <Share2 size={15} /> {shareCopied ? 'Link copied' : 'Share'}
               </button>
             </div>
 
@@ -441,9 +438,9 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
             <h2 className="pdp-section-header" style={{ margin: 0 }}>Customer Reviews ({reviewData.totalCount})</h2>
             <button 
               className="btn-write-review"
-              onClick={() => setShowReviewModal(true)}
+              onClick={openReviewForm}
             >
-              <MessageSquare size={18} /> ✍️ Write a Review
+              <MessageSquare size={18} /> Write a Review
             </button>
           </div>
 
@@ -451,8 +448,8 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
             <div style={{ background: '#dcfce7', color: '#166534', border: '1px solid #86efac', padding: '14px 20px', borderRadius: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
               <CheckCircle size={22} style={{ color: '#166534' }} />
               <div>
-                <strong>Thank you! Your review & photos have been submitted successfully.</strong><br/>
-                <span style={{ fontSize: '0.85rem', fontWeight: 400 }}>It is currently ⏳ Pending Admin Inspection and will appear live on the website once approved by our moderation team.</span>
+                <strong>Thank you! Your review has been sent.</strong><br/>
+                <span style={{ fontSize: '0.85rem', fontWeight: 400 }}>It will appear here after our team checks it (usually within 1–2 days). You can see its status in My Account → My Reviews.</span>
               </div>
             </div>
           )}
@@ -572,127 +569,82 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
 
       {/* ─── MODAL: WRITE A CUSTOMER REVIEW ───────────────────────────────── */}
       {showReviewModal && (
-        <div className="pdp-review-modal-backdrop" onClick={() => setShowReviewModal(false)}>
+        <div className="pdp-review-modal-backdrop" onClick={() => !reviewSubmitting && setShowReviewModal(false)}>
           <div className="pdp-review-modal" onClick={e => e.stopPropagation()}>
             <div className="pdp-review-modal-header">
-              <h3>✍️ Write a Review for {product.name}</h3>
-              <button className="pdp-review-modal-close" onClick={() => setShowReviewModal(false)}>×</button>
+              <h3>Write a review</h3>
+              <button type="button" className="pdp-review-modal-close" aria-label="Close" onClick={() => setShowReviewModal(false)}>×</button>
             </div>
 
             <form onSubmit={handleSubmitReview}>
               <div className="pdp-review-modal-body">
-                <div className="pdp-review-form-group">
-                  <label>Your Name *</label>
-                  <input 
-                    type="text" 
-                    required 
-                    className="pdp-review-input" 
-                    placeholder="e.g. Rajeet Kumar" 
-                    value={reviewerName}
-                    onChange={e => setReviewerName(e.target.value)}
-                  />
-                </div>
+                <p className="pdp-review-product">{product.name}</p>
 
                 <div className="pdp-review-form-group">
-                  <label>Your Email Address * (For Verified Buyer badge)</label>
-                  <input 
-                    type="email" 
-                    required 
-                    className="pdp-review-input" 
-                    placeholder="e.g. rajeet@gmail.com" 
-                    value={reviewerEmail}
-                    onChange={e => setReviewerEmail(e.target.value)}
-                  />
-                </div>
-
-                <div className="pdp-review-form-group">
-                  <label>Overall Star Rating *</label>
-                  <div className="pdp-star-selector">
+                  <label>Your rating *</label>
+                  <div className="pdp-star-selector" role="radiogroup" aria-label="Star rating">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <span 
-                        key={i} 
-                        style={{ color: i < reviewRating ? '#fbbf24' : '#cccccc' }}
+                      <button
+                        type="button"
+                        key={i}
+                        role="radio"
+                        aria-checked={reviewRating === i + 1}
+                        aria-label={`${i + 1} star${i ? 's' : ''}`}
+                        className="pdp-star-btn"
+                        style={{ color: i < reviewRating ? '#f5b301' : '#d4d4d4' }}
                         onClick={() => setReviewRating(i + 1)}
-                      >
-                        ★
-                      </span>
+                      >★</button>
                     ))}
-                    <span style={{ fontSize: '1rem', color: '#666', alignSelf: 'center', marginLeft: '8px' }}>
-                      ({reviewRating}.0 / 5.0)
-                    </span>
+                    <span className="pdp-star-label">{['', 'Poor', 'Fair', 'Good', 'Very good', 'Excellent'][reviewRating]}</span>
                   </div>
                 </div>
 
                 <div className="pdp-review-form-group">
-                  <label>Your Review & Experience *</label>
-                  <textarea 
-                    rows="4" 
-                    required 
-                    className="pdp-review-textarea" 
-                    placeholder="Tell us what you liked about this product..."
-                    value={reviewComment}
-                    onChange={e => setReviewComment(e.target.value)}
-                  />
+                  <label htmlFor="rv-name">Name shown with your review *</label>
+                  <input id="rv-name" type="text" required minLength={2} maxLength={60} className="pdp-review-input"
+                    placeholder="e.g. Priya S." value={reviewerName} onChange={e => setReviewerName(e.target.value)} />
                 </div>
 
                 <div className="pdp-review-form-group">
-                  <label>📸 Add Product Photos (Optional)</label>
+                  <label htmlFor="rv-text">Your experience *</label>
+                  <textarea id="rv-text" rows="4" required minLength={10} maxLength={1500} className="pdp-review-textarea"
+                    placeholder="How long have you used it? What did you like or not like?"
+                    value={reviewComment} onChange={e => setReviewComment(e.target.value)} />
+                  <small className="pdp-review-hint">{reviewComment.trim().length}/1500 · at least 10 characters</small>
+                </div>
+
+                <div className="pdp-review-form-group">
+                  <label>Photos (optional, up to 3)</label>
                   <div className="pdp-photo-upload-box">
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    {reviewFiles.length < 3 && (
                       <label className="pdp-photo-upload-btn" style={{ margin: 0 }}>
-                        <Upload size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Choose Image Files
-                        <input type="file" accept="image/*" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
+                        <Camera size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} /> Add photos
+                        <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
                       </label>
-                      <button type="button" className="pdp-photo-upload-btn" onClick={handleAddSamplePhoto} style={{ margin: 0 }}>
-                        ✨ Add Sample Photo
-                      </button>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                      <input 
-                        type="url" 
-                        className="pdp-review-input" 
-                        placeholder="Or paste an Image URL here..." 
-                        value={photoUrlInput}
-                        onChange={e => setPhotoUrlInput(e.target.value)}
-                        style={{ fontSize: '0.85rem', padding: '8px 10px' }}
-                      />
-                      <button 
-                        type="button" 
-                        className="btn-review-submit" 
-                        style={{ padding: '8px 14px', fontSize: '0.85rem' }}
-                        onClick={handleAddPhotoUrl}
-                      >
-                        Add
-                      </button>
-                    </div>
-
+                    )}
                     {reviewPhotos.length > 0 && (
                       <div className="pdp-uploaded-preview-grid">
                         {reviewPhotos.map((photo, pIdx) => (
                           <div key={pIdx} className="pdp-preview-thumb">
-                            <img src={photo} alt="Upload preview" />
-                            <button 
-                              type="button" 
-                              className="pdp-preview-remove"
-                              onClick={() => setReviewPhotos(prev => prev.filter((_, idx) => idx !== pIdx))}
-                            >
-                              ×
-                            </button>
+                            <img src={photo} alt="Your photo" />
+                            <button type="button" className="pdp-preview-remove" aria-label="Remove photo" onClick={() => removeReviewPhoto(pIdx)}>×</button>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
                 </div>
+
+                <p className="pdp-review-note">Reviews are checked by our team before they appear on the website.</p>
+                {reviewError && <p className="pdp-review-error" role="alert">{reviewError}</p>}
               </div>
 
               <div className="pdp-review-modal-footer">
-                <button type="button" className="btn-add-cart" style={{ width: 'auto', padding: '10px 18px' }} onClick={() => setShowReviewModal(false)}>
+                <button type="button" className="btn-add-cart" style={{ width: 'auto', padding: '10px 18px' }} onClick={() => setShowReviewModal(false)} disabled={reviewSubmitting}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-review-submit">
-                  Submit Review & Photos
+                <button type="submit" className="btn-review-submit" disabled={reviewSubmitting}>
+                  {reviewSubmitting ? 'Submitting…' : 'Submit review'}
                 </button>
               </div>
             </form>
