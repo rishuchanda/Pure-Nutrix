@@ -189,7 +189,9 @@ function App() {
       } else {
         setCurrentView(initialView);
         if (!state || !state.product) {
-          window.history.replaceState({ view: initialView }, '', getPathForView(initialView, initialSlug));
+          // keep /account/orders etc. so My Account can open the right section
+          const keepPath = initialView === 'account' ? window.location.pathname : getPathForView(initialView, initialSlug);
+          window.history.replaceState({ view: initialView }, '', keepPath);
         }
       }
     } else {
@@ -594,7 +596,7 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <Lazy><AccountPage user={user} onBack={handleBackToHome} onSignOut={() => supabase.auth.signOut()} /></Lazy>
+            <Lazy><AccountPage user={user} onBack={handleBackToHome} onSignOut={() => supabase.auth.signOut()} onProductClick={handleOpenProductDetails} onOpenAuth={() => setIsAuthModalOpen(true)} /></Lazy>
           </motion.div>
         ) : currentView === 'products' ? (
           <motion.div
@@ -618,7 +620,7 @@ function App() {
                 <p>Loading Product Details...</p>
               </div>
             ) : (
-              <Lazy><ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} onProductClick={handleOpenProductDetails} /></Lazy>
+              <Lazy><ProductDetailsPage product={selectedProduct} onOrder={handleOrder} onBack={handleOpenProducts} onAddToCart={handleAddToCart} onProductClick={handleOpenProductDetails} onOpenAuth={() => setIsAuthModalOpen(true)} /></Lazy>
             )}
           </motion.div>
         ) : currentView === 'quality-standards' ? (
