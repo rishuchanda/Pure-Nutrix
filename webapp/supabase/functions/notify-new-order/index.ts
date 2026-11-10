@@ -5,6 +5,12 @@
 //   { order_id }            from the database trigger on public.orders (insert)
 //   { action: "public_key" } admin page asks for the push key before subscribing
 //   { action: "test" }       admin page sends a test alert (admin login required)
+//   { status_order_id }      from the trigger on orders.status (shipped / out for
+//                            delivery / delivered) -> WhatsApp update to the customer
+//
+// New orders also get a WhatsApp confirmation to the customer (approved Meta
+// template "order_confirmation"), sent once per order (orders.whatsapp_confirmed_at).
+// The WhatsApp token is read from public.whatsapp_settings (same as send-whatsapp).
 //
 // No keys live in this file. The Web Push (VAPID) key pair is created by this
 // function the first time it runs and kept in public.push_vapid_keys, a table
@@ -173,6 +179,95 @@ async function emailOwner(subject: string, html: string) {
   return res.ok ? 'sent' : `failed ${res.status}`;
 }
 
+// ---------- WhatsApp (Meta Cloud API, approved templates) ----------
+const GRAPH = 'https://graph.facebook.com/v22.0';
+// Template text must not contain new lines, tabs or more than 4 spaces in a row.
+const waText = (v: unknown, max = 180) => String(v ?? '').replace(/[\r\n\t]+/g, ' ').replace(/ {2,}/g, ' ').trim().slice(0, max) || '-';
+export function waPhone(raw: unknown) {
+  let d = String(raw ?? '').replace(/\D/g, '');
+  if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
+  if (d.length === 10) d = '91' + d;
+  return /^91[6-9]\d{9}$/.test(d) ? d : null;
+}
+
+async function sendWhatsAppTemplate(phone: string, template: string, language: string, params: string[], logText: string, contactName?: string) {
+  const rows = await db('whatsapp_settings?id=eq.1&select=access_token,phone_number_id');
+  const cfg = rows?.[0];
+  if (!cfg?.access_token || !cfg?.phone_number_id) return 'skipped: WhatsApp not configured';
+  const res = await fetch(`${GRAPH}/${cfg.phone_number_id}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${cfg.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to: phone,
+      type: 'template',
+      template: { name: template, language: { code: language }, components: [{ type: 'body', parameters: params.map((t) => ({ type: 'text', text: t })) }] },
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    console.error('whatsapp send failed', res.status, JSON.stringify(data?.error || data).slice(0, 300));
+    return `failed ${res.status}: ${String(data?.error?.message || '').slice(0, 120)}`;
+  }
+  // Keep the CRM in sync (contact + outbound message), like the old browser code did.
+  try {
+    await db('whatsapp_contacts?on_conflict=phone_number', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ phone_number: phone, ...(contactName ? { name: contactName } : {}), last_message_at: new Date().toISOString() }),
+    });
+  } catch (e) { console.error('crm contact', e); }
+  try {
+    await db('whatsapp_messages', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({ contact_phone: phone, direction: 'outbound', message_body: logText, status: 'sent', meta_message_id: data?.messages?.[0]?.id || null }),
+    });
+  } catch (e) { console.error('crm message', e); }
+  return 'sent';
+}
+
+async function whatsappOrderConfirmation(o: any) {
+  const phone = waPhone(o.customer_mobile);
+  if (!phone) return 'skipped: no valid mobile';
+  // Claim once per order so a retry never sends two confirmations.
+  const claimed = await db(`orders?id=eq.${o.id}&whatsapp_confirmed_at=is.null&select=id`, {
+    method: 'PATCH',
+    body: JSON.stringify({ whatsapp_confirmed_at: new Date().toISOString() }),
+  });
+  if (!claimed?.[0]) return 'skipped: already sent';
+  const name = waText(o.customer_name || 'there', 60);
+  const items = waText(o.product_name, 200);
+  const total = waText(Number(o.price || 0).toLocaleString('en-IN'), 20);
+  return await sendWhatsAppTemplate(
+    phone, 'order_confirmation', 'en_US', [name, items, total],
+    `[Template Sent: order_confirmation] Hi ${name}, your order for ${items} (₹${total}) is confirmed.`, o.customer_name ? name : undefined,
+  );
+}
+
+const STATUS_LABEL: Record<string, string> = { shipped: 'Shipped', out_for_delivery: 'Out for delivery', delivered: 'Delivered' };
+
+async function handleStatus(orderId: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(orderId)) return json({ error: 'bad order id' }, 400);
+  const rows = await db(`orders?id=eq.${orderId}&select=id,status,customer_name,customer_mobile,whatsapp_status_sent`);
+  const o = rows?.[0];
+  const key = String(o?.status || '').toLowerCase();
+  if (!o || !STATUS_LABEL[key]) return json({ ok: true, skipped: 'no update for this status' });
+  // Claim: only send each status once.
+  const claimed = await db(`orders?id=eq.${orderId}&status=eq.${encodeURIComponent(o.status)}&or=(whatsapp_status_sent.is.null,whatsapp_status_sent.neq.${key})&select=id`, {
+    method: 'PATCH',
+    body: JSON.stringify({ whatsapp_status_sent: key }),
+  });
+  if (!claimed?.[0]) return json({ ok: true, skipped: 'already sent' });
+  const phone = waPhone(o.customer_mobile);
+  if (!phone) return json({ ok: true, skipped: 'no valid mobile' });
+  const name = waText(o.customer_name || 'there', 60);
+  const label = STATUS_LABEL[key];
+  const whatsapp = await sendWhatsAppTemplate(phone, 'order_update', 'en', [name, label],
+    `[Template Sent: order_update] Hi ${name}, your order status has been updated to: ${label}.`, o.customer_name ? name : undefined);
+  return json({ ok: true, whatsapp });
+}
+
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 const inr = (n: unknown) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
@@ -201,6 +296,8 @@ async function handleOrder(orderId: string) {
   const title = `🛒 New order · ${inr(o.price)} · ${method}`;
   const body = `${o.customer_name || 'Customer'}${o.city ? ` (${o.city})` : ''}: ${String(o.product_name || '').slice(0, 120)}`;
   const push = await pushToAdmins({ title, body, url: '/admin', tag: `order-${o.id}` });
+  let whatsapp = 'skipped';
+  try { whatsapp = await whatsappOrderConfirmation(o); } catch (e) { console.error('whatsapp confirmation', e); whatsapp = 'error'; }
 
   const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111">
     <h2 style="margin:0 0 8px">New order — ${esc(inr(o.price))} (${esc(method)})</h2>
@@ -215,7 +312,7 @@ async function handleOrder(orderId: string) {
     <p><a href="${SITE}/admin" style="display:inline-block;padding:10px 16px;background:#111;color:#fff;border-radius:8px;text-decoration:none">Open admin</a></p>
   </div>`;
   const email = await emailOwner(`New order ${inr(o.price)} (${method}) — ${o.customer_name || ''}`, html);
-  return json({ ok: true, push, email });
+  return json({ ok: true, push, email, whatsapp });
 }
 
 export async function handler(req: Request) {
@@ -233,6 +330,7 @@ export async function handler(req: Request) {
       return json({ ok: true, push, email });
     }
     if (body.order_id) return await handleOrder(String(body.order_id));
+    if (body.status_order_id) return await handleStatus(String(body.status_order_id));
     return json({ error: 'nothing to do' }, 400);
   } catch (e) {
     console.error(e);

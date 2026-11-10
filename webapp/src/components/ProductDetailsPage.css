@@ -799,3 +799,23 @@
   .pdp-thumbnails { gap: 8px !important; overflow-x: auto; scrollbar-width: none; }
   .pdp-thumbnail { flex-shrink: 0; width: 60px !important; height: 60px !important; border-radius: 12px !important; }
 }
+
+/* Share button: dark-on-light so it is visible on the white info column */
+.pdp-share-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px;
+  background: #fff; color: #111; border: 1px solid #dcdcd6; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.pdp-share-btn:hover { background: #f4f4f1; }
+.pdp-share-btn:active { transform: scale(0.96); }
+
+/* Review form */
+.pdp-review-product { margin: 0 0 14px; font-weight: 600; color: #111; font-size: 0.95rem; }
+.pdp-star-btn { background: none; border: none; padding: 0 2px; font-size: 1.75rem; line-height: 1; cursor: pointer; }
+.pdp-star-selector { flex-wrap: wrap; align-items: center; }
+.pdp-star-label { align-self: center; margin-left: 8px; font-size: 0.9rem !important; color: #555; font-weight: 600; white-space: nowrap; }
+.pdp-review-hint { display: block; margin-top: 4px; color: #888; font-size: 0.75rem; }
+.pdp-review-note { margin: 4px 0 0; font-size: 0.8rem; color: #666; }
+.pdp-review-error { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: #fef2f2; color: #b42318; font-size: 0.85rem; }
+.btn-review-submit:disabled { opacity: 0.6; cursor: wait; }

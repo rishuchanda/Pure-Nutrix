@@ -4,10 +4,9 @@ import {
   MessageSquare, Image as ImageIcon, ShieldCheck, AlertCircle, 
   ThumbsUp, Calendar, User, RefreshCw, Check, X, Award, ExternalLink
 } from 'lucide-react';
-import { 
-  getStoredReviews, updateReviewStatus, deleteReview, 
-  toggleVerifiedBuyer, saveStoredReviews 
-} from '../utils/mockReviews';
+import {
+  fetchAllReviewsAdmin, setReviewStatusAdmin, deleteReviewAdmin, setVerifiedAdmin
+} from '../utils/reviewsStore';
 import './ReviewsTab.css';
 
 const ReviewsTab = ({ showNotification }) => {
@@ -21,51 +20,40 @@ const ReviewsTab = ({ showNotification }) => {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [inspectReview, setInspectReview] = useState(null);
 
-  // Load reviews on mount & listen for updates
-  const loadReviews = () => {
-    const list = getStoredReviews();
-    setReviews(list || []);
-  };
+  const [loadError, setLoadError] = useState('');
 
-  useEffect(() => {
-    loadReviews();
-    window.addEventListener('pn_reviews_updated', loadReviews);
-    return () => window.removeEventListener('pn_reviews_updated', loadReviews);
-  }, []);
-
-  // Handlers for moderation
-  const handleApprove = (id, customerName) => {
-    const updated = updateReviewStatus(id, 'Approved');
-    setReviews(updated);
-    if (showNotification) {
-      showNotification(`✅ Review by "${customerName}" Approved & Posted live on website!`);
+  // Reviews come from the database (table product_reviews).
+  const loadReviews = async () => {
+    try {
+      setLoadError('');
+      setReviews(await fetchAllReviewsAdmin());
+    } catch (e) {
+      setLoadError(/does not exist|schema cache/i.test(e.message || '') ? 'Reviews table is not set up yet.' : (e.message || 'Could not load reviews'));
     }
   };
 
-  const handleReject = (id, customerName) => {
-    const updated = updateReviewStatus(id, 'Rejected');
-    setReviews(updated);
-    if (showNotification) {
-      showNotification(`🚫 Review by "${customerName}" Rejected & Removed from website.`);
-    }
+  useEffect(() => { loadReviews(); }, []);
+
+  const run = async (fn, msg) => {
+    try { await fn(); await loadReviews(); if (showNotification && msg) showNotification(msg); }
+    catch (e) { if (showNotification) showNotification('Error: ' + (e.message || e)); }
   };
+
+  const handleApprove = (id, customerName) =>
+    run(() => setReviewStatusAdmin(id, 'approved'), `✅ Review by "${customerName}" approved — now live on the website.`);
+
+  const handleReject = (id, customerName) =>
+    run(() => setReviewStatusAdmin(id, 'rejected'), `🚫 Review by "${customerName}" rejected (hidden from the website).`);
 
   const handleDelete = (id, customerName) => {
-    if (window.confirm(`Are you sure you want to permanently delete the review by ${customerName}?`)) {
-      const updated = deleteReview(id);
-      setReviews(updated);
-      if (showNotification) {
-        showNotification(`🗑️ Review by "${customerName}" permanently deleted.`);
-      }
+    if (window.confirm(`Permanently delete the review by ${customerName}? This cannot be undone.`)) {
+      run(() => deleteReviewAdmin(id), `🗑️ Review by "${customerName}" deleted.`);
     }
   };
 
   const handleToggleVerified = (id, customerName) => {
-    const updated = toggleVerifiedBuyer(id);
-    setReviews(updated);
-    if (showNotification) {
-      showNotification(`✔ Verified Buyer status toggled for "${customerName}".`);
-    }
+    const rev = reviews.find(r => r.id === id);
+    run(() => setVerifiedAdmin(id, !rev?.verifiedBuyer), `✔ Verified Buyer changed for "${customerName}".`);
   };
 
   // Filtered & Searched reviews
@@ -128,6 +116,8 @@ const ReviewsTab = ({ showNotification }) => {
           </button>
         </div>
       </div>
+
+      {loadError && <p style={{ color: '#f87171', margin: '0 0 16px' }}>{loadError}</p>}
 
       {/* ─── KPI Stats Grid ──────────────────────────────────────────────── */}
       <div className="reviews-kpi-grid">
