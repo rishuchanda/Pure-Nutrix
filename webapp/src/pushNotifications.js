@@ -23,7 +23,13 @@ export async function requestPushPermissionAndSubscribe(user) {
     return;
   }
 
+  // The admin app (/admin) has its own order-alert subscription (Admin → Order alerts).
+  if (window.location.pathname === '/admin') return;
+
   try {
+    const existing = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+    if (existing) return existing; // never replace another subscription on this device
+
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       console.log('Notification permission denied');
