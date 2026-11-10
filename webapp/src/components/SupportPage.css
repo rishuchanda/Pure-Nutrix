@@ -364,3 +364,8 @@
     font-size: 1.8rem;
   }
 }
+
+.contact-error { color: #b42318; font-size: 0.9rem; margin: 4px 0 10px; }
+.contact-sent { padding: 18px 4px; display: flex; flex-direction: column; gap: 10px; }
+.contact-sent strong { font-size: 1.1rem; }
+.contact-sent p { color: #555; margin: 0 0 6px; }

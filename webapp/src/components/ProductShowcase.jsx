@@ -63,6 +63,8 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
               src={imagesList[currentImgIdx]}
               alt={`${product.name} - Image ${currentImgIdx + 1}`}
               className="product-image"
+              decoding="async"
+              loading="lazy"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}

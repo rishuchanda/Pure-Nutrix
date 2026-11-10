@@ -83,7 +83,7 @@ const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
                   <div className="product-item-image-wrap">
                     <span className="badge-best-seller">{reviewData.isNew ? 'New Launch' : 'Best Seller'}</span>
                     {product.image_urls && product.image_urls.length > 0 ? (
-                      <img src={product.image_urls[0]} alt={product.name} />
+                      <img src={product.image_urls[0]} alt={product.name} loading={index < 4 ? "eager" : "lazy"} decoding="async" width="600" height="600" />
                     ) : (
                       <div style={{ padding: '40px', color: '#888' }}>No Image</div>
                     )}

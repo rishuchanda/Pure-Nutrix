@@ -542,7 +542,10 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
               <button 
                 className="btn-outline-premium" 
                 style={{ background: '#111', color: '#fff', border: 'none', padding: '12px' }}
-                onClick={() => alert('Review prompt opened!')}
+                onClick={() => {
+                  const match = (allProducts || []).find(p => p.name === activeOrder.product_name);
+                  window.location.href = match ? `/product/${match.slug || match.id}#reviews` : '/products';
+                }}
               >
                 Write a Review
               </button>
@@ -694,9 +697,9 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                   <span className="stack-price">₹{product1.price}</span>
                 </div>
                 <p className="stack-desc">{product1.name} - {product1.description?.substring(0, 50)}...</p>
-                <button className="btn-primary stack-add-btn" onClick={() => alert('Stack added to cart!')}>
-                  <Plus size={16} /> Add Stack to Cart
-                </button>
+                <a className="btn-primary stack-add-btn" href={`/product/${product1.slug || product1.id}`} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Plus size={16} /> View &amp; Add to Cart
+                </a>
               </div>
             )}
 
@@ -707,9 +710,9 @@ const AccountPage = ({ user, onBack, onSignOut }) => {
                   <span className="stack-price">₹{product2.price}</span>
                 </div>
                 <p className="stack-desc">{product2.name} - {product2.description?.substring(0, 50)}...</p>
-                <button className="btn-primary stack-add-btn" onClick={() => alert('Stack added to cart!')}>
-                  <Plus size={16} /> Add Stack to Cart
-                </button>
+                <a className="btn-primary stack-add-btn" href={`/product/${product2.slug || product2.id}`} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Plus size={16} /> View &amp; Add to Cart
+                </a>
               </div>
             )}
             

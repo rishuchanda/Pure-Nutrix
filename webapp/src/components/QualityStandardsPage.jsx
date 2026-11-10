@@ -301,10 +301,10 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.8 }}
-            onClick={() => alert("Detailed Lab Reports / COA feature coming soon!")}
+            onClick={() => { window.location.href = '/lab-report/liposomal-glutathione'; }}
             style={{ marginTop: '50px' }}
           >
-            View Our Latest Lab Reports / COA
+            View Lab Report (Liposomal Glutathione)
           </motion.button>
         </div>
       </section>
