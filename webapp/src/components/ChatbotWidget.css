@@ -381,3 +381,10 @@
 }
 
 
+
+@media (max-width: 768px) {
+  body.pn-tabbar .chatbot-tooltip { display: none; }
+  body.pn-tabbar .chatbot-fab-robot { width: 46px !important; height: 56px !important; }
+  body.pn-tabbar .chatbot-widget-container { right: 6px; }
+  body.pn-hide-bot .chatbot-widget-container { display: none; }
+}

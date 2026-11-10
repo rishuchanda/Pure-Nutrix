@@ -3,6 +3,10 @@ import Navbar from './components/Navbar';
 import Hero3D from './components/Hero3D';
 import PromoTicker from './components/PromoTicker';
 import ShopByConcern from './components/ShopByConcern';
+import MobileTabBar from './components/MobileTabBar';
+import PromiseStrip from './components/PromiseStrip';
+import HelpCta from './components/HelpCta';
+import RecentlyViewed from './components/RecentlyViewed';
 import ProductShowcase from './components/ProductShowcase';
 import WhyChooseUs from './components/WhyChooseUs';
 import TrustSection from './components/TrustSection';
@@ -212,6 +216,9 @@ function App() {
         currency: 'INR'
       });
     }
+
+    // Tiny haptic tap on phones that support it
+    try { navigator.vibrate && navigator.vibrate(12); } catch { /* not supported */ }
 
     // Small non-blocking confirmation instead of a browser alert
     setCartToast({ name: product.name?.length > 40 ? product.name.slice(0, 38) + '…' : product.name, at: Date.now() });
@@ -520,10 +527,13 @@ function App() {
               <Hero3D onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
               <PromoTicker />
               <ShopByConcern onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
+              <PromiseStrip />
 
               <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} onAddToCart={handleAddToCart} />
+              <RecentlyViewed onProductClick={handleOpenProductDetails} />
               <WhyChooseUs />
               <TrustSection />
+              <HelpCta />
             </main>
             <Footer onOpenQuality={handleOpenQuality} onOpenLegalPolicy={handleOpenLegalPolicy} onOpenPrivacyPolicy={handleOpenPrivacyPolicy} onOpenSupport={handleOpenSupport} onOpenProducts={handleOpenProducts} />
           </motion.div>
@@ -679,6 +689,18 @@ function App() {
         </div>
       )}
       {currentView !== 'admin' && <ChatbotWidget defaultMessage="Hi, I need help with Pure Nutrix products." />}
+      {['home', 'products', 'quality-standards', 'support', 'legal-policy', 'privacy-policy', 'account'].includes(currentView) && (
+        <MobileTabBar
+          active={currentView}
+          cartCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)}
+          user={user}
+          onHome={handleBackToHome}
+          onShop={handleOpenProducts}
+          onCart={handleOpenCart}
+          onAccount={handleOpenAccount}
+          onAuth={() => setIsAuthModalOpen(true)}
+        />
+      )}
     </>
   );
 }

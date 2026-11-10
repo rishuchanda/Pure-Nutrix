@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, CreditCard, Wallet, Truck, ShieldCheck, XCircle, Tag } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, CreditCard, Wallet, Truck, ShieldCheck, XCircle, Tag, ChevronDown, Lock, Gift } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { findCoupon, couponDiscount } from '../utils/coupons';
 import './OrderPage.css';
@@ -8,6 +9,12 @@ import './OrderPage.css';
 const OrderPage = ({ product, cartItems, onBack }) => {
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('razorpay');
+  const [summaryOpen, setSummaryOpen] = useState(false); // mobile: order summary collapsed by default
+  const checkoutFormRef = useRef(null);
+  useEffect(() => {
+    document.body.classList.add('pn-checkout');
+    return () => document.body.classList.remove('pn-checkout');
+  }, []);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -135,6 +142,11 @@ const OrderPage = ({ product, cartItems, onBack }) => {
   const [isCheckoutOtpSent, setIsCheckoutOtpSent] = useState(false);
   const [checkoutOtp, setCheckoutOtp] = useState('');
   const [showOtpChoice, setShowOtpChoice] = useState(false);
+  useEffect(() => {
+    // Guest checkout: bring the OTP step into view on small screens
+    const el = document.getElementById('otp-step') || document.querySelector('.otp-input-box');
+    if ((showOtpChoice || isCheckoutOtpSent) && el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [showOtpChoice, isCheckoutOtpSent]);
   const [otpMethod, setOtpMethod] = useState('email');
 
   const handleInputChange = (e) => {
@@ -347,8 +359,14 @@ const OrderPage = ({ product, cartItems, onBack }) => {
           image: firstProductImage,
           status: 'Processing'
         };
+        const paymentFields = { payment_method: paymentMethod === 'cod' ? 'COD' : 'Prepaid' };
         const couponFields = appliedCoupon ? { coupon_code: appliedCoupon.code, discount_amount: discountAmount } : {};
-        let { error } = await supabase.from('orders').insert([{ ...orderRow, ...couponFields }]);
+        let { error } = await supabase.from('orders').insert([{ ...orderRow, ...couponFields, ...paymentFields }]);
+        if (error && (error.code === '42703' || error.code === 'PGRST204' || /payment_method/i.test(error.message || ''))) {
+          // payment_method column not added yet — keep the order, note the method in the product line.
+          console.warn('orders.payment_method column is missing; saving the method inside product_name.');
+          ({ error } = await supabase.from('orders').insert([{ ...orderRow, ...couponFields, product_name: `${finalProductName} | ${paymentFields.payment_method}` }]));
+        }
         if (error && appliedCoupon && (error.code === '42703' || error.code === 'PGRST204' || /coupon_code|discount_amount/i.test(error.message || ''))) {
           // Coupon columns not added yet — still save the order (the price already includes the discount).
           console.warn('orders.coupon_code / discount_amount columns are missing; order saved without them.');
@@ -582,17 +600,30 @@ const OrderPage = ({ product, cartItems, onBack }) => {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="order-header">
-              <button className="back-btn" onClick={onBack}>
+              <button className="back-btn" onClick={onBack} aria-label="Back">
                 <ArrowLeft size={20} />
-                <span>Back to Home</span>
+                <span className="back-label">Back</span>
               </button>
-              <h1 className="order-page-title">Secure <span className="text-gold">Checkout</span></h1>
+              <h1 className="order-page-title">Checkout</h1>
+              <span className="secure-chip"><Lock size={14} /> Secure</span>
             </div>
+
+            {/* Mobile: one-line summary that opens the full order details */}
+            <button type="button" className={`mobile-summary-toggle ${summaryOpen ? 'open' : ''}`} onClick={() => setSummaryOpen(o => !o)} aria-expanded={summaryOpen}>
+              <span className="mst-left">
+                <span className="mst-thumb">{(orderItems[0]?.product.image_urls || [])[0] && <img src={orderItems[0].product.image_urls[0]} alt="" />}</span>
+                <span className="mst-text">
+                  <strong>{summaryOpen ? 'Hide order summary' : 'Show order summary'}</strong>
+                  <small>{totalQuantity * 2} items · {appliedCoupon ? `${appliedCoupon.code} applied` : 'Tap to apply coupon'}</small>
+                </span>
+              </span>
+              <span className="mst-right">₹{finalTotal} <ChevronDown size={18} /></span>
+            </button>
 
             <div className="checkout-layout">
               {/* Left Side: Form */}
               <div className="checkout-form-section glass-card">
-                <form onSubmit={handlePayment}>
+                <form onSubmit={handlePayment} ref={checkoutFormRef} id="checkout-form">
                   <div className="form-step">
                     {savedAddresses.length > 0 && (
                       <div className="saved-addresses-section" style={{ marginBottom: 24 }}>
@@ -600,8 +631,8 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {savedAddresses.map(addr => (
                             <div key={addr.id} style={{ position: 'relative' }}>
-                              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', border: selectedAddressId === addr.id ? '2px solid #ff0055' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: selectedAddressId === addr.id ? '#fff9fa' : '#fff' }}>
-                                <input type="radio" name="selected_address" checked={selectedAddressId === addr.id} onChange={() => handleSelectSavedAddress(addr)} style={{ marginTop: '4px', accentColor: '#ff0055' }} />
+                              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', border: selectedAddressId === addr.id ? '2px solid #111111' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: selectedAddressId === addr.id ? '#f6f6f4' : '#fff' }}>
+                                <input type="radio" name="selected_address" checked={selectedAddressId === addr.id} onChange={() => handleSelectSavedAddress(addr)} style={{ marginTop: '4px', accentColor: '#111111' }} />
                                 <div>
                                   <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>{addr.name}</h4>
                                   <p style={{ margin: 0, fontSize: '0.85rem', color: '#555', lineHeight: '1.4' }}>
@@ -624,8 +655,8 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                               )}
                             </div>
                           ))}
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: selectedAddressId === 'new' ? '2px solid #ff0055' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: selectedAddressId === 'new' ? '#fff9fa' : '#fff' }}>
-                            <input type="radio" name="selected_address" checked={selectedAddressId === 'new'} onChange={() => handleSelectSavedAddress('new')} style={{ accentColor: '#ff0055' }} />
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: selectedAddressId === 'new' ? '2px solid #111111' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: selectedAddressId === 'new' ? '#f6f6f4' : '#fff' }}>
+                            <input type="radio" name="selected_address" checked={selectedAddressId === 'new'} onChange={() => handleSelectSavedAddress('new')} style={{ accentColor: '#111111' }} />
                             <span style={{ fontWeight: 500 }}>Add a new address</span>
                           </label>
                         </div>
@@ -678,20 +709,41 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                       {authError && <div className="error-message" style={{ color: 'red', margin: '15px 0' }}>{authError}</div>}
 
                       {isCheckoutOtpSent && (
-                        <div className="input-group" style={{ marginTop: '15px', background: '#fff', padding: '15px', borderRadius: '8px', border: '2px solid #D4AF37', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                        <div className="input-group otp-input-box" style={{ marginTop: '15px', background: '#fff', padding: '15px', borderRadius: '8px', border: '2px solid #D4AF37', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                           <label style={{ color: '#1a1a1a', fontWeight: 'bold' }}>Enter 6-Digit OTP sent to {otpMethod === 'email' ? formData.email : 'WhatsApp'}</label>
                           <input type="text" value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value.replace(/\D/g, '').slice(0,6))} required maxLength="6" style={{ letterSpacing: '8px', textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold', background: '#f9f9f9', border: '1px solid #ccc' }} placeholder="------" />
                         </div>
                       )}
 
+                      <div className="payment-methods">
+                        <h2 className="step-title">Payment Method</h2>
+                        <label className={`pay-option ${paymentMethod === 'razorpay' ? 'selected' : ''}`}>
+                          <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} disabled={isProcessing || isCheckoutOtpSent} />
+                          <span className="pay-icon"><CreditCard size={20} /></span>
+                          <span className="pay-text">
+                            <strong>Pay Online</strong>
+                            <small>UPI, Cards, Net Banking · No extra fee</small>
+                          </span>
+                          <span className="pay-tag">Recommended</span>
+                        </label>
+                        <label className={`pay-option ${paymentMethod === 'cod' ? 'selected' : ''}`}>
+                          <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} disabled={isProcessing || isCheckoutOtpSent} />
+                          <span className="pay-icon"><Wallet size={20} /></span>
+                          <span className="pay-text">
+                            <strong>Cash on Delivery</strong>
+                            <small>Pay when the parcel arrives · +₹19 handling fee</small>
+                          </span>
+                        </label>
+                      </div>
+
                       {!showOtpChoice && !isCheckoutOtpSent && (
-                        <button type="submit" className="btn-primary continue-btn pay-btn" disabled={isProcessing} style={{ marginTop: '20px' }}>
-                          {isProcessing ? 'Processing...' : `Pay Online ₹${finalTotal}`}
+                        <button type="submit" className="btn-primary continue-btn pay-btn inline-pay-btn" disabled={isProcessing} style={{ marginTop: '20px' }}>
+                          {isProcessing ? 'Processing...' : (paymentMethod === 'cod' ? `Place Order · Pay ₹${finalTotal} on delivery` : `Pay ₹${finalTotal} Securely`)}
                         </button>
                       )}
 
                       {showOtpChoice && !isCheckoutOtpSent && (
-                        <div style={{ marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div id="otp-step" style={{ marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                           <p style={{ textAlign: 'center', marginBottom: '15px', fontWeight: 'bold', color: '#1e293b' }}>Where would you like to receive the verification OTP?</p>
                           <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
                             <button type="button" onClick={() => sendOtp('whatsapp')} className="btn-primary" style={{ background: '#25D366', color: '#fff', border: 'none', padding: '12px' }} disabled={isProcessing}>
@@ -731,7 +783,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
               </div>
 
               {/* Right Side: Order Summary */}
-              <div className="order-summary-section">
+              <div className={`order-summary-section ${summaryOpen ? 'is-open' : ''}`}>
                 <div className="glass-card summary-card">
                   <h3 className="summary-title">Order Summary</h3>
                   
@@ -838,6 +890,14 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                       <span>₹{finalTotal}</span>
                     </div>
                   </div>
+                  {shippingFee > 0 && (
+                    <p className="free-ship-hint"><Truck size={15} /> Add items worth ₹{499 - totalPrice} more for FREE shipping</p>
+                  )}
+                  <div className="summary-trust">
+                    <span><ShieldCheck size={15} /> Secure payment</span>
+                    <span><Gift size={15} /> Free jar added</span>
+                    <span><Truck size={15} /> PAN India delivery</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -850,6 +910,9 @@ const OrderPage = ({ product, cartItems, onBack }) => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, type: 'spring', bounce: 0.4 }}
           >
+            <div className="success-confetti" aria-hidden="true">
+              {Array.from({ length: 24 }).map((_, i) => <span key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i % 8) * 0.12}s`, background: ['#111', '#25d366', '#f2c94c', '#e11d48', '#3b82f6'][i % 5] }} />)}
+            </div>
             <div className="glass-card success-card">
               <motion.div 
                 className="success-icon-wrapper"
@@ -869,8 +932,8 @@ const OrderPage = ({ product, cartItems, onBack }) => {
               
               <div className="success-order-details">
                 <div className="detail-item">
-                  <span className="detail-label">Order Number</span>
-                  <span className="detail-value">#PNX-{Math.floor(100000 + Math.random() * 900000)}</span>
+                  <span className="detail-label">Payment</span>
+                  <span className="detail-value">{paymentMethod === 'cod' ? 'Cash on Delivery' : 'Paid online'}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Expected Delivery</span>
@@ -878,13 +941,28 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                 </div>
               </div>
 
-              <button className="btn-primary return-home-btn" onClick={onBack}>
-                Return to Home
-              </button>
+              <div className="success-actions">
+                <a className="success-wa" href="/whatsapp">Questions? Chat on WhatsApp</a>
+                <button className="btn-primary return-home-btn" onClick={onBack}>
+                  Continue Shopping
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+      {!isSuccess && !showOtpChoice && !isCheckoutOtpSent && createPortal(
+        <div className="mobile-pay-bar">
+          <div className="mpb-total">
+            <small>{paymentMethod === 'cod' ? 'Pay on delivery' : 'Total'}</small>
+            <strong>₹{finalTotal}</strong>
+          </div>
+          <button type="submit" form="checkout-form" className="mpb-btn" disabled={isProcessing}>
+            {isProcessing ? 'Processing…' : (paymentMethod === 'cod' ? 'Place Order' : 'Pay Securely')}
+          </button>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

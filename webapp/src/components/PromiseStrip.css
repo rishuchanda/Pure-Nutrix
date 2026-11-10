@@ -1,0 +1,15 @@
+.promise-strip { padding: 28px 0 8px; background: #fff; font-family: var(--font-primary); }
+.ps-wrap { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.ps-item { display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 18px; background: #f7f7f5; border: 1px solid #efefec; }
+.ps-icon { width: 44px; height: 44px; border-radius: 50%; background: #fff; color: #111; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+.ps-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ps-text strong { font-size: 0.95rem; color: #111; }
+.ps-text small { font-size: 0.78rem; color: #666; }
+@media (max-width: 768px) {
+  .promise-strip { padding: 20px 0 4px; }
+  .ps-wrap { padding: 0 16px; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .ps-item { padding: 12px; gap: 10px; border-radius: 16px; }
+  .ps-icon { width: 38px; height: 38px; }
+  .ps-text strong { font-size: 0.85rem; }
+  .ps-text small { font-size: 0.7rem; }
+}

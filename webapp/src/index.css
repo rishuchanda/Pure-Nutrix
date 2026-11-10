@@ -12,6 +12,7 @@
   
   --font-primary: 'DM Sans', sans-serif;
   --font-display: 'DM Sans', sans-serif;
+  --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;
 
   --transition-smooth: all 0.3s ease;
 }
@@ -171,3 +172,19 @@ h1, h2, h3, h4, h5, h6 {
   padding: 7px 14px; font-weight: 600; cursor: pointer; font-family: inherit;
 }
 @keyframes cartToastIn { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* ---- Elegant details (Nov 2026) ---- */
+.serif-accent { font-family: var(--font-serif); font-style: italic; font-weight: 600; letter-spacing: 0; font-size: 1.08em; }
+/* Tactile press feedback on main buttons */
+.add-to-cart-btn-minimal, .hs-cta, .btn-add-cart, .btn-buy-now, .cart-primary-btn, .csb-btn, .mpb-btn, .pdp-sticky-btn, .help-cta-btn {
+  transition: transform 0.15s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+.add-to-cart-btn-minimal:active, .hs-cta:active, .btn-add-cart:active, .btn-buy-now:active, .cart-primary-btn:active, .csb-btn:active, .mpb-btn:active, .pdp-sticky-btn:active, .help-cta-btn:active { transform: scale(0.97); }
+.is-added { background: #067647 !important; color: #fff !important; border-color: #067647 !important; }
+@keyframes pnBump { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.pn-bump { animation: pnBump 0.45s ease; }
+@keyframes pnShimmer { 0% { background-position: -300px 0; } 100% { background-position: 300px 0; } }
+.pn-skeleton { background: linear-gradient(90deg, #f1f1ee 0px, #f8f8f6 120px, #f1f1ee 240px); background-size: 600px 100%; animation: pnShimmer 1.3s linear infinite; border-radius: 14px; }
+@media (max-width: 768px) {
+  h1, h2, h3 { text-wrap: balance; }
+}

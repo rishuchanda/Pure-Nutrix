@@ -28,8 +28,8 @@ const Footer = ({ onOpenQuality, onOpenLegalPolicy, onOpenPrivacyPolicy, onOpenS
       <div className="container footer-content">
         <div className="footer-brand">
           <img src="/assets/logo.png" alt="Pure Nutrix" className="footer-logo" loading="lazy" decoding="async" />
-          <h2 className="text-gold">PURE NUTRIX</h2>
-          <p className="footer-desc">Premium skin and hair care nutraceuticals formulated for advanced cellular radiance.</p>
+          <p className="footer-desc">Science-backed nutraceuticals for skin, hair and everyday wellness. FSSAI licensed, made in India.</p>
+          <a className="footer-wa" href="/whatsapp">Chat on WhatsApp →</a>
           <div className="footer-company-info" style={{ marginTop: '15px', fontSize: '0.85rem', color: '#a0a0a0', lineHeight: '1.4' }}>
             <strong>D3 PRODUCTION</strong><br />
             Keshar Vihar, Goner Road, Near Bus Stop, Dantli,<br />
@@ -59,6 +59,11 @@ const Footer = ({ onOpenQuality, onOpenLegalPolicy, onOpenPrivacyPolicy, onOpenS
           <a href="/privacy-policy" onClick={spa(onOpenPrivacyPolicy)}>Privacy Policy</a>
           <a href="/support" onClick={spa(onOpenSupport)}>Contact Us / Support</a>
         </div>
+      </div>
+
+      <div className="container footer-pay">
+        <span className="footer-pay-label">We accept</span>
+        {['UPI', 'Cards', 'Net Banking', 'Cash on Delivery'].map(m => <span key={m} className="footer-pay-chip">{m}</span>)}
       </div>
 
       <div className="footer-bottom">

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp, Share2, FlaskConical } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp, Share2, FlaskConical, Truck, Wallet, ShieldCheck } from 'lucide-react';
 import { getProductReviews, addCustomerReview } from '../utils/mockReviews';
 import { getProductDetails } from '../utils/productDetailsData';
 import { supabase } from '../supabaseClient';
@@ -42,6 +42,17 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
     window.addEventListener('pn_reviews_updated', handleReviewUpdate);
     return () => window.removeEventListener('pn_reviews_updated', handleReviewUpdate);
   }, []);
+
+  useEffect(() => {
+    // Remember this product for the "Recently viewed" row on the home page
+    if (!product?.id) return;
+    try {
+      const key = 'pn_recently_viewed';
+      const list = JSON.parse(localStorage.getItem(key) || '[]').filter(p => p && p.id !== product.id);
+      list.unshift(product);
+      localStorage.setItem(key, JSON.stringify(list.slice(0, 6)));
+    } catch { /* storage blocked */ }
+  }, [product?.id]);
 
   useEffect(() => {
     if (window.location.hash !== '#reviews') return undefined;
@@ -154,6 +165,11 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
     return () => io.disconnect();
   }, [product?.id]);
   useEffect(() => {
+    // Phones: keep the chatbot from covering the Buy buttons on product pages
+    document.body.classList.add('pn-hide-bot');
+    return () => document.body.classList.remove('pn-hide-bot');
+  }, []);
+  useEffect(() => {
     document.body.classList.toggle('pn-sticky-buy', showStickyBuy);
     return () => document.body.classList.remove('pn-sticky-buy');
   }, [showStickyBuy]);
@@ -229,7 +245,19 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
         <div className="pdp-grid">
           {/* LEFT COLUMN - STICKY GALLERY */}
           <div className="pdp-gallery-column">
-            <div className="pdp-main-image-container">
+            <div
+              className="pdp-main-image-container"
+              onTouchStart={(e) => { e.currentTarget.dataset.tx = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                const dx = e.changedTouches[0].clientX - Number(e.currentTarget.dataset.tx || 0);
+                if (Math.abs(dx) > 45) (dx < 0 ? handleNextImage : handlePrevImage)();
+              }}
+            >
+              {product.image_urls && product.image_urls.length > 1 && (
+                <div className="pdp-dots" aria-hidden="true">
+                  {product.image_urls.map((_, i) => <span key={i} className={i === activeImage ? 'on' : ''} />)}
+                </div>
+              )}
               {product.image_urls && product.image_urls.length > 0 ? (
                 <>
                   <motion.img
@@ -330,6 +358,12 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
 
             <div className="pdp-offers-box">
               <div className="pdp-offer-item"><strong>Offer:</strong> Buy 1 Get 1 FREE — the free jar is added to your cart automatically.</div>
+              {typeof product.price === 'number' && (
+                <div className="pdp-bogo-math">
+                  <span>You get <strong>2 packs</strong> for <strong>₹{product.price}</strong></span>
+                  <span className="pdp-bogo-each">= ₹{Math.round(product.price / 2)} per pack</span>
+                </div>
+              )}
             </div>
 
             <div className="pdp-tags">
@@ -356,6 +390,12 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
               <button className="btn-buy-now" onClick={() => onOrder(product)}>
                 Buy Now
               </button>
+            </div>
+
+            <div className="pdp-trust-row">
+              <span><Truck size={16} /> Free shipping above ₹499</span>
+              <span><Wallet size={16} /> Cash on Delivery</span>
+              <span><ShieldCheck size={16} /> Secure payment</span>
             </div>
 
             <div className="pdp-accordions">

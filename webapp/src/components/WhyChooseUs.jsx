@@ -118,7 +118,7 @@ const WhyChooseUs = () => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="wcu-title">
-            <span className="wcu-title-highlight">The Pure Nutrix</span> Difference
+            <span className="wcu-title-highlight">The Pure Nutrix</span> <em className="serif-accent">Difference</em>
           </h2>
           <p className="wcu-subtitle">
             See how we stack up against the competition. We don't just meet standards, we redefine them.
