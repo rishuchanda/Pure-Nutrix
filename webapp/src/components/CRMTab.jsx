@@ -8,7 +8,12 @@ import {
 import {
   MEDIA_BUCKET, MEDIA_ACCEPT, MessageMedia, isMediaMessage, classifyFile, outboundPath, formatBytes
 } from './WhatsAppMedia';
+import AddContactsModal from './crm/AddContactsModal';
+import OfferBroadcast from './crm/OfferBroadcast';
+import { waPhone, offerStatus } from './crm/contactUtils';
+import { setOfferOptIn } from './crm/contactsApi';
 import './CRMTab.css';
+import './crm/crmBroadcast.css';
 
 // ─── Default Auto-Reply Rules ────────────────────────────────────────────────
 const DEFAULT_AUTO_REPLIES = [
@@ -32,9 +37,7 @@ const CRMTab = ({ onBack }) => {
 
   // New Contact Modal
   const [showAddContact, setShowAddContact] = useState(false);
-  const [newContactName, setNewContactName] = useState('');
-  const [newContactPhone, setNewContactPhone] = useState('');
-  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [contactFilter, setContactFilter] = useState('all'); // all | yes | unknown | stopped
 
   // Auto-Reply State
   const [autoReplies, setAutoReplies] = useState(DEFAULT_AUTO_REPLIES);
@@ -43,20 +46,13 @@ const CRMTab = ({ onBack }) => {
   const [newReplyText, setNewReplyText] = useState('');
   const [editingRule, setEditingRule] = useState(null);
 
-  // Campaign State
-  const [bulkMessage, setBulkMessage] = useState('');
-  const [campaignSubject, setCampaignSubject] = useState('');
-  const [campaignChannel, setCampaignChannel] = useState('whatsapp'); // whatsapp | email | both
-  const [isSendingBlast, setIsSendingBlast] = useState(false);
-  const [blastResult, setBlastResult] = useState(null);
 
   // Settings State
   const [waSettings, setWaSettings] = useState({});
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Template States
-  const [customInboxTemplate, setCustomInboxTemplate] = useState('monsoon_offer');
-  const [campaignTemplate, setCampaignTemplate] = useState('');
+  const [customInboxTemplate, setCustomInboxTemplate] = useState('');
 
   const messagesEndRef = useRef(null);
 
@@ -161,7 +157,7 @@ const CRMTab = ({ onBack }) => {
 
         if (orderData) {
           orderData.forEach(o => {
-            const phone = o.customer_mobile ? '91' + o.customer_mobile.replace(/[^0-9]/g, '') : null;
+            const phone = waPhone(o.customer_mobile);
             if (!phone) return;
             if (!merged[phone]) {
               merged[phone] = {
@@ -409,100 +405,16 @@ const CRMTab = ({ onBack }) => {
   };
 
 
-  // ─── Add New Contact ──────────────────────────────────────────────────────
-  const handleAddContact = async (e) => {
-    e.preventDefault();
-    if (!newContactPhone.trim()) return;
-    setIsAddingContact(true);
+  // ─── Offer permission toggle (Contacts) ──────────────────────────────────
+  const toggleOffers = async (c) => {
+    const st = offerStatus(c);
+    if (st === 'stopped') { alert('This customer replied STOP. They get offers again only if they reply START.'); return; }
+    const on = st !== 'yes';
+    if (on && !window.confirm(`Did ${c.name || 'this customer'} agree to get offers from Pure Nutrix on WhatsApp?`)) return;
     try {
-      const phone = newContactPhone.replace(/[^0-9]/g, '');
-      const { error } = await supabase.from('whatsapp_contacts').upsert({
-        phone_number: phone,
-        name: newContactName.trim() || null,
-        last_message_at: new Date().toISOString()
-      }, { onConflict: 'phone_number' });
-      if (error) throw error;
-      const newContact = { phone_number: phone, name: newContactName.trim() || null, lifetime_value: 0, total_orders: 0, last_message_at: new Date().toISOString() };
-      setContacts(prev => [newContact, ...prev.filter(c => c.phone_number !== phone)]);
-      setShowAddContact(false);
-      setNewContactName('');
-      setNewContactPhone('');
-      setSelectedContact(newContact);
-      setActiveSection('inbox');
-    } catch (err) {
-      alert('Failed to add contact: ' + err.message);
-    } finally {
-      setIsAddingContact(false);
-    }
-  };
-
-  // ─── Campaign Blast ───────────────────────────────────────────────────────
-  const handleSendBlast = async () => {
-    if (!bulkMessage.trim()) return;
-    if ((campaignChannel === 'email' || campaignChannel === 'both') && !campaignSubject.trim()) {
-      alert("Please enter an email subject.");
-      return;
-    }
-    if (!window.confirm(`Send this message to ${filteredContacts.length} contacts via ${campaignChannel.toUpperCase()}?`)) return;
-    setIsSendingBlast(true);
-    setBlastResult(null);
-    let sent = 0, failed = 0;
-    
-    for (const contact of filteredContacts) {
-      let contactSuccess = false;
-      try {
-        const messageText = bulkMessage.replace('{{name}}', contact.name || 'Customer');
-        let waSuccess = true;
-        let emailSuccess = true;
-
-        if (campaignChannel === 'whatsapp' || campaignChannel === 'both') {
-          // If a campaignTemplate is provided, send as template, else fallback to text
-          const payload = campaignTemplate.trim() ? {
-            phone_number: contact.phone_number,
-            type: 'template',
-            template_name: campaignTemplate.trim(),
-            template_language: 'en',
-            template_components: [] // You can add variable mapping logic here later if needed
-          } : {
-            phone_number: contact.phone_number,
-            message: messageText,
-            type: 'text'
-          };
-          const { data } = await supabase.functions.invoke('send-whatsapp', { body: payload });
-          waSuccess = !!data?.success;
-        }
-        
-        if (campaignChannel === 'email' || campaignChannel === 'both') {
-          if (contact.email) {
-            const htmlMessage = messageText.replace(/\n/g, '<br/>');
-            const { data } = await supabase.functions.invoke('send-email', {
-              body: { 
-                to: contact.email, 
-                subject: campaignSubject.replace('{{name}}', contact.name || 'Customer'),
-                html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">${htmlMessage}</div>`
-              }
-            });
-            emailSuccess = !!data?.success;
-          } else {
-             // If they don't have an email but channel is 'email' only, it's a fail.
-             if (campaignChannel === 'email') emailSuccess = false;
-          }
-        }
-
-        if ((campaignChannel === 'whatsapp' && waSuccess) || 
-            (campaignChannel === 'email' && emailSuccess) || 
-            (campaignChannel === 'both' && (waSuccess || emailSuccess))) {
-           contactSuccess = true;
-        }
-
-        if (contactSuccess) { sent++; } else { failed++; }
-        await new Promise(r => setTimeout(r, 300)); // Rate limit
-      } catch { failed++; }
-    }
-    setBlastResult({ sent, failed });
-    setIsSendingBlast(false);
-    setBulkMessage('');
-    setCampaignSubject('');
+      const patch = await setOfferOptIn(c, on);
+      setContacts(prev => prev.map(x => x.phone_number === c.phone_number ? { ...x, ...patch, from_orders: false } : x));
+    } catch (err) { alert(err.message); }
   };
 
   // ─── Auto-Reply CRUD ──────────────────────────────────────────────────────
@@ -521,6 +433,8 @@ const CRMTab = ({ onBack }) => {
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.phone_number?.includes(searchTerm)
   );
+  const shownContacts = contactFilter === 'all' ? filteredContacts : filteredContacts.filter(c => offerStatus(c) === contactFilter);
+  const offerCounts = contacts.reduce((acc, c) => { acc[offerStatus(c)] += 1; return acc; }, { yes: 0, unknown: 0, stopped: 0 });
 
   const totalLTV = contacts.reduce((acc, c) => acc + (Number(c.lifetime_value) || 0), 0);
   const totalMessages = messages.length;
@@ -596,7 +510,7 @@ const CRMTab = ({ onBack }) => {
         </div>
         <div className="crm-top-actions">
           <button className="admin-btn admin-btn-primary crm-add-btn" onClick={() => setShowAddContact(true)}>
-            <UserPlus size={16} /> New Contact
+            <UserPlus size={16} /> Add Contacts
           </button>
           <button className="admin-btn admin-btn-secondary crm-refresh-btn" onClick={fetchContacts}>
             <RefreshCcw size={16} />
@@ -805,15 +719,22 @@ const CRMTab = ({ onBack }) => {
               <div className="crm-section-header">
                 <div>
                   <h2>Contact Management</h2>
-                  <p>{contacts.length} contacts total</p>
+                  <p>{contacts.length} contacts · {offerCounts.yes} agreed to offers</p>
                 </div>
                 <button className="admin-btn admin-btn-primary" onClick={() => setShowAddContact(true)}>
-                  <Plus size={16} /> Add Contact
+                  <Plus size={16} /> Add Contacts
                 </button>
               </div>
 
+              <div className="pnc-filters" role="tablist" aria-label="Filter contacts">
+                {[['all', `All (${contacts.length})`], ['yes', `Offers OK (${offerCounts.yes})`], ['unknown', `Not asked (${offerCounts.unknown})`], ['stopped', `Said STOP (${offerCounts.stopped})`]].map(([id, label]) => (
+                  <button key={id} type="button" role="tab" aria-selected={contactFilter === id} className={contactFilter === id ? 'on' : ''} onClick={() => setContactFilter(id)}>{label}</button>
+                ))}
+              </div>
+
               <div className="contacts-grid">
-                {filteredContacts.map(c => (
+                {shownContacts.length === 0 && <p style={{ color: '#888' }}>No contacts here yet.</p>}
+                {shownContacts.map(c => (
                   <div key={c.phone_number} className="contact-card glass-card">
                     <div className="contact-card-avatar">{c.name?.charAt(0) || '?'}</div>
                     <div className="contact-card-info">
@@ -823,6 +744,15 @@ const CRMTab = ({ onBack }) => {
                         <span>📦 {c.total_orders || 0} Orders</span>
                         <span>💰 ₹{Number(c.lifetime_value || 0).toLocaleString()}</span>
                       </div>
+                      {(() => {
+                        const st = offerStatus(c);
+                        return (
+                          <button type="button" className={`pnc-offer-pill ${st}`} onClick={() => toggleOffers(c)}
+                            title={st === 'yes' ? 'Tap to stop sending offers' : st === 'stopped' ? 'Customer replied STOP' : 'Tap if this customer agreed to get offers'}>
+                            {st === 'yes' ? '✓ Gets offers' : st === 'stopped' ? 'Said STOP' : '+ Mark: agreed to offers'}
+                          </button>
+                        );
+                      })()}
                     </div>
                     <div className="contact-card-actions">
                       <button
@@ -933,105 +863,7 @@ const CRMTab = ({ onBack }) => {
           {/* ── CAMPAIGNS ── */}
           {activeSection === 'campaigns' && (
             <div className="crm-section-content">
-              <div className="crm-section-header">
-                <div>
-                  <h2>Broadcast Campaign</h2>
-                  <p>Send a message to all {filteredContacts.length} contacts at once.</p>
-                </div>
-              </div>
-
-              <div className="campaign-layout">
-                <div className="campaign-form glass-card">
-                  <h3>Compose Message</h3>
-                  <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-                      <input type="radio" name="campaignChannel" checked={campaignChannel === 'whatsapp'} onChange={() => setCampaignChannel('whatsapp')} />
-                      WhatsApp Only
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-                      <input type="radio" name="campaignChannel" checked={campaignChannel === 'email'} onChange={() => setCampaignChannel('email')} />
-                      Email Only
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-                      <input type="radio" name="campaignChannel" checked={campaignChannel === 'both'} onChange={() => setCampaignChannel('both')} />
-                      Both (WhatsApp + Email)
-                    </label>
-                  </div>
-                  
-                  <p className="campaign-tip">Use <code>{'{{name}}'}</code> to personalize with customer name.</p>
-
-                  {(campaignChannel === 'email' || campaignChannel === 'both') && (
-                    <input
-                      type="text"
-                      className="admin-input"
-                      placeholder="Email Subject (e.g. Special Offer for {{name}}!)"
-                      value={campaignSubject}
-                      onChange={(e) => setCampaignSubject(e.target.value)}
-                      style={{ marginBottom: '10px' }}
-                    />
-                  )}
-
-                  {(campaignChannel === 'whatsapp' || campaignChannel === 'both') && (
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#555', marginBottom: '5px' }}>Meta Approved Template Name (Required for WhatsApp Offers)</label>
-                      <input
-                        type="text"
-                        className="admin-input"
-                        placeholder="e.g. monsoon_offer, new_deal"
-                        value={campaignTemplate}
-                        onChange={(e) => setCampaignTemplate(e.target.value)}
-                        style={{ marginBottom: '5px' }}
-                      />
-                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Note: If you leave this blank, it sends a standard text message (which fails if the customer hasn't messaged you in 24 hrs).</span>
-                    </div>
-                  )}
-
-                  <textarea
-                    className="admin-input campaign-textarea"
-                    rows="8"
-                    placeholder={`Hi {{name}},\n\n🌿 Exciting news from Pure-Nutrix!\n\nWe have a special monsoon offer just for you...\n\n(Note: WhatsApp will ignore this text if a Template Name is provided above. Emails will use this text.)`}
-                    value={bulkMessage}
-                    onChange={(e) => setBulkMessage(e.target.value)}
-                  />
-
-                  {blastResult && (
-                    <div className="blast-result">
-                      ✅ Sent: {blastResult.sent} &nbsp; ❌ Failed: {blastResult.failed}
-                    </div>
-                  )}
-
-                  <button
-                    className="admin-btn admin-btn-primary campaign-send-btn"
-                    onClick={handleSendBlast}
-                    disabled={!bulkMessage.trim() || isSendingBlast || filteredContacts.length === 0}
-                  >
-                    {isSendingBlast
-                      ? <><RefreshCcw size={16} className="spinning" /> Sending...</>
-                      : <><Send size={16} /> Send to {filteredContacts.length} Contacts</>
-                    }
-                  </button>
-                </div>
-
-                <div className="campaign-audience glass-card">
-                  <h3>Audience ({filteredContacts.length})</h3>
-                  <div className="campaign-search">
-                    <Search size={14} />
-                    <input type="text" placeholder="Filter audience..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                  </div>
-                  <div className="audience-list">
-                    {filteredContacts.map(c => (
-                      <div key={c.phone_number} className="audience-item">
-                        <div className="contact-avatar small">{c.name?.charAt(0) || '?'}</div>
-                        <div>
-                          <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>{c.name || 'Unknown'}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>+{c.phone_number}</div>
-                        </div>
-                        <span className="audience-ltv">₹{Number(c.lifetime_value || 0).toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <OfferBroadcast contacts={contacts} onAddContacts={() => setShowAddContact(true)} onContactsChanged={fetchContacts} />
             </div>
           )}
             {/* ── Settings View ── */}
@@ -1106,46 +938,14 @@ const CRMTab = ({ onBack }) => {
         </div>
       </div>
 
-      {/* ── Add Contact Modal ── */}
+      {/* ── Add Contacts Modal ── */}
       {showAddContact && (
-        <div className="crm-modal-overlay" onClick={() => setShowAddContact(false)}>
-          <div className="crm-modal glass-card" onClick={e => e.stopPropagation()}>
-            <div className="crm-modal-header">
-              <h3><UserPlus size={20} /> Add New Contact</h3>
-              <button className="icon-btn" onClick={() => setShowAddContact(false)}><X size={20} /></button>
-            </div>
-            <form onSubmit={handleAddContact} className="crm-modal-body">
-              <div className="input-group">
-                <label>Full Name</label>
-                <input
-                  className="admin-input"
-                  type="text"
-                  placeholder="Raman Sharma"
-                  value={newContactName}
-                  onChange={e => setNewContactName(e.target.value)}
-                />
-              </div>
-              <div className="input-group">
-                <label>WhatsApp Number (with country code) *</label>
-                <input
-                  className="admin-input"
-                  type="text"
-                  placeholder="919876543210"
-                  value={newContactPhone}
-                  onChange={e => setNewContactPhone(e.target.value)}
-                  required
-                />
-                <small style={{ color: '#9ca3af', marginTop: '0.25rem' }}>Include country code, no + or spaces (e.g. 919876543210)</small>
-              </div>
-              <div className="crm-modal-actions">
-                <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setShowAddContact(false)}>Cancel</button>
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={isAddingContact}>
-                  {isAddingContact ? 'Adding...' : <><Check size={16} /> Add & Open Chat</>}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AddContactsModal
+          existingPhones={contacts.filter(c => !c.from_orders).map(c => c.phone_number)}
+          onClose={() => setShowAddContact(false)}
+          onSaved={fetchContacts}
+          onOpenChat={(c) => { setShowAddContact(false); setSelectedContact(c); setActiveSection('inbox'); }}
+        />
       )}
 
     </div>
