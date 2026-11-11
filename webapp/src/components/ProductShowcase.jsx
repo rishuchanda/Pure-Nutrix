@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { getProductReviews } from '../utils/mockReviews';
+import RatingStars from './RatingStars';
+import { useReviewsTick } from '../utils/reviewsStore';
 
 import './ProductShowcase.css';
 
@@ -23,6 +25,8 @@ const ProductIngredients = ({ ingredients }) => {
 const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) => {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   const [added, setAdded] = useState(false);
+  useReviewsTick();
+  const reviews = getProductReviews(product);
   useEffect(() => { if (!added) return undefined; const t = setTimeout(() => setAdded(false), 1600); return () => clearTimeout(t); }, [added]);
 
   const imagesList = product.image_urls || product.images || [];
@@ -127,16 +131,13 @@ const ProductCard = ({ product, index, onOrder, onProductClick, onAddToCart }) =
           {product.short_description || product.description || 'Premium formulation for maximum efficacy.'}
         </p>
 
-        {getProductReviews(product).isNew ? (
-          <div className="product-rating-minimal" style={{ fontSize: 12, color: '#555' }}>New launch</div>
+        {reviews.totalCount > 0 ? (
+          <div className="product-rating-minimal">
+            <RatingStars rating={reviews.rating} size={12} color="#111" />
+            <span style={{ fontSize: 12, color: '#555', marginLeft: 4 }}>({reviews.totalCount})</span>
+          </div>
         ) : (
-        <div className="product-rating-minimal">
-          <Star size={12} className="star-icon" fill="#111" color="#111" />
-          <Star size={12} className="star-icon" fill="#111" color="#111" />
-          <Star size={12} className="star-icon" fill="#111" color="#111" />
-          <Star size={12} className="star-icon" fill="#111" color="#111" />
-          <Star size={12} className="star-icon" color="#111" />
-        </div>
+          <div className="product-rating-minimal" style={{ fontSize: 12, color: '#555' }}>{reviews.isNew ? 'New launch' : 'Buy 1 Get 1 FREE'}</div>
         )}
 
         <div className="product-meta-minimal">
@@ -196,7 +197,7 @@ const ProductShowcase = ({ onOrder, onProductClick, onAddToCart }) => {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
         >
-          <span className="section-eyebrow">Bestsellers &amp; new launches</span>
+          <span className="section-eyebrow">Our range</span>
           <h2 className="section-title">Our <em className="serif-accent">Premium</em> Products</h2>
           <p className="section-subtitle">Buy 1 Get 1 FREE on every product — the free jar is added at checkout.</p>
         </motion.div>

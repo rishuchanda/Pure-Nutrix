@@ -169,3 +169,15 @@
   .trust-grid { grid-auto-rows: auto !important; row-gap: 10px !important; align-items: stretch; }
   .trust-card { min-height: 0 !important; height: auto !important; margin: 0 !important; background: #f7f7f5 !important; border: 1px solid #efefec !important; }
 }
+
+/* Certificate links (Nov 2026) */
+.trust-grid > div { display: flex; }
+.trust-card { width: 100%; color: inherit; text-decoration: none; }
+a.trust-card.is-link { cursor: pointer; }
+.trust-view { margin-top: 8px; font-size: 0.8rem; font-weight: 600; color: #166534; }
+.trust-footnote { margin-top: 28px; font-size: 0.8rem; color: #777; text-align: center; }
+@media (max-width: 768px) {
+  .trust-card .trust-view { display: none; }
+  .trust-card.is-link .badge-title::after { content: ' ›'; color: #166534; }
+  .trust-footnote { margin-top: 16px; font-size: 0.72rem; }
+}

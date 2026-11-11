@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, ArrowRight, FlaskConical, Gift, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight, FlaskConical, Gift, Sparkles, MessageCircle } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import './Hero3D.css';
 
@@ -137,10 +137,14 @@ const Hero3D = ({ onProductClick, onOpenProducts }) => {
                   <p className="hs-price">
                     <strong>{formatINR(s.price.now)}</strong>
                     {s.price.mrp > s.price.now && <s>{formatINR(s.price.mrp)}</s>}
+                    <span className="hs-price-note">for 2 jars · Buy 1 Get 1 FREE</span>
                   </p>
                 ) : null}
                 <a className="hs-cta" href={s.cta.href} onClick={s.cta.onClick} tabIndex={i === index ? 0 : -1}>
                   {s.cta.label} <ArrowRight size={18} />
+                </a>
+                <a className="hs-wa" href="/whatsapp" target="_blank" rel="noopener noreferrer" tabIndex={i === index ? 0 : -1}>
+                  <MessageCircle size={15} /> Questions? Ask on WhatsApp
                 </a>
               </div>
               {s.visual}
