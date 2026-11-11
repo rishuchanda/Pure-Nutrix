@@ -93,4 +93,14 @@ if (preg_match('#^/(?:product|buy|pdp)/([a-zA-Z0-9-]+)/?$#', $path, $matches)) {
 }
 
 // Output the final HTML
+// Admin app: send the admin manifest from the server, so "Add to Home Screen"
+// on /admin installs "PN Admin" (start_url /admin) and not the shop.
+if (preg_match('#^/admin/?$#', $path)) {
+    $html = str_replace('href="/manifest.json"', 'href="/admin-manifest.json?v=2"', $html);
+    $html = str_replace('<meta name="apple-mobile-web-app-title" content="Pure Nutrix" />', '<meta name="apple-mobile-web-app-title" content="PN Admin" />', $html);
+    $html = preg_replace('/<title>.*?<\/title>/is', '<title>PN Admin</title>', $html, 1);
+    $html = str_replace('<meta name="robots" content="index, follow', '<meta name="robots" content="noindex, nofollow', $html);
+    header('Cache-Control: no-store');
+}
+
 echo $html;
