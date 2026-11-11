@@ -185,6 +185,25 @@ async function emailOwner(subject: string, html: string) {
 const GRAPH = 'https://graph.facebook.com/v22.0';
 // Template text must not contain new lines, tabs or more than 4 spaces in a row.
 const waText = (v: unknown, max = 180) => String(v ?? '').replace(/[\r\n\t]+/g, ' ').replace(/ {2,}/g, ' ').trim().slice(0, max) || '-';
+// Short product name for messages: "Pure Nutrix Liposomal Glutathione 600mg (85% Purity) – Nano..." -> "Liposomal Glutathione 600mg".
+export const shortProductName = (name: unknown) =>
+  String(name ?? '').replace(/^Pure\s*Nutrix\s+/i, '').split(/\s+\|\s+/)[0].split(/\s+[–—]\s+|\s*\(/)[0].trim() || String(name ?? '').trim();
+
+// Order lines are stored as "2x <name> (+ 2x Free BOGO), 1x <name> (+ 1x Free BOGO)" (+ optional " | COD").
+// For messages show the free product by name: "2x Liposomal Glutathione 600mg + 2x Liposomal Glutathione 600mg FREE".
+export function orderItemsText(productName: unknown) {
+  const base = String(productName ?? '').replace(/\s+\|\s+(COD|Prepaid|Coupon\b.*)$/i, '').trim();
+  return base.split(/,\s*(?=\d+x\s)/).map((part) => {
+    const bogo = part.trim().match(/^(\d+)x\s+(.+?)\s*\(\+\s*(\d+)x\s+Free BOGO\)$/i);
+    if (bogo) {
+      const n = shortProductName(bogo[2]);
+      return `${bogo[1]}x ${n} + ${bogo[3]}x ${n} FREE`;
+    }
+    const plain = part.trim().match(/^(\d+)x\s+(.+)$/);
+    return plain ? `${plain[1]}x ${shortProductName(plain[2])}` : part.trim();
+  }).join(', ');
+}
+
 export function waPhone(raw: unknown) {
   let d = String(raw ?? '').replace(/\D/g, '');
   if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
@@ -239,7 +258,7 @@ async function whatsappOrderConfirmation(o: any) {
   });
   if (!claimed?.[0]) return 'skipped: already sent';
   const name = waText(o.customer_name || 'there', 60);
-  const items = waText(o.product_name, 200);
+  const items = waText(orderItemsText(o.product_name), 400);
   const total = waText(Number(o.price || 0).toLocaleString('en-IN'), 20);
   return await sendWhatsAppTemplate(
     phone, 'order_confirmation', 'en_US', [name, items, total],
@@ -326,7 +345,7 @@ async function handleOrder(orderId: string) {
 
   const method = o.payment_method || (/\|\s*COD/i.test(o.product_name || '') ? 'COD' : 'Prepaid');
   const title = `🛒 New order · ${inr(o.price)} · ${method}`;
-  const body = `${o.customer_name || 'Customer'}${o.city ? ` (${o.city})` : ''}: ${String(o.product_name || '').slice(0, 120)}`;
+  const body = `${o.customer_name || 'Customer'}${o.city ? ` (${o.city})` : ''}: ${orderItemsText(o.product_name).slice(0, 140)}`;
   const push = await pushToAdmins({ title, body, url: '/admin', tag: `order-${o.id}` });
   let whatsapp = 'skipped';
   try { whatsapp = await whatsappOrderConfirmation(o); } catch (e) { console.error('whatsapp confirmation', e); whatsapp = 'error'; }
@@ -336,7 +355,7 @@ async function handleOrder(orderId: string) {
     <p style="margin:0 0 12px">${esc(new Date(o.created_at || Date.now()).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))}</p>
     <table cellpadding="6" style="border-collapse:collapse">
       <tr><td><b>Customer</b></td><td>${esc(o.customer_name)} · ${esc(o.customer_mobile)}</td></tr>
-      <tr><td><b>Items</b></td><td>${esc(o.product_name)}</td></tr>
+      <tr><td><b>Items</b></td><td>${esc(orderItemsText(o.product_name))}</td></tr>
       <tr><td><b>Qty</b></td><td>${esc(o.qty)}</td></tr>
       <tr><td><b>Ship to</b></td><td>${esc(o.shipping_address)}, ${esc(o.city)}, ${esc(o.state)} ${esc(o.pincode)}</td></tr>
       ${o.coupon_code ? `<tr><td><b>Coupon</b></td><td>${esc(o.coupon_code)} (−${esc(inr(o.discount_amount))})</td></tr>` : ''}
