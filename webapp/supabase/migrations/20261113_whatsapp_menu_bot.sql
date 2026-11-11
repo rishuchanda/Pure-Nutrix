@@ -3,6 +3,8 @@
 -- Additive, safe to run more than once.
 
 alter table public.whatsapp_contacts add column if not exists bot_paused_until timestamptz;
+-- Customer asked to cancel on WhatsApp (admin confirms and changes the status).
+alter table public.orders add column if not exists cancel_requested_at timestamptz;
 
 create table if not exists public.whatsapp_bot_settings (
   id            int primary key default 1 check (id = 1),
