@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Star } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { getProductReviews } from '../utils/mockReviews';
+import RatingStars from './RatingStars';
+import { useReviewsTick } from '../utils/reviewsStore';
 import { getProductDetails } from '../utils/productDetailsData';
 import './ProductsPage.css';
 
@@ -16,6 +18,7 @@ const CATEGORIES = [
 const SORTS = { featured: 'Featured', low: 'Price: Low to High', high: 'Price: High to Low' };
 
 const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
+  useReviewsTick();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('all');
@@ -108,7 +111,7 @@ const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
                   style={{ cursor: 'pointer' }}
                 >
                   <div className="product-item-image-wrap">
-                    <span className="badge-best-seller">{reviewData.isNew ? 'New Launch' : 'Best Seller'}</span>
+                    <span className="badge-best-seller">{reviewData.isNew ? 'New Launch' : 'Buy 1 Get 1'}</span>
                     {product.original_price > product.price && (
                       <span className="badge-save">−{Math.round((1 - product.price / product.original_price) * 100)}%</span>
                     )}
@@ -139,15 +142,11 @@ const ProductsPage = ({ onProductClick, onBack, onAddToCart }) => {
 
                     {reviewData.totalCount > 0 ? (
                       <div className="product-item-stars">
-                        <div style={{ display: 'flex' }}>
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} size={14} fill="#fbbf24" stroke="none" className="star-icon" />
-                          ))}
-                        </div>
-                        <span>{reviewData.rating} ({reviewData.totalCount} reviews)</span>
+                        <RatingStars rating={reviewData.rating} />
+                        <span>{reviewData.rating} ({reviewData.totalCount} {reviewData.totalCount === 1 ? 'review' : 'reviews'})</span>
                       </div>
                     ) : (
-                      <div className="product-item-stars"><span>New launch · no reviews yet</span></div>
+                      <div className="product-item-stars"><span>{reviewData.isNew ? 'New launch · ' : ''}No reviews yet</span></div>
                     )}
 
                     <div className="product-item-price">

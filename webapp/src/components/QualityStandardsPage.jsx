@@ -19,8 +19,8 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
     },
     {
       id: 2,
-      title: 'FDA',
-      desc: 'Regulatory Guideline for Food and Drug Administration.',
+      title: 'FDA Guidelines',
+      desc: 'Manufacturing facility audited against FDA regulatory guidelines.',
       icon: <FileText size={40} className="cert-icon" />
     },
     {
@@ -253,19 +253,18 @@ const QualityStandardsPage = ({ onBack, onExplore }) => {
             transition={{ delay: 0.2 }}
             style={{ maxWidth: '800px', margin: '20px auto' }}
           >
-            Trust is built on proof. We subject our finished products to strict independent third-party testing. View our official certifications below.
+            Trust is built on proof. These certificates belong to our manufacturer, Herboplanet LLP, Jaipur (issued by EU Certification Ltd, valid till Feb 2028). Tap any one to open it.
           </motion.p>
           
           <div className="pdf-preview-grid">
             {[
-              { id: 'fssai', name: 'FSSAI License', file: 'fssai.pdf', img: null },
               { id: 'haccp', name: 'HACCP Certificate', file: 'haccp.pdf', img: 'haccp.png' },
-              { id: 'fda', name: 'FDA Registration', file: 'fda.pdf', img: 'fda.png' },
+              { id: 'fda', name: 'FDA Guidelines Audit', file: 'fda.pdf', img: 'fda.png' },
               { id: 'kosher', name: 'KOSHER Certificate', file: 'kosher.pdf', img: 'kosher.png' },
               { id: 'iso22000', name: 'ISO 22000:2018', file: 'iso22000.pdf', img: 'iso22000.png' },
               { id: 'iso9001', name: 'ISO 9001:2015', file: 'iso9001.pdf', img: 'iso9001.png' },
-              { id: 'whogmp', name: 'WHO-GMP Certified', file: 'who-gmp.pdf', img: 'who-gmp.png' },
-              { id: 'organic', name: 'Organic Certified', file: 'organic.pdf', img: 'organic.png' }
+              { id: 'whogmp', name: 'WHO-GMP', file: 'who-gmp.pdf', img: 'who-gmp.png' },
+              { id: 'organic', name: 'Organic Compliance Audit', file: 'organic.pdf', img: 'organic.png' }
             ].map((doc, idx) => (
               <motion.div 
                 key={doc.id}

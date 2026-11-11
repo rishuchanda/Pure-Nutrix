@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, Star, Plus, Minus, MessageSquare, Upload, Camera, CheckCircle, Image as ImageIcon, X, AlertCircle, ThumbsUp, Share2, FlaskConical, Truck, Wallet, ShieldCheck } from 'lucide-react';
 import { getProductReviews } from '../utils/mockReviews';
+import RatingStars from './RatingStars';
 import { submitReview, loadApprovedReviews } from '../utils/reviewsStore';
 import { getProductDetails } from '../utils/productDetailsData';
 import { supabase } from '../supabaseClient';
@@ -301,7 +302,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
           {/* RIGHT COLUMN - PRODUCT INFO */}
           <div className="pdp-info-column">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <span className="pdp-badge-best-seller">{reviewData.isNew ? 'New Launch' : 'Best Seller'}</span>
+              <span className="pdp-badge-best-seller">{reviewData.isNew ? 'New Launch' : 'Buy 1 Get 1 FREE'}</span>
               <button
                 type="button"
                 className="pdp-share-btn"
@@ -334,15 +335,9 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
 
             <div className="pdp-star-summary" onClick={() => document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' })}>
               {reviewData.totalCount > 0 && (
-              <div className="pdp-stars">
-                <Star size={16} fill="#fbbf24" stroke="none" />
-                <Star size={16} fill="#fbbf24" stroke="none" />
-                <Star size={16} fill="#fbbf24" stroke="none" />
-                <Star size={16} fill="#fbbf24" stroke="none" />
-                <Star size={16} fill="#fbbf24" stroke="none" />
-              </div>
+              <div className="pdp-stars"><RatingStars rating={reviewData.rating} size={16} /></div>
               )}
-              <span>{reviewData.totalCount > 0 ? `${reviewData.rating} (${reviewData.totalCount} reviews)` : 'New launch · be the first to review'}</span>
+              <span>{reviewData.totalCount > 0 ? `${reviewData.rating} (${reviewData.totalCount} ${reviewData.totalCount === 1 ? 'review' : 'reviews'})` : `${reviewData.isNew ? 'New launch · ' : ''}No reviews yet — be the first to review`}</span>
             </div>
 
             <div className="pdp-price-row">
@@ -443,7 +438,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
         {/* BOTTOM FULL WIDTH SECTIONS */}
         <div className="pdp-bottom-sections" id="reviews">
           <div className="pdp-reviews-header-bar">
-            <h2 className="pdp-section-header" style={{ margin: 0 }}>Customer Reviews ({reviewData.totalCount})</h2>
+            <h2 className="pdp-section-header" style={{ margin: 0 }}>Customer Reviews{reviewData.totalCount > 0 ? ` (${reviewData.totalCount})` : ''}</h2>
             <button 
               className="btn-write-review"
               onClick={openReviewForm}
@@ -463,7 +458,7 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
           )}
 
           <div className="pdp-ai-summary">
-            <h3>{reviewData.isNew ? '✨ Product Highlights' : '✨ AI Generated Review Summary'}</h3>
+            <h3>✨ Product Highlights</h3>
             <p>{details.aiSummary.text}</p>
             <div className="pdp-ai-topics">
               {details.aiSummary.topics.map((topic, idx) => (
