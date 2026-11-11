@@ -4,7 +4,7 @@ export const getProductDetails = (productName) => {
   // Default fallback details
   let details = {
     subtitle: "Premium Nutraceutical Support for Optimal Health",
-    tags: ["✨ Premium Quality", "🌱 Natural Ingredients", "🔬 Clinically Proven"],
+    tags: ["✨ Premium Quality", "🌱 Natural Ingredients", "🏭 ISO 22000 Facility"],
     whatMakesItSpecial: {
       description: "A premium, science-backed formula designed for optimal health and vitality.",
       bullets: [
@@ -32,7 +32,7 @@ export const getProductDetails = (productName) => {
       shelfLife: "18 months from manufacturing"
     },
     aiSummary: {
-      text: "Customers appreciate the high quality and effectiveness of this product. Many report feeling more energetic and healthier after consistent use. The premium formulation is frequently highlighted as a major positive.",
+      text: "Made in an ISO 22000 and GMP certified facility in Jaipur. The full ingredient list, batch number and best-before date are printed on every pack.",
       topics: ["High Quality", "Effectiveness", "Energy Boost", "Premium Formula"]
     },
     faq: [
@@ -95,15 +95,15 @@ export const getProductDetails = (productName) => {
   // Match Glutathione
   else if (name.includes('glutathione')) {
     details = {
-      subtitle: "ADVANCED SKIN RADIANCE FORMULA: Repairs dull skin and promotes a youthful, luminous radiance.",
-      tags: ["✨ Skin Brightening", "🌱 Vegetarian", "🔬 Clinically Proven"],
+      subtitle: "SKIN RADIANCE FORMULA: L-Glutathione 500mg with Vitamin C, one capsule a day for antioxidant and skin glow support.",
+      tags: ["✨ Skin Radiance", "🌱 Vegetarian", "🏭 ISO 22000 Facility"],
       whatMakesItSpecial: {
-        description: "An advanced skin radiance formula combining L-Glutathione and Vitamin C. It repairs dull skin from within, promoting a youthful, luminous glow while neutralizing free radicals.",
+        description: "An advanced skin radiance formula combining L-Glutathione and Vitamin C. It supports skin radiance from within and helps the body fight free radicals.",
         bullets: [
-          "Promotes intense skin brightening and even skin tone",
+          "Supports skin radiance and an even-looking skin tone",
           "Powerful antioxidant action to fight cellular aging",
-          "Added Vitamin C boosts Glutathione absorption by up to 50%",
-          "Reduces dark spots, pigmentation, and oxidative stress"
+          "Added Vitamin C works alongside glutathione as an antioxidant",
+          "Helps the body handle everyday oxidative stress"
         ]
       },
       howToUse: {
@@ -125,20 +125,20 @@ export const getProductDetails = (productName) => {
         shelfLife: "18 months from manufacturing"
       },
       aiSummary: {
-        text: "Customers highly praise this Glutathione supplement for its noticeable effects on skin brightness and even tone. Many users report a visible reduction in pigmentation and dark spots within a few weeks of consistent use. The addition of Vitamin C is frequently mentioned as a great benefit for immunity and overall glow.",
-        topics: ["Skin Brightening", "Reduces Pigmentation", "Glowing Skin", "Antioxidant Boost"]
+        text: "From the label: 500 mg L-Glutathione with Vitamin C per capsule, 30 vegetarian capsules (one month), one capsule a day after a meal. Made in an ISO 22000 and GMP certified facility.",
+        topics: ["500 mg per capsule", "With Vitamin C", "1 capsule a day", "30-day pack"]
       },
       faq: [
-        { q: "How long until I see results?", a: "Most users begin noticing a brighter, more even skin tone within 4 to 8 weeks of consistent daily use." },
-        { q: "Can men use this product?", a: "Absolutely! Glutathione works equally well for both men and women looking to improve skin health." },
-        { q: "Is it safe for long-term use?", a: "Yes, L-Glutathione is a naturally occurring antioxidant in the body and is safe for daily, long-term supplementation." }
+        { q: "How long until I see results?", a: "Results differ from person to person. Take it daily, together with sun protection and a good diet, for at least 8–12 weeks before you judge it." },
+        { q: "Can men use this product?", a: "Yes, it is for adult men and women." },
+        { q: "Is it safe for long-term use?", a: "Glutathione is an antioxidant the body makes on its own. Stay within one capsule a day, and ask your doctor first if you are pregnant, nursing, or on any medicine." }
       ]
     };
   } 
   // Match Collagen
   else if (name.includes('collagen')) {
     details = {
-      subtitle: "CELLULAR SKIN RADIANCE: Improves skin elasticity, retains moisture, and reduces fine lines.",
+      subtitle: "SKIN, HAIR & NAIL SUPPORT: Collagen with Biotin, Hyaluronic Acid, Vitamin C and Zinc in one daily capsule.",
       tags: ["✨ Anti-Aging", "💧 Hydrating", "🔬 High Bioavailability"],
       whatMakesItSpecial: {
         description: "A comprehensive cellular skin radiance complex. It replenishes diminishing collagen levels to improve skin elasticity, retain vital moisture, and visibly reduce fine lines.",
@@ -168,12 +168,12 @@ export const getProductDetails = (productName) => {
         shelfLife: "18 months from manufacturing"
       },
       aiSummary: {
-        text: "Customers love this collagen complex for its multi-benefit formula. Many report not only improved skin elasticity and hydration but also significantly stronger hair and nails thanks to the Biotin and Hyaluronic Acid. Users appreciate that it doesn't cause breakouts, likely due to the added Zinc.",
-        topics: ["Skin Elasticity", "Hair & Nail Growth", "Deep Hydration", "Anti-Aging"]
+        text: "From the label: hydrolyzed collagen with Biotin, Hyaluronic Acid, Vitamin C and Zinc, 30 capsules (one month), one capsule a day. Made in an ISO 22000 and GMP certified facility.",
+        topics: ["Collagen + Biotin", "Hyaluronic Acid", "Vitamin C & Zinc", "30-day pack"]
       },
       faq: [
         { q: "Is this marine or bovine collagen?", a: "Our formula uses highly bioavailable hydrolyzed collagen peptides for maximum absorption." },
-        { q: "Will this help with hair loss?", a: "Yes, the inclusion of Biotin and Zinc specifically targets hair follicle strength and promotes healthier, thicker hair growth." },
+        { q: "Will this help with hair fall?", a: "Biotin and Zinc are nutrients that support normal hair and nails. Hair fall has many causes, so if it is heavy please see a doctor." },
         { q: "What is the best time to take it?", a: "We recommend taking it before bed, as the body's natural cellular repair processes are most active during sleep." }
       ]
     };
@@ -211,8 +211,8 @@ export const getProductDetails = (productName) => {
         shelfLife: "12 months from manufacturing"
       },
       aiSummary: {
-        text: "Customers consistently report feeling more energetic and noticing improved digestion after incorporating this juice into their morning routine. The natural hydration benefits for the skin from the Omega 7 content are frequently praised. Users appreciate the pure, unadulterated quality of the Himalayan berries.",
-        topics: ["Energy Boost", "Gut Health & Digestion", "Skin Hydration", "Immunity Support"]
+        text: "From the label: Himalayan Sea Buckthorn juice, 500 ml bottle. Mix 15–20 ml in a glass of water, twice a day. Refrigerate after opening and finish within 30 days.",
+        topics: ["500 ml bottle", "Omega 3, 6, 7 & 9", "Mix with water", "Twice a day"]
       },
       faq: [
         { q: "What does it taste like?", a: "It has a naturally tart and tangy flavor, characteristic of pure Sea Buckthorn berries. We recommend diluting it in water or juice." },
@@ -223,13 +223,13 @@ export const getProductDetails = (productName) => {
   // Match Ashwagandha
   else if (name.includes('ashwagandha')) {
     details = {
-      subtitle: "NATURAL STRESS RELIEF, ENERGY & IMMUNITY SUPPORT: Clinically proven adaptogen to lower cortisol & boost vitality.",
-      tags: ["✨ Stress Relief", "🌱 100% Pure Root Extract", "🔬 Clinically Proven", "⚡ Energy Booster"],
+      subtitle: "STRESS, ENERGY & IMMUNITY SUPPORT: 500mg ashwagandha root extract, a traditional Ayurvedic adaptogen.",
+      tags: ["✨ Stress Support", "🌱 Root Extract", "🏭 ISO 22000 Facility", "⚡ Daily Energy"],
       whatMakesItSpecial: {
-        description: "Formulated with 500mg of 100% pure, root-derived ashwagandha per capsule, this clinically proven adaptogen helps your body naturally adapt to physical and mental stress without causing drowsiness.",
+        description: "Formulated with 500mg of 100% pure, root-derived ashwagandha per capsule, this traditional adaptogen helps your body adapt to physical and mental stress without causing drowsiness.",
         bullets: [
           "Potent 500mg Strength: Delivers a concentrated dose of 100% pure root-derived extract for maximum absorption and efficacy.",
-          "Natural Stress & Anxiety Relief: Acts as a powerful adaptogen to lower cortisol levels, promoting emotional balance and daily calmness.",
+          "Everyday Stress Support: A traditional adaptogen that helps the body handle daily stress and supports calmness.",
           "Energy & Vitality Booster: Helps fight persistent fatigue, supporting improved stamina, endurance, and physical performance.",
           "Immunity & Wellness Support: Rich in natural antioxidants to reinforce your body's immune system and overall health."
         ]
@@ -244,7 +244,7 @@ export const getProductDetails = (productName) => {
       },
       scienceAndIngredients: {
         keyIngredients: "100% Pure Ashwagandha Root Extract (500mg)",
-        description: "Formulated exclusively from pure root-derived extract rather than leaves, ensuring maximum concentration of bioactive withanolides. This clinically tested adaptogen calms the nervous system while simultaneously revitalizing cellular energy production."
+        description: "Formulated exclusively from pure root-derived extract rather than leaves, ensuring maximum concentration of bioactive withanolides. This traditional adaptogen supports the nervous system while simultaneously revitalizing cellular energy production."
       },
       specs: {
         form: "Capsules",
@@ -253,14 +253,14 @@ export const getProductDetails = (productName) => {
         shelfLife: "24 months from manufacturing"
       },
       aiSummary: {
-        text: "Customers highly value this Ashwagandha root extract for daily workplace stress relief, mood calmness, and improved mental clarity. Active gym-goers report enhanced muscle recovery and physical endurance, while many users experience deeper, more restorative sleep and consistent year-round immune defense without any daytime drowsiness.",
-        topics: ["Workplace Stress Relief", "Physical Endurance", "Sleep Quality", "Immune Defense"]
+        text: "From the label: 500 mg ashwagandha root extract per capsule, 30 capsules (one month), one capsule a day after a meal. Made in an ISO 22000 and GMP certified facility.",
+        topics: ["500 mg root extract", "1 capsule a day", "Root, not leaf", "30-day pack"]
       },
       faq: [
         { q: "Will this make me drowsy during the daytime?", a: "No, Pure Nutrix Ashwagandha is an adaptogen that calms the nervous system without acting as a sedative or causing daytime drowsiness." },
-        { q: "How long before I see noticeable results?", a: "Most users notice enhanced calmness, focus, and energy within 2-3 weeks of consistent daily supplementation." },
+        { q: "How long before I see results?", a: "It differs from person to person. Take it daily for at least 8 weeks, with good sleep and diet, before you judge it." },
         { q: "Can fitness athletes and gym-goers take this?", a: "Yes! Active individuals take it daily to support muscle recovery, stamina, endurance, and physical vitality." },
-        { q: "Is this safe for long-term daily use?", a: "Yes, 100% pure root-derived ashwagandha is safe and non-habit forming for daily, long-term wellness support." }
+        { q: "Is this safe for long-term daily use?", a: "It is not habit forming. Stay within one capsule a day, and ask your doctor first if you are pregnant, nursing, have a thyroid condition or take any medicine." }
       ]
     };
   }

@@ -1,3 +1,4 @@
+import React from 'react';
 import { supabase } from '../supabaseClient';
 
 // Real customer reviews, stored in Supabase (table product_reviews).
@@ -127,4 +128,16 @@ export async function deleteReviewAdmin(id) {
   const { error } = await supabase.from('product_reviews').delete().eq('id', id);
   if (error) throw error;
   loadApprovedReviews(true);
+}
+
+// Re-render a component when the approved reviews finish loading.
+export function useReviewsTick() {
+  const [tick, setTick] = React.useState(0);
+  React.useEffect(() => {
+    const on = () => setTick(t => t + 1);
+    window.addEventListener('pn_reviews_updated', on);
+    loadApprovedReviews();
+    return () => window.removeEventListener('pn_reviews_updated', on);
+  }, []);
+  return tick;
 }

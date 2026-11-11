@@ -2,7 +2,7 @@ const SEO_CONFIG_KEY = 'pn_live_seo_config';
 
 const defaultSEOConfig = {
   siteName: "Pure Nutrix",
-  defaultTitle: "Pure Nutrix | India's #1 Premium Nutraceuticals, Skin Glow & Health Supplements",
+  defaultTitle: "Pure Nutrix | Premium Nutraceuticals, Skin Glow & Health Supplements",
   defaultDescription: "Pure Nutrix nutraceuticals: Liposomal Glutathione 600mg, Ultra L-Glutathione with Vitamin C, Advanced Collagen & Biotin, Himalayan Sea Buckthorn Juice and Ashwagandha Root Extract 500mg. FSSAI licensed, made in India. Buy 1 Get 1 FREE.",
   defaultKeywords: "Pure Nutrix, pure nutrix supplements, liposomal glutathione 600mg, glutathione capsules india, l-glutathione with vitamin c, collagen biotin capsules, sea buckthorn juice, ashwagandha root extract 500mg",
   siteUrl: "https://purenutrix.in",
