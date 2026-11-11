@@ -1,0 +1,21 @@
+.xo-backdrop { position: fixed; inset: 0; z-index: 100001; background: rgba(15, 17, 21, .55); display: grid; place-items: center; padding: 16px;
+  animation: xo-fade .2s ease-out; }
+.xo-card { position: relative; width: 100%; max-width: 400px; background: #fff; color: #111; border-radius: 22px; padding: 28px 24px 22px;
+  text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,.25); animation: xo-up .25s ease-out; }
+.xo-close { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border: 0; background: none; color: #666; cursor: pointer; border-radius: 50%; }
+.xo-close:hover { background: #f3f3f3; }
+.xo-kicker { margin: 0 0 6px; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: #a17d1c; font-weight: 700; }
+.xo-card h2 { margin: 0 0 6px; font-size: 1.55rem; line-height: 1.2; }
+.xo-sub { margin: 0 0 18px; color: #444; font-size: .95rem; }
+.xo-code { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px; border: 2px dashed #c9a227;
+  border-radius: 14px; background: #fffbea; cursor: pointer; font: inherit; color: #111; }
+.xo-code span { font-size: 1.5rem; font-weight: 800; letter-spacing: .12em; }
+.xo-code small { display: inline-flex; align-items: center; gap: 5px; color: #7a6416; font-size: .8rem; }
+.xo-note { margin: 12px 0 18px; font-size: .8rem; color: #666; }
+.xo-actions { display: grid; gap: 10px; }
+.xo-shop { border: 0; border-radius: 12px; padding: 14px; background: #111; color: #fff; font: inherit; font-weight: 700; font-size: 1rem; cursor: pointer; }
+.xo-wa { display: inline-flex; justify-content: center; align-items: center; gap: 8px; padding: 12px; border-radius: 12px; background: #e9fbf0;
+  color: #0b5d34; font-weight: 600; text-decoration: none; }
+@keyframes xo-fade { from { opacity: 0; } }
+@keyframes xo-up { from { opacity: 0; transform: translateY(16px); } }
+@media (prefers-reduced-motion: reduce) { .xo-backdrop, .xo-card { animation: none; } }

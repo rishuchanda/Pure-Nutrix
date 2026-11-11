@@ -389,6 +389,14 @@ const ProductDetailsPage = ({ product, onBack, onOrder, onAddToCart, onProductCl
               </button>
             </div>
 
+            <p className="pdp-dispatch"><Truck size={15} /> Dispatched from Jaipur within 24–48 hours (except Sundays)</p>
+
+            <a className="pdp-wa-ask" href={`/whatsapp?p=${encodeURIComponent(product.slug || '')}`} target="_blank" rel="noopener noreferrer">
+              <MessageSquare size={18} />
+              <span><strong>Questions? Ask us on WhatsApp</strong><small>Price, how to take, delivery — quick reply</small></span>
+              <ChevronRight size={18} />
+            </a>
+
             <div className="pdp-trust-row">
               <span><Truck size={16} /> Free shipping above ₹499</span>
               <span><Wallet size={16} /> Cash on Delivery</span>
