@@ -90,6 +90,17 @@ function App() {
     }
   });
 
+  // After an order is placed, take the ordered products out of the cart. A cart
+  // checkout keeps a copy for the success screen, so it doesn't flip to "loading".
+  const [placedCartItems, setPlacedCartItems] = useState(null);
+  const handleOrderPlaced = (items, fromCart) => {
+    if (fromCart) setPlacedCartItems(items);
+    const ordered = new Set((items || []).map(i => i?.product?.id));
+    setCartItems(prev => prev.filter(i => !ordered.has(i.product.id)));
+  };
+  useEffect(() => { if (currentView !== 'order') setPlacedCartItems(null); }, [currentView]);
+  const orderCartItems = placedCartItems || cartItems;
+
   useEffect(() => {
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
@@ -552,13 +563,13 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            {!selectedProduct && (!cartItems || cartItems.length === 0) ? (
+            {!selectedProduct && (!orderCartItems || orderCartItems.length === 0) ? (
               <div style={{ height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
                 <div className="spinning" style={{ width: '40px', height: '40px', border: '4px solid #D4AF37', borderTopColor: 'transparent', borderRadius: '50%', marginBottom: '1rem' }}></div>
                 <p>Loading Order Details...</p>
               </div>
             ) : (
-              <Lazy><OrderPage product={selectedProduct} cartItems={currentView === 'order' && !selectedProduct ? cartItems : null} onBack={handleBackToHome} /></Lazy>
+              <Lazy><OrderPage product={selectedProduct} cartItems={currentView === 'order' && !selectedProduct ? orderCartItems : null} onBack={handleBackToHome} onOrderPlaced={handleOrderPlaced} /></Lazy>
             )}
           </motion.div>
         ) : currentView === 'cart' ? (
