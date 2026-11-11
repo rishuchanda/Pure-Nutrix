@@ -24,6 +24,7 @@ import { parsePath, getPathForView } from './parsePath';
 
 
 import ChatbotWidget from './components/ChatbotWidget';
+import ExitOffer from './components/ExitOffer';
 
 // Pages that are not needed for the first screen are loaded on demand, so the
 // home page downloads far less JavaScript (admin, CRM, GST, PDF code etc.).
@@ -357,15 +358,20 @@ function App() {
   // WhatsApp QR Code Redirection Logic
   useEffect(() => {
     if (currentView === 'whatsapp') {
+      // "Hi" opens the WhatsApp menu bot; ?p=<product slug> adds which product they were looking at.
+      const waHello = () => {
+        const p = new URLSearchParams(window.location.search).get('p');
+        return p ? `Hi! I want to know about ${p.replace(/[^a-z0-9-]/gi, '').replace(/-/g, ' ').slice(0, 60)}` : 'Hi';
+      };
       const fetchAndRedirect = async () => {
         try {
           const { data: phone, error } = await supabase.rpc('get_active_whatsapp_number');
           const targetPhone = phone || atob('OTE5MDU3NjA3MDMw');
-          window.location.replace(`https://wa.me/${targetPhone}?text=${encodeURIComponent('Hi Pure Nutrix Support!')}`);
+          window.location.replace(`https://wa.me/${targetPhone}?text=${encodeURIComponent(waHello())}`);
         } catch (err) {
           console.error('Redirect fallback to personal WhatsApp', err);
           const targetPhone = atob('OTE5MDU3NjA3MDMw');
-          window.location.replace(`https://wa.me/${targetPhone}?text=${encodeURIComponent('Hi Pure Nutrix Support!')}`);
+          window.location.replace(`https://wa.me/${targetPhone}?text=${encodeURIComponent(waHello())}`);
         }
       };
       fetchAndRedirect();
@@ -708,6 +714,7 @@ function App() {
         </div>
       )}
       {currentView !== 'admin' && <ChatbotWidget defaultMessage="Hi, I need help with Pure Nutrix products." />}
+      <ExitOffer active={['home', 'products', 'pdp', 'cart'].includes(currentView)} onShop={() => { if (currentView !== 'products' && currentView !== 'pdp' && currentView !== 'cart') handleOpenProducts(); }} />
       {['home', 'products', 'quality-standards', 'support', 'legal-policy', 'privacy-policy', 'account'].includes(currentView) && (
         <MobileTabBar
           active={currentView}

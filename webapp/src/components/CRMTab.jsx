@@ -10,6 +10,7 @@ import {
 } from './WhatsAppMedia';
 import AddContactsModal from './crm/AddContactsModal';
 import OfferBroadcast from './crm/OfferBroadcast';
+import BotSettings from './crm/BotSettings';
 import { waPhone, offerStatus } from './crm/contactUtils';
 import { setOfferOptIn } from './crm/contactsApi';
 import './CRMTab.css';
@@ -459,7 +460,7 @@ const CRMTab = ({ onBack }) => {
   const navItems = [
     { id: 'inbox', label: 'Inbox', icon: Inbox },
     { id: 'contacts', label: 'Contacts', icon: Users },
-    { id: 'autoreply', label: 'Auto-Reply', icon: Bot },
+    { id: 'autoreply', label: 'Menu Bot', icon: Bot },
     { id: 'campaigns', label: 'Campaigns', icon: Megaphone },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -506,7 +507,7 @@ const CRMTab = ({ onBack }) => {
         </div>
         <div className="crm-stat">
           <MessageSquare size={22} className="stat-icon" />
-          <div><div className="stat-value">{autoReplyEnabled ? 'ON' : 'OFF'}</div><div className="stat-label">Auto-Reply</div></div>
+          <div><div className="stat-value">Menu</div><div className="stat-label">WhatsApp Bot</div></div>
         </div>
         <div className="crm-top-actions">
           <button className="admin-btn admin-btn-primary crm-add-btn" onClick={() => setShowAddContact(true)}>
@@ -769,94 +770,10 @@ const CRMTab = ({ onBack }) => {
             </div>
           )}
 
-          {/* ── AUTO-REPLY ── */}
+          {/* ── MENU BOT ── */}
           {activeSection === 'autoreply' && (
             <div className="crm-section-content">
-              <div className="crm-section-header">
-                <div>
-                  <h2>Auto-Reply Chatbot</h2>
-                  <p>Set keyword-based automatic responses for incoming messages.</p>
-                </div>
-                <div className="toggle-wrapper">
-                  <span>{autoReplyEnabled ? 'Enabled' : 'Disabled'}</span>
-                  <div
-                    className={`toggle ${autoReplyEnabled ? 'on' : 'off'}`}
-                    onClick={() => setAutoReplyEnabled(p => !p)}
-                  >
-                    <div className="toggle-knob" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Add new rule */}
-              <div className="autoreply-add-form glass-card">
-                <h4><Plus size={16} /> Add New Rule</h4>
-                <div className="autoreply-form-row">
-                  <div className="input-group-inline">
-                    <label>Keyword (trigger word)</label>
-                    <input
-                      className="admin-input"
-                      type="text"
-                      placeholder="e.g. return, offer, help"
-                      value={newKeyword}
-                      onChange={e => setNewKeyword(e.target.value)}
-                    />
-                  </div>
-                  <div className="input-group-inline" style={{ flex: 2 }}>
-                    <label>Auto-Reply Message</label>
-                    <input
-                      className="admin-input"
-                      type="text"
-                      placeholder="The reply to send when this keyword is detected..."
-                      value={newReplyText}
-                      onChange={e => setNewReplyText(e.target.value)}
-                    />
-                  </div>
-                  <button
-                    className="admin-btn admin-btn-primary"
-                    style={{ alignSelf: 'flex-end', padding: '0.65rem 1.2rem' }}
-                    onClick={handleAddAutoReply}
-                    disabled={!newKeyword.trim() || !newReplyText.trim()}
-                  >
-                    <Plus size={16} /> Add
-                  </button>
-                </div>
-              </div>
-
-              {/* Existing rules */}
-              <div className="autoreply-rules-list">
-                {autoReplies.map(rule => (
-                  <div key={rule.id} className="autoreply-rule-card glass-card">
-                    {editingRule?.id === rule.id ? (
-                      <div className="autoreply-form-row">
-                        <input
-                          className="admin-input"
-                          value={editingRule.keyword}
-                          onChange={e => setEditingRule(p => ({ ...p, keyword: e.target.value }))}
-                        />
-                        <input
-                          className="admin-input"
-                          style={{ flex: 2 }}
-                          value={editingRule.reply}
-                          onChange={e => setEditingRule(p => ({ ...p, reply: e.target.value }))}
-                        />
-                        <button className="admin-btn admin-btn-primary" style={{ padding: '0.5rem 1rem' }} onClick={() => handleSaveEdit(rule.id)}><Check size={16} /></button>
-                        <button className="admin-btn admin-btn-secondary" style={{ padding: '0.5rem 1rem' }} onClick={() => setEditingRule(null)}><X size={16} /></button>
-                      </div>
-                    ) : (
-                      <div className="rule-display">
-                        <div className="rule-keyword">"{rule.keyword}"</div>
-                        <ChevronRight size={16} opacity={0.5} />
-                        <div className="rule-reply">{rule.reply}</div>
-                        <div className="rule-actions">
-                          <button className="icon-btn" onClick={() => setEditingRule(rule)}><Edit2 size={15} /></button>
-                          <button className="icon-btn danger" onClick={() => handleDeleteAutoReply(rule.id)}><Trash2 size={15} /></button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <BotSettings />
             </div>
           )}
 
