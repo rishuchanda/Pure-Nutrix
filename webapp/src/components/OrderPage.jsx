@@ -6,7 +6,7 @@ import { supabase } from '../supabaseClient';
 import { findCoupon, couponDiscount } from '../utils/coupons';
 import './OrderPage.css';
 
-const OrderPage = ({ product, cartItems, onBack }) => {
+const OrderPage = ({ product, cartItems, onBack, onOrderPlaced }) => {
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('razorpay');
   const [summaryOpen, setSummaryOpen] = useState(false); // mobile: order summary collapsed by default
@@ -424,6 +424,9 @@ const OrderPage = ({ product, cartItems, onBack }) => {
             currency: 'INR'
           });
         }
+
+        // Order saved: remove the ordered products from the cart.
+        try { onOrderPlaced?.(orderItems, !!cartItems); } catch (e) { console.error('cart clear', e); }
 
         setTimeout(() => {
           setIsProcessing(false);
