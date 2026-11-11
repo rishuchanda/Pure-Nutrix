@@ -156,7 +156,7 @@ const ProfessionalInvoice = ({ order, onClose }) => {
                   <span style={{ fontSize: '14px', fontWeight: 700 }}>100% Quality Authenticated</span>
                 </div>
                 <p style={{ margin: 0, fontSize: '12px', color: '#888', lineHeight: 1.5, maxWidth: '400px' }}>
-                  Thank you for trusting Pure Nutrix. For support, contact <strong style={{ color: '#111' }}>care@purenutrix.com</strong>.<br/>
+                  Thank you for trusting Pure Nutrix. For support, contact <strong style={{ color: '#111' }}>help@purenutrix.in</strong>.<br/>
                   This is a computer-generated invoice and requires no physical signature.
                 </p>
               </div>

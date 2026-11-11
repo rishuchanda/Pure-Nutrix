@@ -10,7 +10,7 @@ const defaultSEOConfig = {
   bingVerificationCode: "",
   googleAnalyticsId: "",
   ogImage: "https://purenutrix.in/assets/og-image.jpg",
-  contactPhone: "+91-9057607030",
+  contactEmail: "help@purenutrix.in",
   addressLocality: "Jaipur, Rajasthan, 302019"
 };
 
