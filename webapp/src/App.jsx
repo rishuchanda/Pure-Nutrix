@@ -489,7 +489,7 @@ function App() {
         };
       default:
         return {
-          title: liveSEO.defaultTitle || "Pure Nutrix | India's #1 Premium Nutraceuticals, Skin Glow & Health Supplements",
+          title: liveSEO.defaultTitle || "Pure Nutrix | Premium Nutraceuticals, Skin Glow & Health Supplements",
           description: liveSEO.defaultDescription || "Pure Nutrix nutraceuticals: Liposomal Glutathione 600mg, Ultra L-Glutathione with Vitamin C, Advanced Collagen & Biotin, Himalayan Sea Buckthorn Juice and Ashwagandha Root Extract 500mg. FSSAI licensed, made in India.",
           keywords: liveSEO.defaultKeywords || "Pure Nutrix, pure nutrix supplements, liposomal glutathione 600mg, glutathione capsules india, collagen biotin capsules, sea buckthorn juice, ashwagandha root extract 500mg",
           canonical: canonicalForCurrentPath()
@@ -548,14 +548,13 @@ function App() {
             <main>
               <Hero3D onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
               <PromoTicker />
-              <ShopByConcern onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
               <PromiseStrip />
-
               <ProductShowcase onOrder={handleOrder} onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} onAddToCart={handleAddToCart} />
+              <ShopByConcern onProductClick={handleOpenProductDetails} onOpenProducts={handleOpenProducts} />
               <RecentlyViewed onProductClick={handleOpenProductDetails} />
               <HowItWorks />
-              <WhyChooseUs />
               <TrustSection />
+              <WhyChooseUs />
               <HomeFaq />
               <MarketplaceStrip />
               <HelpCta />
