@@ -105,15 +105,6 @@ const SupportPage = ({ initialTab = 'contact', onBack }) => {
 
             <div className="contact-grid">
               <div className="contact-info-cards">
-                <div className="contact-card">
-                  <div className="contact-icon"><Phone size={24} /></div>
-                  <div className="contact-details">
-                    <h3>Customer Care</h3>
-                    <p>+91-9057607030</p>
-                    <span>Mon-Sat, 10:00 AM to 6:00 PM</span>
-                  </div>
-                </div>
-
                 <div 
                   className="contact-card" 
                   onClick={() => {
@@ -126,19 +117,19 @@ const SupportPage = ({ initialTab = 'contact', onBack }) => {
                   <div className="contact-icon" style={{ backgroundColor: '#25D366', color: '#fff' }}><MessageSquare size={24} /></div>
                   <div className="contact-details">
                     <h3>WhatsApp Support</h3>
-                    <p style={{ color: '#25D366', fontWeight: 'bold' }}>💬 Live Chat Online</p>
-                    <span>Click to connect instantly!</span>
+                    <p style={{ color: '#25D366', fontWeight: 'bold' }}>💬 +91 79769 79355</p>
+                    <span>Mon–Sat, 10 AM – 7 PM · tap to chat</span>
                   </div>
                 </div>
 
-                <div className="contact-card">
+                <a className="contact-card" href="mailto:help@purenutrix.in" style={{ textDecoration: 'none', color: 'inherit' }}>
                   <div className="contact-icon"><Mail size={24} /></div>
                   <div className="contact-details">
                     <h3>Email Support</h3>
-                    <p>help@purenutrix.com</p>
+                    <p>help@purenutrix.in</p>
                     <span>We typically reply within 24 hours</span>
                   </div>
-                </div>
+                </a>
 
                 <div className="contact-card">
                   <div className="contact-icon"><MapPin size={24} /></div>
@@ -227,7 +218,7 @@ const SupportPage = ({ initialTab = 'contact', onBack }) => {
               </button>
 
               <div className="track-help">
-                <p>Having trouble tracking? Reach out to us at <strong>help@purenutrix.com</strong> with your Order ID.</p>
+                <p>Having trouble tracking? Reach out to us at <strong>help@purenutrix.in</strong> with your Order ID.</p>
               </div>
             </div>
           </motion.div>
