@@ -119,51 +119,268 @@ function runInBackground(task: Promise<unknown>) {
   return rt?.waitUntil ? Promise.resolve() : task;
 }
 
-async function sendAutoReply(token: string, phoneId: string, phone: string, messageBody: string) {
-  // Check if admin has replied to this user recently
-  const { data: recentOutbound } = await supabase
-    .from('whatsapp_messages')
-    .select('created_at')
-    .eq('contact_phone', phone)
-    .eq('direction', 'outbound')
-    .order('created_at', { ascending: false })
-    .limit(1);
+// ─── Menu bot ───────────────────────────────────────────────────────────────
+// A customer who says hi / menu (or writes after 12 quiet hours) gets a WhatsApp
+// list menu. Menu taps are answered automatically; "Talk to our team" pauses the
+// bot for that customer and alerts the owner, who then chats from the CRM.
+// All replies are free-form service messages inside the customer's 24h window.
 
-  let shouldReply = false;
-  if (!recentOutbound || recentOutbound.length === 0) {
-    // First time customer is messaging us, or we've never replied
-    shouldReply = true;
-  } else {
-    const hoursSinceLastReply = (Date.now() - new Date(recentOutbound[0].created_at).getTime()) / (1000 * 60 * 60);
-    // If admin hasn't replied in the last 24 hours, send auto-reply again
-    if (hoursSinceLastReply > 24) shouldReply = true;
-  }
-  if (!shouldReply) return;
+const SITE = 'https://purenutrix.in';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const BOT_PAUSE_HOURS = 12;
+// "Hi", "menu", or a short greeting line like "Hi! I want to know about liposomal glutathione".
+const GREETING = /^\s*(hi+|hello+|hey+|helo|namaste|namaskar|menu|start|help|main menu|options?|hlo|hy)\b[^?\n]{0,70}$/i;
+const STOP_WORDS = /^\s*(stop|unsubscribe|stop offers|band|band karo)\s*$/i;
+const START_WORDS = /^\s*(start|subscribe|start offers)\s*$/i;
 
-  let replyText = `Thanks for messaging Pure-Nutrix! We have received your message and will get back to you shortly.`;
-  // Simple keyword trigger
-  const lower = messageBody.toLowerCase();
-  if (lower.includes('order') || lower.includes('track')) {
-    replyText = `To track your order, please visit our website and check the My Account section, or provide your Order ID here.`;
-  }
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Order received ✅', processing: 'Being packed 📦', shipped: 'Shipped 🚚',
+  out_for_delivery: 'Out for delivery 🛵', delivered: 'Delivered 🎉', cancelled: 'Cancelled ❌', returned: 'Returned ↩️',
+};
 
-  const res = await fetch(`${GRAPH}/${phoneId}/messages`, {
+const inr = (n: unknown) => `₹${Math.round(Number(n || 0)).toLocaleString('en-IN')}`;
+const cut = (s: string, n: number) => (s.length <= n ? s : s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…');
+export const shortProductName = (name: unknown) =>
+  String(name ?? '').replace(/^Pure\s*Nutrix\s+/i, '').split(/\s+\|\s+/)[0].split(/\s+[–—]\s+|\s*\(/)[0].trim() || String(name ?? '').trim();
+export function orderItemsText(productName: unknown) {
+  const base = String(productName ?? '').replace(/\s+\|\s+(COD|Prepaid|Coupon\b.*)$/i, '').trim();
+  return base.split(/,\s*(?=\d+x\s)/).map((part) => {
+    const bogo = part.trim().match(/^(\d+)x\s+(.+?)\s*\(\+\s*(\d+)x\s+Free BOGO\)$/i);
+    if (bogo) { const n = shortProductName(bogo[2]); return `${bogo[1]}x ${n} + ${bogo[3]}x ${n} FREE`; }
+    const plain = part.trim().match(/^(\d+)x\s+(.+)$/);
+    return plain ? `${plain[1]}x ${shortProductName(plain[2])}` : part.trim();
+  }).join(', ');
+}
+
+type Wa = { token: string; phoneId: string; phone: string };
+
+async function waSend(wa: Wa, payload: Record<string, unknown>, logText: string) {
+  const res = await fetch(`${GRAPH}/${wa.phoneId}/messages`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messaging_product: "whatsapp", to: phone, type: "text", text: { body: replyText } }),
+    headers: { Authorization: `Bearer ${wa.token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messaging_product: 'whatsapp', to: wa.phone, ...payload }),
   });
   const sent = await res.json().catch(() => ({}));
-
-  // Log the outbound auto-reply in DB (with its id so delivery ticks work)
+  if (!res.ok) console.error('bot send failed', res.status, JSON.stringify(sent?.error || sent).slice(0, 300));
   const { error } = await supabase.from('whatsapp_messages').insert({
-    contact_phone: phone,
-    direction: 'outbound',
-    message_body: replyText,
-    message_type: 'text',
-    status: res.ok ? 'sent' : 'failed',
+    contact_phone: wa.phone, direction: 'outbound', message_type: 'bot',
+    message_body: `🤖 ${logText}`, status: res.ok ? 'sent' : 'failed',
     meta_message_id: sent?.messages?.[0]?.id || null,
   });
-  if (error) console.error('auto-reply log insert failed:', error.message);
+  if (error) console.error('bot log insert failed:', error.message);
+  return res.ok;
+}
+
+const text = (wa: Wa, body: string) => waSend(wa, { type: 'text', text: { body: body.slice(0, 4000), preview_url: true } }, body);
+
+function buttons(wa: Wa, body: string, btns: { id: string; title: string }[]) {
+  return waSend(wa, {
+    type: 'interactive',
+    interactive: {
+      type: 'button',
+      body: { text: body.slice(0, 1024) },
+      action: { buttons: btns.slice(0, 3).map((b) => ({ type: 'reply', reply: { id: b.id, title: cut(b.title, 20) } })) },
+    },
+  }, `${body}\n[${btns.map((b) => b.title).join(' | ')}]`);
+}
+
+async function botSettings() {
+  const { data } = await supabase.from('whatsapp_bot_settings').select('*').eq('id', 1).maybeSingle();
+  return data || { enabled: true, welcome_text: 'Welcome to Pure Nutrix 🌿 Please choose an option below 👇', offer_text: '', support_hours: '10 AM – 7 PM' };
+}
+
+async function sendMenu(wa: Wa, cfg: any, name?: string) {
+  const first = String(name || '').trim().split(/\s+/)[0];
+  const hello = first && /[a-z]/i.test(first) ? `Hi ${first.charAt(0).toUpperCase() + first.slice(1).toLowerCase()}! ` : 'Hi! ';
+  const rows = [
+    { id: 'm:products', title: 'Products & Price', description: 'See all products, prices and buy in 1 tap' },
+    { id: 'm:offer', title: "Today's Offer", description: 'Current offers and coupon code' },
+    { id: 'm:track', title: 'Track My Order', description: 'Status of your order on this number' },
+    { id: 'm:order_help', title: 'Order Help', description: 'Payment, delivery, change or cancel an order' },
+    { id: 'm:product_help', title: 'Product Info & Use', description: 'How to take, lab report, details' },
+    { id: 'm:talk', title: 'Talk to Our Team', description: `Chat with a person (${cut(cfg.support_hours || '', 40)})` },
+  ];
+  const body = `${hello}${cfg.welcome_text}`;
+  return waSend(wa, {
+    type: 'interactive',
+    interactive: {
+      type: 'list',
+      header: { type: 'text', text: 'Pure Nutrix' },
+      body: { text: body.slice(0, 1024) },
+      footer: { text: 'Type MENU anytime to see this again' },
+      action: { button: 'Open menu', sections: [{ title: 'How can we help?', rows }] },
+    },
+  }, `${body}\n[Menu: ${rows.map((r) => r.title).join(' | ')}]`);
+}
+
+async function products() {
+  const { data } = await supabase.from('products')
+    .select('id, name, slug, price, original_price, image_urls, short_description, usage_instructions, stock')
+    .not('slug', 'is', null).order('created_at', { ascending: true }).limit(10);
+  return data || [];
+}
+
+async function sendProductList(wa: Wa, mode: 'buy' | 'info') {
+  const list = await products();
+  if (!list.length) return text(wa, `Please see all our products here: ${SITE}/products`);
+  const rows = list.map((p: any) => ({
+    id: `${mode}:${p.slug}`.slice(0, 200),
+    title: cut(shortProductName(p.name), 24),
+    description: cut(`${inr(p.price)}${Number(p.original_price) > Number(p.price) ? ` (MRP ${inr(p.original_price)})` : ''} · Buy 1 Get 1 FREE`, 72),
+  }));
+  const body = mode === 'buy'
+    ? 'Every product comes with Buy 1 Get 1 FREE 🎁 Pick a product to see details and order:'
+    : 'Pick a product to see how to take it and its lab report:';
+  return waSend(wa, {
+    type: 'interactive',
+    interactive: {
+      type: 'list',
+      body: { text: body },
+      footer: { text: 'Type MENU for the main menu' },
+      action: { button: 'Choose product', sections: [{ title: 'Our products', rows }] },
+    },
+  }, `${body}\n[${rows.map((r: any) => r.title).join(' | ')}]`);
+}
+
+async function labLink(p: any) {
+  const { data } = await supabase.from('lab_reports').select('slug, product_name, file_path, is_active').eq('is_active', true);
+  const hit = (data || []).find((r: any) => r.file_path && (String(p.slug).startsWith(r.slug) || String(p.name).toLowerCase().includes(String(r.product_name).toLowerCase())));
+  return hit ? `${SITE}/lab-report/${hit.slug}` : null;
+}
+
+async function sendProductCard(wa: Wa, slug: string) {
+  const { data: p } = await supabase.from('products').select('*').eq('slug', slug).maybeSingle();
+  if (!p) return sendProductList(wa, 'buy');
+  const name = shortProductName(p.name);
+  const mrp = Number(p.original_price) > Number(p.price) ? ` ~${inr(p.original_price)}~` : '';
+  const desc = String(p.short_description || '').replace(/<[^>]+>/g, '').trim();
+  const lab = await labLink(p);
+  const body = [
+    `*${name}*`,
+    `Price: *${inr(p.price)}*${mrp}`,
+    '🎁 Buy 1 Get 1 FREE — you get 2 packs for this price.',
+    desc ? cut(desc, 300) : '',
+    lab ? `🧪 Lab report: ${lab}` : '',
+    'Use code PUREJOY10 for extra 10% off at checkout.',
+  ].filter(Boolean).join('\n');
+  const img = Array.isArray(p.image_urls) && p.image_urls[0] && /^https:\/\//.test(p.image_urls[0]) ? p.image_urls[0] : null;
+  return waSend(wa, {
+    type: 'interactive',
+    interactive: {
+      type: 'cta_url',
+      ...(img ? { header: { type: 'image', image: { link: img } } } : {}),
+      body: { text: body.slice(0, 1024) },
+      footer: { text: 'Cash on Delivery available · Type MENU for more' },
+      action: { name: 'cta_url', parameters: { display_text: 'Buy Now', url: `${SITE}/buy/${p.slug}?utm_source=whatsapp&utm_medium=bot` } },
+    },
+  }, `${body}\n[Buy Now → ${SITE}/buy/${p.slug}]`);
+}
+
+async function sendProductInfo(wa: Wa, slug: string) {
+  const { data: p } = await supabase.from('products').select('*').eq('slug', slug).maybeSingle();
+  if (!p) return sendProductList(wa, 'info');
+  const use = String(p.usage_instructions || '').replace(/<[^>]+>/g, '').trim();
+  const lab = await labLink(p);
+  const body = [
+    `*${shortProductName(p.name)}*`,
+    use ? `How to take: ${cut(use, 500)}` : 'How to take: please follow the directions on the label.',
+    lab ? `🧪 Lab report: ${lab}` : '',
+    `Full details: ${SITE}/product/${p.slug}`,
+    'For medical conditions, pregnancy or medicines, please ask your doctor before use.',
+  ].filter(Boolean).join('\n\n');
+  return buttons(wa, body, [{ id: `buy:${p.slug}`, title: 'Buy this' }, { id: 'm:talk', title: 'Ask a question' }, { id: 'menu', title: 'Main menu' }]);
+}
+
+async function sendTracking(wa: Wa) {
+  const last10 = wa.phone.replace(/\D/g, '').slice(-10);
+  const { data } = await supabase.from('orders')
+    .select('id, status, price, product_name, created_at')
+    .like('customer_mobile', `%${last10}`)
+    .order('created_at', { ascending: false }).limit(3);
+  if (!data?.length) {
+    return buttons(wa, `We couldn't find an order on this WhatsApp number (+91 ${last10}).\n\nIf you ordered with another number, please send your Order ID here and our team will check.`,
+      [{ id: 'm:talk', title: 'Talk to our team' }, { id: 'm:products', title: 'See products' }, { id: 'menu', title: 'Main menu' }]);
+  }
+  const lines = data.map((o: any) => {
+    const st = STATUS_LABEL[String(o.status || 'pending').toLowerCase()] || String(o.status || '');
+    const when = new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' });
+    return `🧾 *#${String(o.id).split('-')[0].toUpperCase()}* · ${when}\n${cut(orderItemsText(o.product_name), 160)}\n${inr(o.price)} · *${st}*`;
+  });
+  const body = `Your recent orders:\n\n${lines.join('\n\n')}\n\nOrders are dispatched from Jaipur within 24–48 hours. We send a WhatsApp update when your order is shipped and delivered.`;
+  return buttons(wa, body, [{ id: 'm:order_help', title: 'Order help' }, { id: 'm:talk', title: 'Talk to our team' }, { id: 'menu', title: 'Main menu' }]);
+}
+
+function sendOrderHelp(wa: Wa) {
+  const body = [
+    '*Order help*',
+    '💳 Payment: pay online (UPI / cards) or Cash on Delivery (+₹19).',
+    '🚚 Delivery: dispatched from Jaipur within 24–48 hours; metro cities 2–5 days, rest of India 5–7 days after dispatch.',
+    '✏️ Change or cancel: tap "Talk to our team" and send your Order ID before the order is shipped.',
+    '📦 Damaged / wrong / expired product: tell us within 48 hours of delivery with an unboxing video. Policy: ' + `${SITE}/legal`,
+  ].join('\n\n');
+  return buttons(wa, body, [{ id: 'm:track', title: 'Track my order' }, { id: 'm:talk', title: 'Talk to our team' }, { id: 'menu', title: 'Main menu' }]);
+}
+
+function sendOffer(wa: Wa, cfg: any) {
+  const body = `*Today's offer*\n\n${cfg.offer_text || 'Buy 1 Get 1 FREE on every product.'}\n\nShop: ${SITE}/products?utm_source=whatsapp&utm_medium=bot`;
+  return buttons(wa, body, [{ id: 'm:products', title: 'See products' }, { id: 'm:talk', title: 'Talk to our team' }, { id: 'menu', title: 'Main menu' }]);
+}
+
+async function handOff(wa: Wa, cfg: any, inboundId: string) {
+  await supabase.from('whatsapp_contacts')
+    .update({ bot_paused_until: new Date(Date.now() + BOT_PAUSE_HOURS * 3600e3).toISOString() })
+    .eq('phone_number', wa.phone);
+  // Alert the owner's phone (menu taps don't alert by themselves).
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/notify-new-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${supabaseKey}` },
+      body: JSON.stringify({ inbound_message_id: inboundId }),
+    });
+  } catch (e) { console.error('handoff alert failed', e); }
+  return text(wa, `Sure 🙂 Please type your question here. Our team will reply soon (${cfg.support_hours}).\n\nType MENU anytime to see the options again.`);
+}
+
+/** Returns true if the bot answered. */
+async function runBot(token: string, phoneId: string, phone: string, message: any, parsed: { type: string; body: string }, contactName: string, inboundId: string) {
+  const cfg = await botSettings();
+  if (!cfg.enabled) return false;
+  const wa: Wa = { token, phoneId, phone };
+
+  const replyId: string = message.interactive?.list_reply?.id || message.interactive?.button_reply?.id || '';
+  if (replyId) {
+    if (replyId === 'menu') return sendMenu(wa, cfg);
+    if (replyId === 'm:products') return sendProductList(wa, 'buy');
+    if (replyId === 'm:product_help') return sendProductList(wa, 'info');
+    if (replyId === 'm:offer') return sendOffer(wa, cfg);
+    if (replyId === 'm:track') return sendTracking(wa);
+    if (replyId === 'm:order_help') return sendOrderHelp(wa);
+    if (replyId === 'm:talk') return handOff(wa, cfg, inboundId);
+    if (replyId.startsWith('buy:')) return sendProductCard(wa, replyId.slice(4));
+    if (replyId.startsWith('info:')) return sendProductInfo(wa, replyId.slice(5));
+    return false;
+  }
+
+  if (parsed.type !== 'text') return false;
+  const body = parsed.body.trim();
+  if (STOP_WORDS.test(body)) return text(wa, 'Done ✅ You will not get offer messages from us any more. Order updates will still come. Reply START to get offers again.');
+  if (START_WORDS.test(body)) { await text(wa, 'Thank you 🙏 You will now get our offers on WhatsApp. Reply STOP anytime to stop.'); return sendMenu(wa, cfg, contactName); }
+
+  const askedMenu = GREETING.test(body);
+  if (!askedMenu) {
+    // Only greet unprompted when the chat was quiet for 12 hours and no person is handling it.
+    const { data: c } = await supabase.from('whatsapp_contacts').select('bot_paused_until').eq('phone_number', phone).maybeSingle();
+    if (c?.bot_paused_until && new Date(c.bot_paused_until).getTime() > Date.now()) return false;
+    const since = new Date(Date.now() - BOT_PAUSE_HOURS * 3600e3).toISOString();
+    const { data: recent } = await supabase.from('whatsapp_messages').select('id')
+      .eq('contact_phone', phone).neq('id', inboundId).gte('created_at', since).limit(1);
+    if (recent?.length) return false;
+    if (/\b(track|status|where is my order|order kab|kab aayega)\b/i.test(body)) return sendTracking(wa);
+  } else {
+    // Customer asked for the menu: bot takes over again.
+    await supabase.from('whatsapp_contacts').update({ bot_paused_until: null }).eq('phone_number', phone);
+  }
+  return sendMenu(wa, cfg, contactName);
 }
 
 async function handleIncomingMessage(message: any, contact: any, settings: any) {
@@ -233,9 +450,13 @@ async function handleIncomingMessage(message: any, contact: any, settings: any) 
     })());
   }
 
-  // Auto-reply Logic (Simple Chatbot with 24-hour cooldown). Reactions don't need a reply.
+  // Menu bot. Reactions don't need a reply.
   if (WHATSAPP_TOKEN && WHATSAPP_PHONE_ID && parsed.type !== 'reaction') {
-    await sendAutoReply(WHATSAPP_TOKEN, WHATSAPP_PHONE_ID, phone_number, parsed.body);
+    try {
+      await runBot(WHATSAPP_TOKEN, WHATSAPP_PHONE_ID, phone_number, message, parsed, contact_name, insertedId);
+    } catch (err) {
+      console.error('bot failed:', (err as Error).message);
+    }
   }
 }
 
