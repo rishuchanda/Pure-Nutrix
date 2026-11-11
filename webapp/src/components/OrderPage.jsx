@@ -394,6 +394,7 @@ const OrderPage = ({ product, cartItems, onBack, onOrderPlaced }) => {
                 subject: `Order Confirmed: ${messageItems}`,
                 html: `
                   <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <img src="https://purenutrix.in/assets/logo.png" alt="Pure Nutrix" width="160" style="display:block;margin:0 auto 12px;height:auto" />
                     <h2 style="color: #D4AF37;">Pure Nutrix Order Confirmation</h2>
                     <p>Hi ${formData.name},</p>
                     <p>Thank you for your order! We have successfully received it and are preparing it for shipment.</p>

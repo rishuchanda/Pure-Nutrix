@@ -310,15 +310,154 @@ async function sendTracking(wa: Wa) {
   return buttons(wa, body, [{ id: 'm:order_help', title: 'Order help' }, { id: 'm:talk', title: 'Talk to our team' }, { id: 'menu', title: 'Main menu' }]);
 }
 
+const shortOrderId = (id: string) => String(id).split('-')[0].toUpperCase();
+
 function sendOrderHelp(wa: Wa) {
-  const body = [
-    '*Order help*',
-    '💳 Payment: pay online (UPI / cards) or Cash on Delivery (+₹19).',
-    '🚚 Delivery: dispatched from Jaipur within 24–48 hours; metro cities 2–5 days, rest of India 5–7 days after dispatch.',
-    '✏️ Change or cancel: tap "Talk to our team" and send your Order ID before the order is shipped.',
-    '📦 Damaged / wrong / expired product: tell us within 48 hours of delivery with an unboxing video. Policy: ' + `${SITE}/legal`,
-  ].join('\n\n');
-  return buttons(wa, body, [{ id: 'm:track', title: 'Track my order' }, { id: 'm:talk', title: 'Talk to our team' }, { id: 'menu', title: 'Main menu' }]);
+  const rows = [
+    { id: 'oh:cancel', title: 'Cancel my order', description: 'Cancel an order that is not shipped yet' },
+    { id: 'oh:change', title: 'Change address / phone', description: 'Update delivery details before dispatch' },
+    { id: 'oh:damage', title: 'Damaged / wrong item', description: 'Damaged, wrong or expired product received' },
+    { id: 'm:track', title: 'Track my order', description: 'Where is my order?' },
+    { id: 'oh:payment', title: 'Payment / COD', description: 'Online payment, Cash on Delivery, refunds' },
+    { id: 'oh:delivery', title: 'Delivery time', description: 'When will my order arrive?' },
+    { id: 'm:talk', title: 'Talk to our team', description: 'Something else — chat with a person' },
+  ];
+  const body = 'How can we help with your order? Choose an option 👇';
+  return waSend(wa, {
+    type: 'interactive',
+    interactive: {
+      type: 'list',
+      body: { text: body },
+      footer: { text: 'Type MENU for the main menu' },
+      action: { button: 'Order options', sections: [{ title: 'Order help', rows }] },
+    },
+  }, `${body}\n[${rows.map((r) => r.title).join(' | ')}]`);
+}
+
+const orderBtns = [{ id: 'm:order_help', title: 'Order help' }, { id: 'm:talk', title: 'Talk to our team' }, { id: 'menu', title: 'Main menu' }];
+
+async function recentOrders(wa: Wa, limit = 5) {
+  const last10 = wa.phone.replace(/\D/g, '').slice(-10);
+  const { data } = await supabase.from('orders')
+    .select('id, status, price, product_name, created_at, cancel_requested_at')
+    .like('customer_mobile', `%${last10}`)
+    .order('created_at', { ascending: false }).limit(limit);
+  return data || [];
+}
+
+async function sendCancelOptions(wa: Wa) {
+  const orders = await recentOrders(wa);
+  const open = orders.filter((o: any) => ['pending', 'processing'].includes(String(o.status || 'pending').toLowerCase()));
+  if (!open.length) {
+    const shipped = orders.find((o: any) => ['shipped', 'out_for_delivery'].includes(String(o.status || '').toLowerCase()));
+    const body = orders.length === 0
+      ? `We couldn't find an order on this number (+91 ${wa.phone.slice(-10)}). If you ordered with another number, tap "Talk to our team" and send your Order ID.`
+      : shipped
+        ? `Your order #${shortOrderId(shipped.id)} is already shipped, so it can't be cancelled now. If you don't want it, please talk to our team.`
+        : 'There is no order on this number that can still be cancelled.';
+    return buttons(wa, body, [{ id: 'm:talk', title: 'Talk to our team' }, { id: 'm:track', title: 'Track my order' }, { id: 'menu', title: 'Main menu' }]);
+  }
+  const asked = open.filter((o: any) => o.cancel_requested_at);
+  if (asked.length === open.length) {
+    return buttons(wa, `Your cancel request for order #${shortOrderId(asked[0].id)} is already with our team. They will confirm on WhatsApp soon.`, [{ id: 'm:talk', title: 'Talk to our team' }, { id: 'menu', title: 'Main menu' }]);
+  }
+  if (open.length === 1) return confirmCancel(wa, open[0]);
+  const rows = open.slice(0, 10).map((o: any) => ({
+    id: `cx:${o.id}`,
+    title: cut(`#${shortOrderId(o.id)} · ${inr(o.price)}`, 24),
+    description: cut(orderItemsText(o.product_name), 72),
+  }));
+  return waSend(wa, {
+    type: 'interactive',
+    interactive: {
+      type: 'list',
+      body: { text: 'Which order do you want to cancel?' },
+      action: { button: 'Choose order', sections: [{ title: 'Orders not shipped yet', rows }] },
+    },
+  }, `Which order do you want to cancel?\n[${rows.map((r: any) => r.title).join(' | ')}]`);
+}
+
+async function confirmCancel(wa: Wa, o: any) {
+  const body = `Cancel this order?\n\n🧾 *#${shortOrderId(o.id)}* · ${inr(o.price)}\n${cut(orderItemsText(o.product_name), 200)}`;
+  return buttons(wa, body, [{ id: `cxy:${o.id}`, title: 'Yes, cancel it' }, { id: 'cxn', title: 'No, keep it' }, { id: 'm:talk', title: 'Talk to our team' }]);
+}
+
+async function ownerAlert(inboundId: string, label: string) {
+  // Make the CRM inbox row readable, then ping the owner's phone.
+  await supabase.from('whatsapp_messages').update({ message_body: label }).eq('id', inboundId);
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/notify-new-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${supabaseKey}` },
+      body: JSON.stringify({ inbound_message_id: inboundId }),
+    });
+  } catch (e) { console.error('owner alert failed', e); }
+}
+
+async function pauseBot(phone: string) {
+  await supabase.from('whatsapp_contacts')
+    .update({ bot_paused_until: new Date(Date.now() + BOT_PAUSE_HOURS * 3600e3).toISOString() })
+    .eq('phone_number', phone);
+}
+
+async function requestCancel(wa: Wa, orderId: string, inboundId: string, cfg: any) {
+  const last10 = wa.phone.replace(/\D/g, '').slice(-10);
+  const { data: o } = await supabase.from('orders').select('id, status, price, product_name, customer_mobile')
+    .eq('id', orderId).like('customer_mobile', `%${last10}`).maybeSingle();
+  if (!o) return text(wa, "Sorry, we couldn't find that order on this number. Please tap Talk to our team.");
+  if (!['pending', 'processing'].includes(String(o.status || 'pending').toLowerCase())) {
+    return buttons(wa, `Order #${shortOrderId(o.id)} is already ${String(o.status).replace(/_/g, ' ')}, so it can't be cancelled here.`, orderBtns);
+  }
+  const { error } = await supabase.from('orders').update({ cancel_requested_at: new Date().toISOString() }).eq('id', o.id);
+  if (error) console.error('cancel request save failed:', error.message);
+  await pauseBot(wa.phone);
+  await ownerAlert(inboundId, `❌ Cancel request · Order #${shortOrderId(o.id)} · ${inr(o.price)}`);
+  return text(wa, `✅ Cancel request received for order #${shortOrderId(o.id)}.\n\nOur team will confirm the cancellation on WhatsApp soon (${cfg.support_hours}). If you paid online, the refund goes back to the same payment method.`);
+}
+
+async function requestChange(wa: Wa, inboundId: string, cfg: any) {
+  await pauseBot(wa.phone);
+  await ownerAlert(inboundId, '✏️ Wants to change address / phone');
+  return text(wa, `Sure ✏️ Please send here:\n1. Your Order ID (or the name on the order)\n2. The new address with PIN code, or the new phone number\n\nWe can change it before the order is shipped. Our team will confirm soon (${cfg.support_hours}).`);
+}
+
+async function requestDamage(wa: Wa, inboundId: string, cfg: any) {
+  await pauseBot(wa.phone);
+  await ownerAlert(inboundId, '📦 Damaged / wrong / expired item reported');
+  return text(wa, `Sorry about that 🙏 Please send here (or to help@purenutrix.in) within 48 hours of delivery:\n1. Your Order ID\n2. A clear unboxing video showing the problem and the shipping label\n3. Photos of the product\n\nOnce checked, we send a replacement, or a full refund if it is out of stock. Policy: ${SITE}/legal\nOur team will reply soon (${cfg.support_hours}).`);
+}
+
+function sendPaymentHelp(wa: Wa) {
+  return buttons(wa, '*Payment*\n\n💳 Pay online with UPI, cards or net banking (secure Razorpay checkout).\n💵 Cash on Delivery is available (+₹19).\n↩️ Refunds (only when an order is cancelled before dispatch, or for damaged/wrong items) go back to the same payment method in 5–7 business days.', orderBtns);
+}
+
+function sendDeliveryHelp(wa: Wa) {
+  return buttons(wa, '*Delivery time*\n\n📦 Dispatched from Jaipur within 24–48 hours (except Sundays and holidays).\n🏙️ Metro cities: 2–5 business days after dispatch.\n🇮🇳 Rest of India: 5–7 business days after dispatch.\n🚚 Free delivery above ₹499.\n\nWe send a WhatsApp update when your order ships and when it is delivered.', [{ id: 'm:track', title: 'Track my order' }, { id: 'm:talk', title: 'Talk to our team' }, { id: 'menu', title: 'Main menu' }]);
+}
+
+/** Free-text routing: order and product questions get the matching options. */
+async function routeText(wa: Wa, body: string, cfg: any): Promise<boolean | null> {
+  const t = body.toLowerCase();
+  if (/\b(cancel+|cancle|cancal|radd|rad karo|nahi chahiye)\b/.test(t)) { await sendCancelOptions(wa); return true; }
+  if (/\b(damage[d]?|broken|toota|tuta|tuti|wrong|galat|expired?|leak|return|refund|replace(ment)?)\b/.test(t)) {
+    await buttons(wa, 'Sorry to hear that 🙏 Is the product damaged, wrong or expired?', [{ id: 'oh:damage', title: 'Yes, report it' }, { id: 'm:order_help', title: 'Other order help' }, { id: 'm:talk', title: 'Talk to our team' }]);
+    return true;
+  }
+  if (/\b(address|pata|pin ?code|change|badal)\b/.test(t)) { await buttons(wa, 'Do you want to change the delivery address or phone number of your order?', [{ id: 'oh:change', title: 'Yes, change it' }, { id: 'm:order_help', title: 'Other order help' }, { id: 'menu', title: 'Main menu' }]); return true; }
+  if (/\b(track|status|where is my order|kab aayega|kab ayega|kab milega|kaha hai|abhi tak)\b/.test(t)) { await sendTracking(wa); return true; }
+  if (/\b(delivery|shipping|kitne din|how many days)\b/.test(t)) { await sendDeliveryHelp(wa); return true; }
+  if (/\b(order)\b/.test(t)) { await sendOrderHelp(wa); return true; }
+  const list = await products();
+  const GENERIC = new Set(['extract', 'capsules', 'capsule', 'vitamin', 'advanced', 'juice', 'with', 'himalayan', 'ultra', 'root', 'acid']);
+  const hit = list.find((p: any) => shortProductName(p.name).toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/[\s-]+/)
+    .filter((w: string) => w.length > 4 && !/^\d/.test(w) && !GENERIC.has(w)).some((w: string) => t.includes(w)));
+  if (hit) {
+    await buttons(wa, `*${shortProductName(hit.name)}* — ${inr(hit.price)} · Buy 1 Get 1 FREE.\nWhat would you like to know?`, [{ id: `buy:${hit.slug}`, title: 'Price & buy' }, { id: `info:${hit.slug}`, title: 'How to take' }, { id: 'm:talk', title: 'Ask a question' }]);
+    return true;
+  }
+  if (/\b(price|rate|kitne|kitna|cost|mrp|product|buy|kharid)/.test(t)) { await sendProductList(wa, 'buy'); return true; }
+  if (/\b(offer|discount|coupon|code|sale)\b/.test(t)) { await sendOffer(wa, cfg); return true; }
+  return null;
 }
 
 function sendOffer(wa: Wa, cfg: any) {
@@ -355,6 +494,17 @@ async function runBot(token: string, phoneId: string, phone: string, message: an
     if (replyId === 'm:offer') return sendOffer(wa, cfg);
     if (replyId === 'm:track') return sendTracking(wa);
     if (replyId === 'm:order_help') return sendOrderHelp(wa);
+    if (replyId === 'oh:cancel') return sendCancelOptions(wa);
+    if (replyId === 'oh:change') return requestChange(wa, inboundId, cfg);
+    if (replyId === 'oh:damage') return requestDamage(wa, inboundId, cfg);
+    if (replyId === 'oh:payment') return sendPaymentHelp(wa);
+    if (replyId === 'oh:delivery') return sendDeliveryHelp(wa);
+    if (replyId === 'cxn') return buttons(wa, 'No problem 👍 Your order stays as it is.', orderBtns);
+    if (replyId.startsWith('cx:')) {
+      const o = (await recentOrders(wa, 10)).find((x: any) => x.id === replyId.slice(3));
+      return o ? confirmCancel(wa, o) : sendCancelOptions(wa);
+    }
+    if (replyId.startsWith('cxy:')) return requestCancel(wa, replyId.slice(4), inboundId, cfg);
     if (replyId === 'm:talk') return handOff(wa, cfg, inboundId);
     if (replyId.startsWith('buy:')) return sendProductCard(wa, replyId.slice(4));
     if (replyId.startsWith('info:')) return sendProductInfo(wa, replyId.slice(5));
@@ -374,8 +524,10 @@ async function runBot(token: string, phoneId: string, phone: string, message: an
     const since = new Date(Date.now() - BOT_PAUSE_HOURS * 3600e3).toISOString();
     const { data: recent } = await supabase.from('whatsapp_messages').select('id')
       .eq('contact_phone', phone).neq('id', inboundId).gte('created_at', since).limit(1);
+    // Order / product questions get matching options even in an ongoing chat.
+    const routed = await routeText(wa, body, cfg);
+    if (routed) return true;
     if (recent?.length) return false;
-    if (/\b(track|status|where is my order|order kab|kab aayega)\b/i.test(body)) return sendTracking(wa);
   } else {
     // Customer asked for the menu: bot takes over again.
     await supabase.from('whatsapp_contacts').update({ bot_paused_until: null }).eq('phone_number', phone);

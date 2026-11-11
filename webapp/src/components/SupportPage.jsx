@@ -117,7 +117,7 @@ const SupportPage = ({ initialTab = 'contact', onBack }) => {
                 <div 
                   className="contact-card" 
                   onClick={() => {
-                    const target = atob('OTE5MDU3NjA3MDMw');
+                    const target = '917976979355'; // CRM WhatsApp number (menu bot)
                     window.open(`https://wa.me/${target}?text=${encodeURIComponent('Hi Pure Nutrix Support! I have a question.')}`, '_blank');
                   }}
                   style={{ cursor: 'pointer', borderColor: '#25D366', transition: 'transform 0.2s, box-shadow 0.2s' }}

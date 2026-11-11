@@ -40,6 +40,13 @@ export const OrderCard = ({ order: o, onStatus, readOnly, compact }) => {
         <span className={`ax-chip tone-${st.tone}`}>{st.label}</span>
       </header>
 
+      {o.cancel_requested_at && !isLost(o) && (
+        <div className="ax-cancel-req" role="status">
+          ❌ Customer asked to cancel on WhatsApp · {fmtDate(o.cancel_requested_at, true)}
+          {!readOnly && <button type="button" onClick={() => change('cancelled')} disabled={busy}>Cancel order</button>}
+        </div>
+      )}
+
       <div className="ax-order-body">
         {o.image && <img src={o.image} alt="" loading="lazy" />}
         <div className="ax-order-info">

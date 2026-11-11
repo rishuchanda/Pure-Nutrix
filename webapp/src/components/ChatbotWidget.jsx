@@ -38,8 +38,8 @@ const ChatbotWidget = ({ phoneNumber, defaultMessage }) => {
   }, [messages, isOpen]);
 
   const handleOpenWhatsApp = () => {
-    // Uses personal WhatsApp number via obfuscated base64 string until official API is verified
-    const targetPhone = phoneNumber || atob('OTE5MDU3NjA3MDMw');
+    // CRM WhatsApp (API) number, so the menu bot answers.
+    const targetPhone = phoneNumber || '917976979355';
     const encodedMessage = encodeURIComponent(defaultMessage || "Hi, I need help with my Pure-Nutrix order.");
     window.open(`https://wa.me/${targetPhone}?text=${encodedMessage}`, '_blank');
   };
