@@ -351,6 +351,7 @@ async function handleOrder(orderId: string) {
   try { whatsapp = await whatsappOrderConfirmation(o); } catch (e) { console.error('whatsapp confirmation', e); whatsapp = 'error'; }
 
   const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111">
+    <img src="${SITE}/assets/logo.png" alt="Pure Nutrix" width="150" style="display:block;margin:0 0 12px;height:auto">
     <h2 style="margin:0 0 8px">New order — ${esc(inr(o.price))} (${esc(method)})</h2>
     <p style="margin:0 0 12px">${esc(new Date(o.created_at || Date.now()).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))}</p>
     <table cellpadding="6" style="border-collapse:collapse">
