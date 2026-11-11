@@ -339,6 +339,13 @@ const OrderPage = ({ product, cartItems, onBack }) => {
         return `${qty}x ${item.product.name} (+ ${qty}x Free BOGO)`;
       }).join(', ');
       const finalProductName = itemNames;
+      // For the customer's email: name the free product instead of "Free BOGO".
+      const shortName = (n) => String(n || '').replace(/^Pure\s*Nutrix\s+/i, '').split(/\s+\|\s+/)[0].split(/\s+[–—]\s+|\s*\(/)[0].trim() || n;
+      const messageItems = orderItems.map(item => {
+        const qty = cartItems ? item.quantity : singleProductQty;
+        const n = shortName(item.product.name);
+        return `${qty}x ${n} + ${qty}x ${n} FREE`;
+      }).join(', ');
       
       // Use the first image from the first product as thumbnail
       const firstProductImage = orderItems.length > 0 ? (orderItems[0].product.image_urls || orderItems[0].product.images || [])[0] || '' : '';
@@ -384,7 +391,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
             await supabase.functions.invoke('send-email', {
               body: {
                 to: user.email,
-                subject: `Order Confirmed: ${finalProductName}`,
+                subject: `Order Confirmed: ${messageItems}`,
                 html: `
                   <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                     <h2 style="color: #D4AF37;">Pure Nutrix Order Confirmation</h2>
@@ -392,7 +399,7 @@ const OrderPage = ({ product, cartItems, onBack }) => {
                     <p>Thank you for your order! We have successfully received it and are preparing it for shipment.</p>
                     <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
                       <strong>Order Details:</strong><br/>
-                      Items: ${finalProductName}<br/>
+                      Items: ${messageItems}<br/>
                       ${appliedCoupon ? `Coupon: ${appliedCoupon.code} (-₹${discountAmount})<br/>` : ''}
                       Total Amount: ₹${finalTotal}<br/>
                       Shipping Address: ${addressString}
