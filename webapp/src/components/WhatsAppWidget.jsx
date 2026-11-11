@@ -4,8 +4,8 @@ import { MessageCircle } from 'lucide-react';
 import './WhatsAppWidget.css';
 
 const WhatsAppWidget = ({ phoneNumber, message }) => {
-  // Obfuscated personal WhatsApp number fallback until official API is verified
-  const defaultPhone = atob('OTE5MDU3NjA3MDMw'); 
+  // CRM WhatsApp (API) number, so the menu bot answers.
+  const defaultPhone = '917976979355';
   const defaultMessage = 'Hi Pure-Nutrix! I would like to know more about your products.';
 
   const targetPhone = phoneNumber || defaultPhone;

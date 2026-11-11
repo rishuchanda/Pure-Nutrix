@@ -13,7 +13,7 @@ import './AccountPage.css';
 // my products (how to take + lab report), my reviews, addresses, profile.
 // Everything shown here is real data from Supabase — no placeholder features.
 
-const WA_NUMBER = '919057607030';
+const WA_NUMBER = '917976979355'; // CRM WhatsApp number (menu bot)
 const VIEWS = ['dashboard', 'orders', 'order', 'reviews', 'addresses', 'profile'];
 const STEPS = [
   { key: 'placed', label: 'Placed', icon: Check },
