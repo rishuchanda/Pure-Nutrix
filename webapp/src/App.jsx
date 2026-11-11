@@ -366,11 +366,11 @@ function App() {
       const fetchAndRedirect = async () => {
         try {
           const { data: phone, error } = await supabase.rpc('get_active_whatsapp_number');
-          const targetPhone = phone || atob('OTE5MDU3NjA3MDMw');
+          const targetPhone = phone || '917976979355' /* CRM (WhatsApp API) number */;
           window.location.replace(`https://wa.me/${targetPhone}?text=${encodeURIComponent(waHello())}`);
         } catch (err) {
           console.error('Redirect fallback to personal WhatsApp', err);
-          const targetPhone = atob('OTE5MDU3NjA3MDMw');
+          const targetPhone = '917976979355' /* CRM (WhatsApp API) number */;
           window.location.replace(`https://wa.me/${targetPhone}?text=${encodeURIComponent(waHello())}`);
         }
       };
