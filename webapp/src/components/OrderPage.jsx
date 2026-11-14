@@ -350,7 +350,8 @@ const OrderPage = ({ product, cartItems, onBack, onOrderPlaced }) => {
       // Use the first image from the first product as thumbnail
       const firstProductImage = orderItems.length > 0 ? (orderItems[0].product.image_urls || orderItems[0].product.images || [])[0] || '' : '';
       
-      const saveOrderToDB = async (user, addressString, finalProductName, firstProductImage) => {
+      // payInfo (online payments only): { razorpay_order_id, razorpay_payment_id, amountPaise }
+      const saveOrderToDB = async (user, addressString, finalProductName, firstProductImage, payInfo = null) => {
         const orderRow = {
           user_id: user.id,
           customer_name: formData.name,
@@ -361,8 +362,12 @@ const OrderPage = ({ product, cartItems, onBack, onOrderPlaced }) => {
           state: formData.state,
           pincode: formData.pincode,
           product_name: finalProductName,
-          price: finalTotal,
+          // Online: the amount Razorpay actually charged (worked out on the server).
+          price: payInfo && payInfo.amountPaise ? payInfo.amountPaise / 100 : finalTotal,
           qty: totalQuantity,
+          // Lets the server re-check the price (orders_check_price trigger).
+          items: orderItems.map(item => ({ id: item.product.id, qty: item.quantity })),
+          ...(payInfo ? { razorpay_order_id: payInfo.razorpay_order_id, razorpay_payment_id: payInfo.razorpay_payment_id } : {}),
           image: firstProductImage,
           status: 'Processing'
         };
@@ -452,7 +457,13 @@ const OrderPage = ({ product, cartItems, onBack, onOrderPlaced }) => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
               },
-              body: JSON.stringify({ amount: Math.round(finalTotal * 100), receipt: `rcpt_${Date.now()}_${attempt}` })
+              // The server prices the order from these items (amount is only a fallback).
+              body: JSON.stringify({
+                items: orderItems.map(item => ({ id: item.product.id, qty: item.quantity })),
+                coupon_code: appliedCoupon ? appliedCoupon.code : null,
+                amount: Math.round(finalTotal * 100),
+                receipt: `rcpt_${Date.now()}_${attempt}`,
+              })
             });
             orderData = await orderResponse.json();
             if (orderResponse.ok && orderData && orderData.id) {
@@ -505,7 +516,11 @@ const OrderPage = ({ product, cartItems, onBack, onOrderPlaced }) => {
             }
             
             // Payment verified! Proceed to save order.
-            await saveOrderToDB(user, addressString, finalProductName, firstProductImage);
+            await saveOrderToDB(user, addressString, finalProductName, firstProductImage, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              amountPaise: orderData.amount,
+            });
           },
           prefill: {
             name: formData.name,
