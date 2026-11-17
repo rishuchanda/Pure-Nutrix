@@ -14,13 +14,16 @@ class HttpError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status; }
 }
 
-// Media sending reads files from the private bucket, so only admins may use it.
+// Security (14 Nov 2026): every send needs an admin login (CRM) or the service
+// key (system calls, e.g. the welcome message after OTP login). Before, anyone
+// could send texts and paid templates from the business number.
 async function assertAdmin(req: Request) {
   const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  if (jwt && supabaseKey && jwt === supabaseKey) return; // system call
   const { data: { user }, error } = await supabase.auth.getUser(jwt);
-  if (error || !user) throw new HttpError(401, 'Please log in as an admin to send media');
+  if (error || !user) throw new HttpError(401, 'Please log in as an admin to send WhatsApp messages');
   const { data: role } = await supabase.from('admin_roles').select('id').eq('id', user.id).maybeSingle();
-  if (!role) throw new HttpError(403, 'Only admins can send media');
+  if (!role) throw new HttpError(403, 'Only admins can send WhatsApp messages');
 }
 
 // Uploads a file from our bucket to WhatsApp and returns the WhatsApp media id.
@@ -61,7 +64,7 @@ serve(async (req) => {
       media_path, media_kind, caption, filename,
     } = await req.json()
 
-    if (type === 'media') await assertAdmin(req);
+    await assertAdmin(req);
 
     // Fetch dynamic configuration from database
     const { data: settings, error: dbError } = await supabase.from('whatsapp_settings').select('*').eq('id', 1).single();
