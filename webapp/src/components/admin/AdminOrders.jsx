@@ -47,6 +47,15 @@ export const OrderCard = ({ order: o, onStatus, readOnly, compact }) => {
         </div>
       )}
 
+      {o.price_check && !isLost(o) && (
+        <div className="ax-cancel-req ax-price-check" role="alert">
+          ⚠️ Check before shipping: {o.price_check}. Match it with Razorpay / the customer first.
+        </div>
+      )}
+      {o.payment_verified && (
+        <div className="ax-paid-ok">✓ Online payment checked with Razorpay</div>
+      )}
+
       <div className="ax-order-body">
         {o.image && <img src={o.image} alt="" loading="lazy" />}
         <div className="ax-order-info">
