@@ -344,8 +344,9 @@ async function handleOrder(orderId: string) {
   if (!o) return json({ ok: true, skipped: 'already notified or not found' });
 
   const method = o.payment_method || (/\|\s*COD/i.test(o.product_name || '') ? 'COD' : 'Prepaid');
-  const title = `🛒 New order · ${inr(o.price)} · ${method}`;
-  const body = `${o.customer_name || 'Customer'}${o.city ? ` (${o.city})` : ''}: ${orderItemsText(o.product_name).slice(0, 140)}`;
+  const check = o.price_check ? `⚠️ CHECK: ${o.price_check}` : '';
+  const title = `${check ? '⚠️' : '🛒'} New order · ${inr(o.price)} · ${method}${o.payment_verified ? ' ✓' : ''}`;
+  const body = `${check ? check.slice(0, 90) + ' · ' : ''}${o.customer_name || 'Customer'}${o.city ? ` (${o.city})` : ''}: ${orderItemsText(o.product_name).slice(0, 140)}`;
   const push = await pushToAdmins({ title, body, url: '/admin', tag: `order-${o.id}` });
   let whatsapp = 'skipped';
   try { whatsapp = await whatsappOrderConfirmation(o); } catch (e) { console.error('whatsapp confirmation', e); whatsapp = 'error'; }
@@ -353,6 +354,8 @@ async function handleOrder(orderId: string) {
   const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111">
     <img src="${SITE}/assets/logo.png" alt="Pure Nutrix" width="150" style="display:block;margin:0 0 12px;height:auto">
     <h2 style="margin:0 0 8px">New order — ${esc(inr(o.price))} (${esc(method)})</h2>
+    ${check ? `<p style="margin:0 0 12px;padding:10px;background:#fff4e5;color:#9a3412;border-radius:8px"><b>${esc(check)}</b><br>Match it with Razorpay / the customer before shipping.</p>` : ''}
+    ${o.payment_verified ? '<p style="margin:0 0 12px;color:#166534"><b>✓ Online payment checked with Razorpay</b></p>' : ''}
     <p style="margin:0 0 12px">${esc(new Date(o.created_at || Date.now()).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))}</p>
     <table cellpadding="6" style="border-collapse:collapse">
       <tr><td><b>Customer</b></td><td>${esc(o.customer_name)} · ${esc(o.customer_mobile)}</td></tr>
@@ -363,7 +366,7 @@ async function handleOrder(orderId: string) {
     </table>
     <p><a href="${SITE}/admin" style="display:inline-block;padding:10px 16px;background:#111;color:#fff;border-radius:8px;text-decoration:none">Open admin</a></p>
   </div>`;
-  const email = await emailOwner(`New order ${inr(o.price)} (${method}) — ${o.customer_name || ''}`, html);
+  const email = await emailOwner(`${check ? '⚠️ CHECK — ' : ''}New order ${inr(o.price)} (${method}) — ${o.customer_name || ''}`, html);
   return json({ ok: true, push, email, whatsapp });
 }
 
