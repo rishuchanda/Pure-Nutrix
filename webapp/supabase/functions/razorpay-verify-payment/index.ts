@@ -1,4 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+// Security (14 Nov 2026): after the signature check, the payment is looked up
+// at Razorpay (amount, status, order) and saved in razorpay_payments. The
+// orders_check_price trigger then only trusts a "prepaid" order whose payment
+// is in that table, unused, and for the right amount.
+const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,7 +55,29 @@ serve(async (req) => {
     const expectedSignature = await generateHmacSha256(body, keySecret)
 
     if (expectedSignature === razorpay_signature) {
-      // Signature is valid
+      // Signature is valid: confirm amount and status with Razorpay itself.
+      const keyId = Deno.env.get('RAZORPAY_KEY_ID') ?? ''
+      const pr = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(razorpay_payment_id)}`, {
+        headers: { 'Authorization': `Basic ${btoa(`${keyId}:${keySecret}`)}` },
+      }).catch(() => null)
+      const looked = !!(pr && pr.ok)
+      const pay = looked ? await pr!.json().catch(() => ({})) : {}
+      if (looked && (pay.order_id !== razorpay_order_id || !['authorized', 'captured'].includes(pay.status))) {
+        return new Response(JSON.stringify({ error: 'Payment not completed' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      if (looked) {
+        const { error: saveErr } = await supabase.from('razorpay_payments').upsert({
+          razorpay_order_id, razorpay_payment_id, amount_paise: Number(pay.amount), status: pay.status,
+        }, { onConflict: 'razorpay_order_id', ignoreDuplicates: true })
+        if (saveErr) console.error('razorpay_payments save failed', saveErr)
+      } else {
+        // Razorpay lookup failed (network): don't lose the customer's order —
+        // it is saved but flagged "online payment not verified" for the owner.
+        console.error('razorpay payment lookup failed', pr?.status)
+      }
       return new Response(JSON.stringify({ success: true, message: 'Payment verified successfully' }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
